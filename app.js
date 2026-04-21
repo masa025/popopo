@@ -264,7 +264,7 @@ function renderVisited(posts = []) {
   const officialHtml = VISITED.map(v => `
     <div class="visited-card">
       <div class="visited-card-body">
-        <span class="visited-category-badge ${v.cat}">${v.cat === 'food' ? '🍽️ グルメ' : '🎨 美術館'}</span>
+        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(v.cat)}</span>
         <div class="visited-name">${v.name}</div>
         <div class="visited-area">📍 ${v.area}</div>
         <div class="visited-rating">${renderStars(v.rating)}</div>
@@ -284,12 +284,11 @@ function renderVisited(posts = []) {
 
   const listenerHtml = posts.map(p => {
     const dateStr = p.visitDate ? new Date(p.visitDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
-    const catLabel = p.cat === 'food' ? '🍽️ グルメ' : p.cat === 'museum' ? '🎨 美術館' : p.cat === 'event' ? '🌿 イベント' : p.cat === 'entertainment' ? '🎬 エンタメ' : p.cat === 'mohinga' ? '🍜 食べたいもの' : '📍 スポット';
     const areaStr = p.area ? `📍 ${p.area}` : `👤 ${escHtml(p.nickname || '匿名リスナー')}`;
     return `
     <div class="visited-card">
       <div class="visited-card-body">
-        <span class="visited-category-badge" style="background:var(--accent);color:#fff;">${catLabel}（リスナー報告）</span>
+        <span class="visited-category-badge" style="background:var(--accent);color:#fff;">${getCatLabel(p.cat)}（リスナー報告）</span>
         <div class="visited-name">${escHtml(p.spotName)}</div>
         <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr}</div>
         <div class="visited-rating">${renderStars(p.rating || 0)}</div>
