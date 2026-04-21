@@ -329,7 +329,11 @@ function renderPosts(posts) {
 
 function populateSpotFilter(posts) {
   const sel = document.getElementById('spotFilter');
-  const allSpotNames = [...new Set([...SPOTS.map(s => s.name), ...posts.map(p => p.spotName).filter(Boolean)])];
+  const allSpotNames = [...new Set([
+    ...SPOTS.map(s => s.name),
+    ...localSuggestions.map(s => s.name),
+    ...posts.map(p => p.spotName).filter(Boolean)
+  ])];
   const current = sel.value;
   sel.innerHTML = '<option value="all">すべて</option>' +
     allSpotNames.map(n => `<option value="${n}"${n === current ? ' selected' : ''}>${n}</option>`).join('');
@@ -337,8 +341,12 @@ function populateSpotFilter(posts) {
 
 function populateModalSpotSelect(preselect = '') {
   const sel = document.getElementById('fSpot');
+  const allSpots = [
+    ...SPOTS,
+    ...localSuggestions.map(s => ({ name: s.name, area: s.area, emoji: getCatEmoji(s.cat) }))
+  ];
   sel.innerHTML = '<option value="">-- スポットを選択 --</option>' +
-    SPOTS.map(s => `<option value="${s.name}"${s.name === preselect ? ' selected' : ''}>${s.emoji} ${s.name}（${s.area}）</option>`).join('');
+    allSpots.map(s => `<option value="${s.name}"${s.name === preselect ? ' selected' : ''}>${s.emoji} ${s.name}（${s.area}）</option>`).join('');
 }
 
 // ============================================================
