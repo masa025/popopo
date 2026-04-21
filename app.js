@@ -120,9 +120,15 @@ async function saveSpotSuggestion(data) {
   return s;
 }
 
+let globalLikes = {};
+
 async function saveLike(spotId) {
   localLikes[spotId] = (localLikes[spotId] || 0) + 1;
   localStorage.setItem('popopo_likes', JSON.stringify(localLikes));
+  // 画面上のカウントを即座に増やす（リスナー発火までのラグ対策）
+  const countSpan = document.getElementById(`like-count-${spotId}`);
+  if (countSpan) countSpan.textContent = (globalLikes[spotId] || 0) + 1;
+  
   if (db) {
     try {
       const ref = db.collection('likes').doc(spotId);
@@ -131,14 +137,17 @@ async function saveLike(spotId) {
   }
 }
 
-async function getLikeCount(spotId) {
+function listenLikes() {
   if (db) {
-    try {
-      const doc = await db.collection('likes').doc(spotId).get();
-      if (doc.exists) return doc.data().count || 0;
-    } catch (e) { /* fallback */ }
+    db.collection('likes').onSnapshot(snap => {
+      snap.docs.forEach(doc => {
+        if (doc.id === 'page_views') return; // 除外
+        globalLikes[doc.id] = doc.data().count || 0;
+        const countSpan = document.getElementById(`like-count-${doc.id}`);
+        if (countSpan) countSpan.textContent = globalLikes[doc.id];
+      });
+    });
   }
-  return localLikes[spotId] || 0;
 }
 
 async function savePost(postData) {
@@ -220,7 +229,7 @@ function renderSpotCards(cat = 'all') {
       <div class="spot-card-top">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
         <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}">
-          ${localLikes[s.id] ? '❤️' : '🤍'} <span id="like-count-${s.id}">${localLikes[s.id] || 0}</span>
+          ${localLikes[s.id] ? '❤️' : '🤍'} <span id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
         </button>
       </div>
       <div class="spot-name">${s.name}${s.suggested ? ' <span class="suggest-badge">✨ リスナー推薦</span>' : ''}</div>
@@ -239,7 +248,7 @@ function renderSpotCards(cat = 'all') {
       const sid = btn.dataset.id;
       await saveLike(sid);
       btn.classList.add('liked');
-      btn.innerHTML = `❤️ <span id="like-count-${sid}">${localLikes[sid] || 0}</span>`;
+      btn.querySelector('span').previousSibling.textContent = '❤️ ';
     });
   });
   grid.querySelectorAll('.spot-post-btn').forEach(btn => {
@@ -336,7 +345,7 @@ function renderPosts(posts) {
         <span class="post-nick">🙂 ${escHtml(post.nickname || '匿名リスナー')}</span>
         <span class="post-rating">${renderStars(post.rating || 0)}</span>
       </div>
-      <div class="post-spot-badge">📍 ${escHtml(post.spotName)}</div>
+      <div class="post-spot-badge">${getCatLabel(post.cat)} | ${escHtml(post.spotName)}</div>
       <div class="post-comment">${escHtml(post.comment)}</div>
       <div class="post-footer">
         <span class="post-date">${dateStr}</span>
@@ -603,6 +612,8 @@ function init() {
     populateSpotFilter(posts);
     renderVisited(posts); // リスナーの投稿も「行った場所」セクションに追加
   });
+
+  listenLikes(); // いいね数をリアルタイム同期
 
   // 統計
   document.getElementById('statSpots').textContent = SPOTS.length;
