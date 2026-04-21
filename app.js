@@ -150,6 +150,24 @@ function listenLikes() {
   }
 }
 
+async function saveChat(chatData) {
+  chatData.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+  if (db) {
+    await db.collection('chats').add(chatData);
+  }
+}
+
+function listenChats(callback) {
+  if (db) {
+    db.collection('chats').orderBy('timestamp', 'desc').onSnapshot(snap => {
+      const chats = snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis?.() || Date.now() }));
+      callback(chats);
+    }, e => { console.warn('Chat listener failed:', e); callback([]); });
+  } else {
+    callback([]);
+  }
+}
+
 async function savePost(postData) {
   const post = { ...postData, timestamp: Date.now(), id: 'p_' + Date.now() };
   localPosts.unshift(post);
@@ -314,61 +332,34 @@ function renderVisited(posts = []) {
   document.getElementById('statVisited').textContent = VISITED.length + posts.length;
 }
 
-function renderPosts(posts) {
-  const grid = document.getElementById('postsGrid');
-  const empty = document.getElementById('postsEmpty');
-  const sort = document.getElementById('sortSelect').value;
-  const spotF = document.getElementById('spotFilter').value;
+function renderChats(chats) {
+  const grid = document.getElementById('chatsGrid');
+  const empty = document.getElementById('chatsEmpty');
 
-  let filtered = [...posts];
-  if (spotF !== 'all') filtered = filtered.filter(p => p.spotName === spotF);
-  if (sort === 'newest') filtered.sort((a, b) => b.timestamp - a.timestamp);
-  if (sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
-
-  if (filtered.length === 0) {
+  if (chats.length === 0) {
     empty.style.display = 'block';
-    const existing = grid.querySelectorAll('.post-card');
-    existing.forEach(el => el.remove());
+    grid.innerHTML = '';
     return;
   }
   empty.style.display = 'none';
 
-  const existingCards = grid.querySelectorAll('.post-card');
-  existingCards.forEach(el => el.remove());
-
-  filtered.forEach(post => {
-    const card = document.createElement('div');
-    card.className = 'post-card';
-    const dateStr = post.visitDate ? new Date(post.visitDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
-    card.innerHTML = `
-      <div class="post-card-top">
-        <span class="post-nick">🙂 ${escHtml(post.nickname || '匿名リスナー')}</span>
-        <span class="post-rating">${renderStars(post.rating || 0)}</span>
-      </div>
-      <div class="post-spot-badge">${getCatLabel(post.cat)} | ${escHtml(post.spotName)}</div>
-      <div class="post-comment">${escHtml(post.comment)}</div>
-      <div class="post-footer">
-        <span class="post-date">${dateStr}</span>
-        ${post.photoUrl ? `<a href="${escHtml(post.photoUrl)}" target="_blank" rel="noopener" class="post-photo-link">📷 写真を見る</a>` : ''}
+  grid.innerHTML = chats.map(chat => {
+    const dateStr = new Date(chat.timestamp).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const nick = chat.nickname || '匿名リスナー';
+    const initial = Array.from(nick)[0].toUpperCase();
+    return `
+      <div class="chat-card">
+        <div class="chat-avatar">${escHtml(initial)}</div>
+        <div class="chat-content">
+          <div class="chat-head">
+            <span class="chat-nick">${escHtml(nick)}</span>
+            <span class="chat-date">${dateStr}</span>
+          </div>
+          <div class="chat-msg">${escHtml(chat.message)}</div>
+        </div>
       </div>
     `;
-    grid.appendChild(card);
-  });
-
-  // 統計更新
-  document.getElementById('statPosts').textContent = posts.length;
-}
-
-function populateSpotFilter(posts) {
-  const sel = document.getElementById('spotFilter');
-  const allSpotNames = [...new Set([
-    ...SPOTS.map(s => s.name),
-    ...localSuggestions.map(s => s.name),
-    ...posts.map(p => p.spotName).filter(Boolean)
-  ])];
-  const current = sel.value;
-  sel.innerHTML = '<option value="all">すべて</option>' +
-    allSpotNames.map(n => `<option value="${n}"${n === current ? ' selected' : ''}>${n}</option>`).join('');
+  }).join('');
 }
 
 function populateModalSpotSelect(preselect = '') {
@@ -393,6 +384,16 @@ function openAddSpotModal() {
 }
 function closeAddSpotModal() {
   document.getElementById('addSpotModal').classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
+// 掲示板投稿モーダル
+function openChatModal() {
+  document.getElementById('chatModal').classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+function closeChatModal() {
+  document.getElementById('chatModal').classList.remove('is-open');
   document.body.style.overflow = '';
 }
 
@@ -445,6 +446,29 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     alert('追加に失敗しました。もう一度お試しください。');
   } finally {
     btn.disabled = false; btn.textContent = '追加する ✨';
+  }
+});
+
+// チャットフォーム送信
+document.getElementById('chatForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nickname = document.getElementById('cNick').value.trim() || '匿名リスナー';
+  const message = document.getElementById('cMsg').value.trim();
+
+  if (!message) { alert('メッセージを入力してください'); return; }
+
+  const btn = document.getElementById('chatSubmitBtn');
+  btn.disabled = true; btn.textContent = '送信中...';
+
+  try {
+    await saveChat({ nickname, message });
+    closeChatModal();
+    document.getElementById('chatForm').reset();
+    showToast('つぶやきを投稿しました！ 🎉');
+  } catch(err) {
+    alert('エラーが発生しました。時間を置いて再度お試しください。');
+  } finally {
+    btn.disabled = false; btn.textContent = '投稿する 🚀';
   }
 });
 
@@ -502,7 +526,7 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   try {
     await savePost(postData);
     closeModal();
-    listenPosts(posts => { allPosts = posts; renderPosts(posts); populateSpotFilter(posts); });
+    listenPosts(posts => { allPosts = posts; });
     showToast('投稿しました！ありがとうございます 🎉');
   } catch (err) {
     console.error(err);
@@ -547,10 +571,22 @@ function bindEvents() {
   document.querySelectorAll('.nav-mobile-link').forEach(l => {
     l.addEventListener('click', () => document.getElementById('navMobile').classList.remove('open'));
   });
-  ['navPostBtn','mobilePostBtn','heroPostBtn','communityPostBtn','emptyPostBtn'].forEach(id => {
+  ['navPostBtn','mobilePostBtn','heroPostBtn','emptyPostBtn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', () => openModal());
   });
+  
+  const openChatBtn = document.getElementById('openChatModalBtn');
+  if (openChatBtn) openChatBtn.addEventListener('click', openChatModal);
+  const chatClose = document.getElementById('chatModalClose');
+  if (chatClose) chatClose.addEventListener('click', closeChatModal);
+  const chatCancel = document.getElementById('chatCancelBtn');
+  if (chatCancel) chatCancel.addEventListener('click', closeChatModal);
+  const chatModal = document.getElementById('chatModal');
+  if (chatModal) chatModal.addEventListener('click', (e) => {
+    if (e.target === chatModal) closeChatModal();
+  });
+
   document.getElementById('modalClose').addEventListener('click', closeModal);
   document.getElementById('cancelBtn').addEventListener('click', closeModal);
   document.getElementById('postModal').addEventListener('click', (e) => {
@@ -567,7 +603,7 @@ function bindEvents() {
     document.getElementById('asCharNum').textContent = this.value.length;
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); }
+    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); }
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
@@ -587,8 +623,6 @@ function bindEvents() {
   document.getElementById('fComment').addEventListener('input', function () {
     document.getElementById('charNum').textContent = this.value.length;
   });
-  document.getElementById('sortSelect').addEventListener('change', () => renderPosts(allPosts));
-  document.getElementById('spotFilter').addEventListener('change', () => renderPosts(allPosts));
 }
 
 // ============================================================
@@ -608,9 +642,13 @@ function init() {
   // 投稿をリッスン
   listenPosts(posts => {
     allPosts = posts;
-    renderPosts(posts);
-    populateSpotFilter(posts);
-    renderVisited(posts); // リスナーの投稿も「行った場所」セクションに追加
+    renderVisited(posts); // リスナーの投稿は「行った場所」セクションに追加
+  });
+
+  // フリートークをリッスン
+  listenChats(chats => {
+    renderChats(chats);
+    document.getElementById('statPosts').textContent = chats.length; // 投稿数をチャット数に変更
   });
 
   listenLikes(); // いいね数をリアルタイム同期
