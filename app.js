@@ -208,7 +208,7 @@ function renderSpotCards(cat = 'all') {
   const allSpots = [
     ...SPOTS,
     ...localSuggestions.map(s => ({
-      id: s.id, cat: s.cat, emoji: getCatEmoji(s.cat),
+      id: s.id, cat: s.cat, catLabel: getCatLabel(s.cat),
       name: s.name, area: s.area, pref: '',
       url: s.url || '', memo: s.reason, suggested: true,
       suggestedBy: s.nickname || '匿名リスナー'
@@ -218,7 +218,7 @@ function renderSpotCards(cat = 'all') {
   grid.innerHTML = filtered.map(s => `
     <div class="spot-card" data-cat="${s.cat}" data-id="${s.id}">
       <div class="spot-card-top">
-        <span class="spot-emoji">${s.emoji}</span>
+        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
         <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}">
           ${localLikes[s.id] ? '❤️' : '🤍'} <span id="like-count-${s.id}">${localLikes[s.id] || 0}</span>
         </button>
@@ -250,8 +250,8 @@ function renderSpotCards(cat = 'all') {
   document.getElementById('statSpots').textContent = allSpots.length;
 }
 
-function getCatEmoji(cat) {
-  return { food: '🍴', mohinga: '🍜', museum: '🎨', event: '🌿', entertainment: '🎬' }[cat] || '📍';
+function getCatLabel(cat) {
+  return { food: '🍴 飲食店', mohinga: '🍜 食べたいもの', museum: '🎨 美術館・博物館', event: '🌿 イベント', entertainment: '🎬 エンタメ' }[cat] || '📍 スポット';
 }
 
 function formatMemo(memo) {
@@ -366,11 +366,11 @@ function populateSpotFilter(posts) {
 function populateModalSpotSelect(preselect = '') {
   const sel = document.getElementById('fSpot');
   const allSpots = [
-    ...SPOTS,
-    ...localSuggestions.map(s => ({ name: s.name, area: s.area, emoji: getCatEmoji(s.cat) }))
+    ...SPOTS.map(s => ({ ...s, catLabel: getCatLabel(s.cat) })),
+    ...localSuggestions.map(s => ({ name: s.name, area: s.area, catLabel: getCatLabel(s.cat) }))
   ];
   sel.innerHTML = '<option value="">-- スポットを選択 --</option>' +
-    allSpots.map(s => `<option value="${s.name}"${s.name === preselect ? ' selected' : ''}>${s.emoji} ${s.name}（${s.area}）</option>`).join('');
+    allSpots.map(s => `<option value="${s.name}"${s.name === preselect ? ' selected' : ''}>${s.catLabel} | ${s.name}（${s.area}）</option>`).join('');
 }
 
 // ============================================================
