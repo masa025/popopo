@@ -284,7 +284,7 @@ function renderSpotCards(cat = 'all') {
           ${localLikes[s.id] ? '❤️' : '🤍'} <span id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
         </button>
       </div>
-      <div class="spot-name">${s.name}${s.suggested ? ' <span class="suggest-badge">✨ リスナー推薦</span>' : ''}</div>
+      <div class="spot-name">${escHtml(s.name)}</div>
       <div class="spot-area"><span>📍 ${s.area}${s.pref && s.pref !== '東京' && s.pref !== '全国' && s.pref !== 'オンライン' ? '（' + s.pref + '）' : ''}</span></div>
       ${s.memo ? `<div class="spot-memo">${escHtml(s.memo)}</div>` : ''}
       ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">提案者：${escHtml(s.suggestedBy)}</div>` : ''}
@@ -346,13 +346,14 @@ function renderVisited(posts = []) {
 
   const listenerHtml = sortedPosts.map(p => {
     const dateStr = p.visitDate ? new Date(p.visitDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
-    const areaStr = p.area ? `📍 ${p.area}` : `👤 ${escHtml(p.nickname || '匿名リスナー')}`;
+    const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
+    const nickname = p.nickname || '匿名リスナー';
     return `
     <div class="visited-card">
       <div class="visited-card-body">
-        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(p.cat)}（リスナー報告）</span>
+        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(p.cat)}</span>
         <div class="visited-name">${escHtml(p.spotName)}</div>
-        <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr}</div>
+        <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr} &nbsp; 👤 ${escHtml(nickname)}</div>
         <div class="visited-rating">${renderStars(p.rating || 0)}</div>
         <div class="visited-review">"${escHtml(p.comment)}"</div>
         <div class="visited-photos">
