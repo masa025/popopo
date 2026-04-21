@@ -11,7 +11,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260422-2">
 </head>
 <body>
 
@@ -54,16 +54,16 @@
       <h1 class="hero-title">みんなで作る<br><span class="hero-accent">休日お出かけマップ</span></h1>
       <p class="hero-sub">人から人へ伝わる、ちいさな旅案内。<br>POPOPOリスナーが実際に行った場所、気になった場所を<br>みんなで集めています。あなたのおすすめもぜひ教えてください！</p>
       <div class="hero-stats">
-        <div class="stat"><span class="stat-num" id="statSpots">17</span><span class="stat-label">スポット</span></div>
+        <div class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></div>
         <div class="stat-divider"></div>
         <div class="stat">
-          <div class="stat-num" id="statPosts">0</div>
+          <div class="stat-num is-loading" id="statPosts">読み込み中</div>
           <div class="stat-label">フリートーク投稿数</div>
         </div>
         <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num" id="statVisited">2</span><span class="stat-label">行った場所</span></div>
+        <div class="stat"><span class="stat-num is-loading" id="statVisited">読み込み中</span><span class="stat-label">行った場所</span></div>
         <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num" id="statViews">...</span><span class="stat-label">👀 訪問者数</span></div>
+        <div class="stat"><span class="stat-num is-loading" id="statViews">読み込み中</span><span class="stat-label">👀 訪問者数</span></div>
       </div>
       <div class="hero-btns">
         <a href="#spots" class="btn-primary">スポットを探す →</a>
@@ -119,7 +119,7 @@
 
       <div class="posts-empty" id="chatsEmpty" style="display:block;">
         <div class="empty-icon">💬</div>
-        <p>まだつぶやきがありません。<br>最初のメッセージを書き込んでみませんか？</p>
+        <p>読み込み中</p>
       </div>
       <div class="chats-grid" id="chatsGrid">
         <!-- チャットカードがここに入る -->
@@ -295,6 +295,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=20260422-2"></script>
 </body>
 </html>

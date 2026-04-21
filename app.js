@@ -94,6 +94,13 @@ let selectedRating = 0;
 let allPosts = [];
 let latestRemoteChats = [];
 
+function setStatText(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = value;
+  el.classList.remove('is-loading');
+}
+
 function showFirebaseNotice() {
   const notice = document.getElementById('firebaseNotice');
   if (notice) notice.style.display = 'block';
@@ -183,7 +190,7 @@ function mergeChats(remoteChats = latestRemoteChats) {
 
 function updateChatsView(chats = mergeChats()) {
   renderChats(chats);
-  document.getElementById('statPosts').textContent = chats.length;
+  setStatText('statPosts', chats.length);
 }
 
 function listenChats(callback) {
@@ -237,7 +244,7 @@ async function trackPageView() {
     try {
       const ref = db.collection('likes').doc('page_views');
       ref.onSnapshot(doc => {
-        viewsEl.textContent = doc.exists ? (doc.data().count || 0) : 0;
+        setStatText('statViews', doc.exists ? (doc.data().count || 0) : 0);
       });
       if (!sessionStorage.getItem('popopo_viewed')) {
         await ref.set({ count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
@@ -245,10 +252,10 @@ async function trackPageView() {
       }
     } catch (e) {
       console.warn('Page view tracking failed', e);
-      viewsEl.textContent = '-';
+      setStatText('statViews', '-');
     }
   } else {
-    viewsEl.textContent = 'Demo';
+    setStatText('statViews', 'Demo');
   }
 }
 
@@ -308,7 +315,7 @@ function renderSpotCards(cat = 'all') {
   });
 
   // スポット数更新（提案含む）
-  document.getElementById('statSpots').textContent = allSpots.length;
+  setStatText('statSpots', allSpots.length);
 }
 
 function getCatLabel(cat) {
@@ -365,7 +372,7 @@ function renderVisited(posts = []) {
   }).join('');
 
   grid.innerHTML = listenerHtml + officialHtml;
-  document.getElementById('statVisited').textContent = VISITED.length + posts.length;
+  setStatText('statVisited', VISITED.length + posts.length);
 }
 
 function renderChats(chats) {
@@ -374,6 +381,7 @@ function renderChats(chats) {
 
   if (chats.length === 0) {
     empty.style.display = 'block';
+    empty.innerHTML = '<div class="empty-icon">💬</div><p>まだつぶやきがありません。<br>最初のメッセージを書き込んでみませんか？</p>';
     grid.innerHTML = '';
     return;
   }
@@ -689,8 +697,6 @@ function init() {
 
   listenLikes(); // いいね数をリアルタイム同期
 
-  // 統計
-  document.getElementById('statSpots').textContent = SPOTS.length;
   trackPageView();
 
   bindEvents();
