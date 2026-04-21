@@ -284,12 +284,14 @@ function renderVisited(posts = []) {
 
   const listenerHtml = posts.map(p => {
     const dateStr = p.visitDate ? new Date(p.visitDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
+    const catLabel = p.cat === 'food' ? '🍽️ グルメ' : p.cat === 'museum' ? '🎨 美術館' : p.cat === 'event' ? '🌿 イベント' : p.cat === 'entertainment' ? '🎬 エンタメ' : p.cat === 'mohinga' ? '🍜 食べたいもの' : '📍 スポット';
+    const areaStr = p.area ? `📍 ${p.area}` : `👤 ${escHtml(p.nickname || '匿名リスナー')}`;
     return `
     <div class="visited-card">
       <div class="visited-card-body">
-        <span class="visited-category-badge" style="background:var(--accent);color:#fff;">✨ リスナー報告</span>
+        <span class="visited-category-badge" style="background:var(--accent);color:#fff;">${catLabel}（リスナー報告）</span>
         <div class="visited-name">${escHtml(p.spotName)}</div>
-        <div class="visited-area">👤 ${escHtml(p.nickname || '匿名リスナー')} &nbsp; 📅 ${dateStr}</div>
+        <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr}</div>
         <div class="visited-rating">${renderStars(p.rating || 0)}</div>
         <div class="visited-review">"${escHtml(p.comment)}"</div>
         <div class="visited-photos">
@@ -453,9 +455,15 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   btn.disabled = true; btn.textContent = '送信中...';
 
   const nickname = document.getElementById('fNick').value.trim() || '匿名リスナー';
+  
+  // スポットのカテゴリとエリアを取得して自動反映
+  const allSpots = [...SPOTS, ...localSuggestions];
+  const matchedSpot = allSpots.find(s => s.name === spotName);
+  const spotCat = matchedSpot ? matchedSpot.cat : 'food';
+  const spotArea = matchedSpot ? matchedSpot.area : (spotFree ? 'エリア不明' : '');
 
   // もし自由入力で新しいスポットが入力されたら、行きたい場所リスト（suggestions）にも自動追加する
-  if (spotFree && !SPOTS.some(s => s.name === spotFree) && !localSuggestions.some(s => s.name === spotFree)) {
+  if (spotFree && !matchedSpot) {
     try {
       await saveSpotSuggestion({
         name: spotFree,
@@ -465,7 +473,6 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
         url: '',
         nickname: nickname
       });
-      // Spotsを再描画
       const activeTab = document.querySelector('.tab.active');
       renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
     } catch (err) {
@@ -476,6 +483,8 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   const postData = {
     nickname: nickname === '匿名リスナー' ? '' : nickname,
     spotName,
+    cat: spotCat,
+    area: spotArea,
     visitDate: document.getElementById('fDate').value,
     rating: selectedRating,
     comment,
