@@ -89,12 +89,19 @@ let db = null;
 let localPosts = JSON.parse(localStorage.getItem('popopo_posts') || '[]');
 let localLikes = JSON.parse(localStorage.getItem('popopo_likes') || '{}');
 let localSuggestions = JSON.parse(localStorage.getItem('popopo_suggestions') || '[]');
+let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 let selectedRating = 0;
 let allPosts = [];
+let latestRemoteChats = [];
+
+function showFirebaseNotice() {
+  const notice = document.getElementById('firebaseNotice');
+  if (notice) notice.style.display = 'block';
+}
 
 function initFirebase() {
-  if (!USE_FIREBASE) {
-    document.getElementById('firebaseNotice').style.display = 'block';
+  if (!USE_FIREBASE || typeof firebase === 'undefined') {
+    showFirebaseNotice();
     return false;
   }
   try {
@@ -104,7 +111,7 @@ function initFirebase() {
     return true;
   } catch (e) {
     console.warn('Firebase init failed:', e);
-    document.getElementById('firebaseNotice').style.display = 'block';
+    showFirebaseNotice();
     return false;
   }
 }
@@ -151,20 +158,42 @@ function listenLikes() {
 }
 
 async function saveChat(chatData) {
-  chatData.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+  const clientId = 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const chat = { ...chatData, id: clientId, clientId, timestamp: Date.now() };
+  localChats.unshift(chat);
+  localStorage.setItem('popopo_chats', JSON.stringify(localChats));
+
   if (db) {
-    await db.collection('chats').add(chatData);
+    db.collection('chats').add({
+      ...chatData,
+      clientId,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(e => console.warn('Chat sync failed:', e));
   }
+
+  return chat;
+}
+
+function mergeChats(remoteChats = latestRemoteChats) {
+  const byKey = new Map();
+  localChats.forEach(chat => byKey.set(chat.clientId || chat.id, chat));
+  remoteChats.forEach(chat => byKey.set(chat.clientId || chat.id, chat));
+  return Array.from(byKey.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
+function updateChatsView(chats = mergeChats()) {
+  renderChats(chats);
+  document.getElementById('statPosts').textContent = chats.length;
 }
 
 function listenChats(callback) {
   if (db) {
     db.collection('chats').orderBy('timestamp', 'desc').onSnapshot(snap => {
-      const chats = snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis?.() || Date.now() }));
-      callback(chats);
-    }, e => { console.warn('Chat listener failed:', e); callback([]); });
+      latestRemoteChats = snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis?.() || Date.now() }));
+      callback(mergeChats(latestRemoteChats));
+    }, e => { console.warn('Chat listener failed:', e); callback(mergeChats([])); });
   } else {
-    callback([]);
+    callback(mergeChats([]));
   }
 }
 
@@ -230,16 +259,21 @@ function renderStars(n, max = 5) {
   return '★'.repeat(n) + '☆'.repeat(max - n);
 }
 
+function sortNewest(items = []) {
+  return [...items].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
 function renderSpotCards(cat = 'all') {
   const grid = document.getElementById('spotsGrid');
+  const suggestedSpots = sortNewest(localSuggestions).map(s => ({
+    id: s.id, cat: s.cat, catLabel: getCatLabel(s.cat),
+    name: s.name, area: s.area, pref: '',
+    url: s.url || '', memo: s.reason, suggested: true,
+    suggestedBy: s.nickname || '匿名リスナー'
+  }));
   const allSpots = [
-    ...SPOTS,
-    ...localSuggestions.map(s => ({
-      id: s.id, cat: s.cat, catLabel: getCatLabel(s.cat),
-      name: s.name, area: s.area, pref: '',
-      url: s.url || '', memo: s.reason, suggested: true,
-      suggestedBy: s.nickname || '匿名リスナー'
-    }))
+    ...suggestedSpots,
+    ...SPOTS
   ];
   const filtered = cat === 'all' ? allSpots : allSpots.filter(s => s.cat === cat);
   grid.innerHTML = filtered.map(s => `
@@ -287,6 +321,7 @@ function formatMemo(memo) {
 
 function renderVisited(posts = []) {
   const grid = document.getElementById('visitedGrid');
+  const sortedPosts = sortNewest(posts);
   
   const officialHtml = VISITED.map(v => `
     <div class="visited-card">
@@ -309,13 +344,13 @@ function renderVisited(posts = []) {
     </div>
   `).join('');
 
-  const listenerHtml = posts.map(p => {
+  const listenerHtml = sortedPosts.map(p => {
     const dateStr = p.visitDate ? new Date(p.visitDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
     const areaStr = p.area ? `📍 ${p.area}` : `👤 ${escHtml(p.nickname || '匿名リスナー')}`;
     return `
     <div class="visited-card">
       <div class="visited-card-body">
-        <span class="visited-category-badge" style="background:var(--accent);color:#fff;">${getCatLabel(p.cat)}（リスナー報告）</span>
+        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(p.cat)}（リスナー報告）</span>
         <div class="visited-name">${escHtml(p.spotName)}</div>
         <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr}</div>
         <div class="visited-rating">${renderStars(p.rating || 0)}</div>
@@ -328,7 +363,7 @@ function renderVisited(posts = []) {
     `;
   }).join('');
 
-  grid.innerHTML = officialHtml + listenerHtml;
+  grid.innerHTML = listenerHtml + officialHtml;
   document.getElementById('statVisited').textContent = VISITED.length + posts.length;
 }
 
@@ -462,6 +497,7 @@ document.getElementById('chatForm').addEventListener('submit', async (e) => {
 
   try {
     await saveChat({ nickname, message });
+    updateChatsView();
     closeChatModal();
     document.getElementById('chatForm').reset();
     showToast('つぶやきを投稿しました！ 🎉');
@@ -647,8 +683,7 @@ function init() {
 
   // フリートークをリッスン
   listenChats(chats => {
-    renderChats(chats);
-    document.getElementById('statPosts').textContent = chats.length; // 投稿数をチャット数に変更
+    updateChatsView(chats);
   });
 
   listenLikes(); // いいね数をリアルタイム同期

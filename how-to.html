@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使い方 | POPOPO お出かけマップ</title>
+  <meta name="description" content="POPOPO お出かけマップの使い方。スポット探し、感想投稿、フリートーク掲示板、スポット追加の流れを紹介します。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="index.html#hero" class="nav-logo">
+        <span class="logo-main">POPOPO</span>
+        <span class="logo-sub">お出かけマップ</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html#spots" class="nav-link">📍 おすすめスポット</a>
+        <a href="index.html#visited" class="nav-link">✅ 行った場所</a>
+        <a href="index.html#community" class="nav-link">💬 フリートーク掲示板</a>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="メニュー">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="navMobile">
+      <a href="index.html#spots" class="nav-mobile-link">📍 おすすめスポット</a>
+      <a href="index.html#visited" class="nav-mobile-link">✅ 行った場所</a>
+      <a href="index.html#community" class="nav-mobile-link">💬 フリートーク掲示板</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="guide-hero">
+      <div class="guide-hero-inner">
+        <span class="guide-kicker">はじめての方向け</span>
+        <h1 class="guide-title">POPOPO お出かけマップの使い方</h1>
+        <p class="guide-lead">気になる場所を探して、行ってみた感想や写真リンクを共有できます。POPOPOの感想、サイトへのご意見、お出かけ相談は、フリートーク掲示板へどうぞ。</p>
+        <div class="guide-actions">
+          <a href="index.html#spots" class="btn-primary">スポットを探す →</a>
+          <a href="index.html#community" class="btn-outline">フリートークを見る</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="guide-section">
+      <div class="container">
+        <div class="guide-grid">
+          <article class="guide-card">
+            <span class="guide-num">1</span>
+            <h2>おすすめスポットを探す</h2>
+            <p>POPOPOで紹介された場所や、リスナーおすすめの場所をカテゴリ別に見られます。気になる場所は詳細リンクから確認できます。</p>
+          </article>
+          <article class="guide-card">
+            <span class="guide-num">2</span>
+            <h2>行った感想を投稿する</h2>
+            <p>「行った感想を投稿」から、スポット名、評価、コメント、写真やSNS投稿のURLを共有できます。リストにない場所も自由入力できます。</p>
+          </article>
+          <article class="guide-card">
+            <span class="guide-num">3</span>
+            <h2>フリートークでつぶやく</h2>
+            <p>POPOPOの感想、サイトへのご意見、今度行きたい場所、ちょっとしたお出かけメモなどを自由に投稿できます。ニックネームは任意です。</p>
+          </article>
+          <article class="guide-card">
+            <span class="guide-num">4</span>
+            <h2>新しいスポットを追加する</h2>
+            <p>おすすめしたい場所や気になっている場所があれば、「スポットを追加する」から提案できます。みんなの候補として一覧に加わります。</p>
+          </article>
+        </div>
+        <p class="guide-note">投稿内容は公開される前提で、個人情報や住所の詳細などは書きすぎないようにしてください。写真は画像ファイルを直接アップロードする形式ではなく、SNSや共有リンクのURLを貼る形です。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <span class="logo-main">POPOPO</span>
+        <span class="logo-sub">お出かけマップ</span>
+      </div>
+      <p class="footer-desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
+      <p class="footer-credit">Powered by POPOPO Community</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('hamburger').addEventListener('click', function () {
+      document.getElementById('navMobile').classList.toggle('open');
+    });
+    document.querySelectorAll('.nav-mobile-link').forEach(function (link) {
+      link.addEventListener('click', function () {
+        document.getElementById('navMobile').classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
