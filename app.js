@@ -93,6 +93,7 @@ let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 let selectedRating = 0;
 let allPosts = [];
 let latestRemoteChats = [];
+let currentReviewSpotName = '';
 
 function setStatText(id, value) {
   const el = document.getElementById(id);
@@ -270,6 +271,16 @@ function sortNewest(items = []) {
   return [...items].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
+function getSpotReviews(spotName) {
+  const target = String(spotName || '').trim();
+  if (!target) return [];
+  return sortNewest(allPosts.filter(p => String(p.spotName || '').trim() === target));
+}
+
+function formatVisitDate(date) {
+  return date ? new Date(date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
+}
+
 function renderSpotCards(cat = 'all') {
   const grid = document.getElementById('spotsGrid');
   const suggestedSpots = sortNewest(localSuggestions).map(s => ({
@@ -283,7 +294,9 @@ function renderSpotCards(cat = 'all') {
     ...SPOTS
   ];
   const filtered = cat === 'all' ? allSpots : allSpots.filter(s => s.cat === cat);
-  grid.innerHTML = filtered.map(s => `
+  grid.innerHTML = filtered.map(s => {
+    const reviewCount = getSpotReviews(s.name).length;
+    return `
     <div class="spot-card" data-cat="${s.cat}" data-id="${s.id}">
       <div class="spot-card-top">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
@@ -292,15 +305,17 @@ function renderSpotCards(cat = 'all') {
         </button>
       </div>
       <div class="spot-name">${escHtml(s.name)}</div>
-      <div class="spot-area"><span>📍 ${s.area}${s.pref && s.pref !== '東京' && s.pref !== '全国' && s.pref !== 'オンライン' ? '（' + s.pref + '）' : ''}</span></div>
+      <div class="spot-area"><span>📍 ${escHtml(s.area)}${s.pref && s.pref !== '東京' && s.pref !== '全国' && s.pref !== 'オンライン' ? '（' + escHtml(s.pref) + '）' : ''}</span></div>
       ${s.memo ? `<div class="spot-memo">${escHtml(s.memo)}</div>` : ''}
       ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">提案者：${escHtml(s.suggestedBy)}</div>` : ''}
       <div class="spot-footer">
         ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener" class="spot-link">🔗 詳細を見る</a>` : ''}
-        <button class="spot-post-btn" data-spotname="${s.name}">📝 行ってみた！</button>
+        <button class="spot-reviews-btn" data-spotname="${escHtml(s.name)}">💬 みんなの感想（${reviewCount}件）</button>
+        <button class="spot-post-btn" data-spotname="${escHtml(s.name)}">📝 行ってみた！</button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   grid.querySelectorAll('.spot-like-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -313,6 +328,9 @@ function renderSpotCards(cat = 'all') {
   grid.querySelectorAll('.spot-post-btn').forEach(btn => {
     btn.addEventListener('click', () => openModal(btn.dataset.spotname));
   });
+  grid.querySelectorAll('.spot-reviews-btn').forEach(btn => {
+    btn.addEventListener('click', () => openSpotReviews(btn.dataset.spotname));
+  });
 
   // スポット数更新（提案含む）
   setStatText('statSpots', allSpots.length);
@@ -324,6 +342,24 @@ function getCatLabel(cat) {
 
 function formatMemo(memo) {
   return `<p>${escHtml(memo)}</p>`;
+}
+
+function renderSpotReviewCards(reviews) {
+  return reviews.map(p => {
+    const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
+    const nickname = p.nickname || '匿名リスナー';
+    return `
+      <article class="spot-review-card">
+        <div class="spot-review-head">
+          <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(p.cat)}</span>
+          <span class="spot-review-rating">${renderStars(p.rating || 0)}</span>
+        </div>
+        <div class="spot-review-meta">${areaStr} &nbsp; 📅 ${formatVisitDate(p.visitDate)} &nbsp; 👤 ${escHtml(nickname)}</div>
+        <div class="spot-review-comment">"${escHtml(p.comment)}"</div>
+        ${p.photoUrl ? `<a href="${escHtml(p.photoUrl)}" target="_blank" rel="noopener" class="visited-photo-link">📷 写真・リンクを見る</a>` : ''}
+      </article>
+    `;
+  }).join('');
 }
 
 function renderVisited(posts = []) {
@@ -352,7 +388,7 @@ function renderVisited(posts = []) {
   `).join('');
 
   const listenerHtml = sortedPosts.map(p => {
-    const dateStr = p.visitDate ? new Date(p.visitDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
+    const dateStr = formatVisitDate(p.visitDate);
     const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
     const nickname = p.nickname || '匿名リスナー';
     return `
@@ -441,12 +477,38 @@ function closeChatModal() {
   document.body.style.overflow = '';
 }
 
+// スポット別感想モーダル
+function openSpotReviews(spotName) {
+  currentReviewSpotName = spotName;
+  const title = document.getElementById('spotReviewsTitle');
+  const body = document.getElementById('spotReviewsBody');
+  const reviews = getSpotReviews(spotName);
+
+  title.textContent = `${spotName} のみんなの感想`;
+  body.innerHTML = reviews.length
+    ? `<div class="spot-review-list">${renderSpotReviewCards(reviews)}</div>`
+    : `
+      <div class="spot-review-empty">
+        <div class="empty-icon">💬</div>
+        <p>このスポットの感想はまだありません。<br>行ってみたら、最初の感想を投稿してみませんか？</p>
+      </div>
+    `;
+
+  document.getElementById('spotReviewsModal').classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSpotReviews() {
+  document.getElementById('spotReviewsModal').classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
 // 投稿モーダル
 function openModal(preselect = '') {
   document.getElementById('postModal').classList.add('is-open');
   document.body.style.overflow = 'hidden';
-  populateModalSpotSelect(preselect);
   resetForm();
+  populateModalSpotSelect(preselect);
 }
 
 function closeModal() {
@@ -569,9 +631,12 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   };
 
   try {
-    await savePost(postData);
+    const savedPost = await savePost(postData);
+    allPosts = sortNewest([savedPost, ...allPosts.filter(p => p.id !== savedPost.id)]);
+    renderVisited(allPosts);
+    const activeTab = document.querySelector('.tab.active');
+    renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
     closeModal();
-    listenPosts(posts => { allPosts = posts; });
     showToast('投稿しました！ありがとうございます 🎉');
   } catch (err) {
     console.error(err);
@@ -631,6 +696,16 @@ function bindEvents() {
   if (chatModal) chatModal.addEventListener('click', (e) => {
     if (e.target === chatModal) closeChatModal();
   });
+  document.getElementById('spotReviewsClose').addEventListener('click', closeSpotReviews);
+  document.getElementById('spotReviewsCancelBtn').addEventListener('click', closeSpotReviews);
+  document.getElementById('spotReviewsPostBtn').addEventListener('click', () => {
+    const spotName = currentReviewSpotName;
+    closeSpotReviews();
+    openModal(spotName);
+  });
+  document.getElementById('spotReviewsModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('spotReviewsModal')) closeSpotReviews();
+  });
 
   document.getElementById('modalClose').addEventListener('click', closeModal);
   document.getElementById('cancelBtn').addEventListener('click', closeModal);
@@ -648,7 +723,7 @@ function bindEvents() {
     document.getElementById('asCharNum').textContent = this.value.length;
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); }
+    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); }
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
@@ -687,7 +762,9 @@ function init() {
   // 投稿をリッスン
   listenPosts(posts => {
     allPosts = posts;
-    renderVisited(posts); // リスナーの投稿は「行った場所」セクションに追加
+    renderVisited(posts); // リスナーの投稿は「みんなの感想」セクションに追加
+    const activeTab = document.querySelector('.tab.active');
+    renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
   });
 
   // フリートークをリッスン
