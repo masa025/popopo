@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POPOPO お出かけマップ | みんなの休日スポット共有</title>
+  <meta name="description" content="POPOPOで紹介された面白い休日スポットをリスナーと一緒に楽しもう。行ってみた報告や写真を共有できるコミュニティサイト。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ナビゲーション -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">
+        <span class="logo-main">POPOPO</span>
+        <span class="logo-sub">お出かけマップ</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#spots" class="nav-link">📍 行きたい場所</a>
+        <a href="#visited" class="nav-link">✅ 行った場所</a>
+        <a href="#community" class="nav-link">💬 みんなの投稿</a>
+      </div>
+      <button class="btn-post-nav" id="navPostBtn">＋ 投稿する</button>
+      <button class="hamburger" id="hamburger" aria-label="メニュー">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="navMobile">
+      <a href="#spots" class="nav-mobile-link">📍 行きたい場所</a>
+      <a href="#visited" class="nav-mobile-link">✅ 行った場所</a>
+      <a href="#community" class="nav-mobile-link">💬 みんなの投稿</a>
+      <button class="btn-post-nav" id="mobilePostBtn">＋ 投稿する</button>
+    </div>
+  </nav>
+
+  <!-- ヒーロー -->
+  <section id="hero">
+    <div class="hero-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">🎙️ POPOPO リスナーコミュニティ</div>
+      <h1 class="hero-title">みんなで作る<br><span class="hero-accent">休日お出かけマップ</span></h1>
+      <p class="hero-sub">人から人へ伝わる、ちいさな旅案内。<br>POPOPOリスナーが実際に行った場所、気になった場所を<br>みんなで集めています。あなたのおすすめもぜひ教えてください！</p>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num" id="statSpots">17</span><span class="stat-label">スポット</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" id="statPosts">0</span><span class="stat-label">みんなの投稿</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" id="statVisited">2</span><span class="stat-label">行った場所</span></div>
+      </div>
+      <div class="hero-btns">
+        <a href="#spots" class="btn-primary">スポットを見る →</a>
+        <button class="btn-outline" id="heroPostBtn">📝 投稿する</button>
+      </div>
+    </div>
+    <div class="scroll-hint"><span>SCROLL</span><div class="scroll-line"></div></div>
+  </section>
+
+  <!-- 行きたい場所 -->
+  <section id="spots">
+    <div class="container">
+      <div class="sec-header-row">
+        <div class="sec-header">
+          <h2 class="sec-title">🗺️ 行きたい場所</h2>
+          <p class="sec-sub">POPOPOで紹介されたお出かけスポット一覧 ＋ みんなのリクエスト</p>
+        </div>
+        <button class="btn-add-spot" id="addSpotBtn">✨ スポットを追加する</button>
+      </div>
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-cat="all">すべて</button>
+        <button class="tab" data-cat="food">🍴 飲食店</button>
+        <button class="tab" data-cat="mohinga">🍜 食べたいもの</button>
+        <button class="tab" data-cat="museum">🎨 美術館・博物館</button>
+        <button class="tab" data-cat="event">🌿 イベント</button>
+        <button class="tab" data-cat="entertainment">🎬 エンタメ</button>
+      </div>
+      <div class="spots-grid" id="spotsGrid"></div>
+    </div>
+  </section>
+
+  <!-- 行った場所 -->
+  <section id="visited">
+    <div class="container">
+      <div class="sec-header">
+        <h2 class="sec-title">✅ 行った場所</h2>
+        <p class="sec-sub">実際に訪れた場所のレポート</p>
+      </div>
+      <div class="visited-grid" id="visitedGrid"></div>
+    </div>
+  </section>
+
+  <!-- みんなの投稿 -->
+  <section id="community">
+    <div class="container">
+      <div class="sec-header community-header">
+        <div>
+          <h2 class="sec-title">💬 みんなの投稿</h2>
+          <p class="sec-sub">行ってみた感想・写真を共有しよう！</p>
+        </div>
+        <button class="btn-primary" id="communityPostBtn">＋ 投稿する</button>
+      </div>
+      <div id="firebaseNotice" class="firebase-notice" style="display:none;">
+        ⚡ Firebase未設定のためデモモードで動作中。<a href="README.md" target="_blank">設定方法はこちら</a>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>並び替え</label>
+          <select id="sortSelect" class="filter-select">
+            <option value="newest">新着順</option>
+            <option value="rating">高評価順</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>スポット</label>
+          <select id="spotFilter" class="filter-select">
+            <option value="all">すべて</option>
+          </select>
+        </div>
+      </div>
+      <div class="posts-grid" id="postsGrid">
+        <div class="posts-empty" id="postsEmpty">
+          <div class="empty-icon">📭</div>
+          <p>まだ投稿がありません。<br>最初の投稿者になろう！</p>
+          <button class="btn-primary" id="emptyPostBtn">投稿する</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- フッター -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <span class="logo-main">POPOPO</span>
+        <span class="logo-sub">お出かけマップ</span>
+      </div>
+      <p class="footer-desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
+      <p class="footer-update">最終更新：2026年4月21日</p>
+      <p class="footer-credit">Powered by POPOPO Community</p>
+    </div>
+  </footer>
+
+  <!-- 投稿モーダル -->
+  <div id="postModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="modalTitle" class="modal-title">📝 行ってみた！を投稿する</h3>
+        <button class="modal-close" id="modalClose" aria-label="閉じる">✕</button>
+      </div>
+      <form id="postForm" class="modal-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="fNick">ニックネーム（任意）</label>
+          <input type="text" id="fNick" class="form-input" placeholder="匿名リスナー" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fSpot">行ったスポット <span class="req">必須</span></label>
+          <select id="fSpot" class="form-input" required></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fSpotFree">リストにない場合は自由入力</label>
+          <input type="text" id="fSpotFree" class="form-input" placeholder="スポット名を入力" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fDate">行った日</label>
+          <input type="date" id="fDate" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">評価</label>
+          <div class="star-picker" id="starPicker" role="group" aria-label="評価">
+            <button type="button" class="star-btn" data-val="1" aria-label="星1">★</button>
+            <button type="button" class="star-btn" data-val="2" aria-label="星2">★</button>
+            <button type="button" class="star-btn" data-val="3" aria-label="星3">★</button>
+            <button type="button" class="star-btn" data-val="4" aria-label="星4">★</button>
+            <button type="button" class="star-btn" data-val="5" aria-label="星5">★</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fComment">コメント <span class="req">必須</span></label>
+          <textarea id="fComment" class="form-textarea" placeholder="感想を教えてください！（200文字以内）" maxlength="200" required></textarea>
+          <span class="char-count"><span id="charNum">0</span>/200</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fPhoto">写真・投稿URL（任意）</label>
+          <input type="url" id="fPhoto" class="form-input" placeholder="InstagramやXの投稿URLなど">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" id="cancelBtn">キャンセル</button>
+          <button type="submit" class="btn-primary" id="submitBtn">投稿する 🚀</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- スポット追加モーダル -->
+  <div id="addSpotModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="addSpotTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="addSpotTitle" class="modal-title">✨ 行きたい場所を追加する</h3>
+        <button class="modal-close" id="addSpotModalClose" aria-label="閉じる">✕</button>
+      </div>
+      <form id="addSpotForm" class="modal-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="asName">スポット名 <span class="req">必須</span></label>
+          <input type="text" id="asName" class="form-input" placeholder="例：○○カフェ、△△公園" maxlength="60" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="asArea">エリア・場所 <span class="req">必須</span></label>
+          <input type="text" id="asArea" class="form-input" placeholder="例：渋谷、上野、池袋" maxlength="40" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="asCat">カテゴリ</label>
+          <select id="asCat" class="form-input">
+            <option value="food">🍴 飲食店</option>
+            <option value="museum">🎨 美術館・博物館</option>
+            <option value="event">🌿 イベント</option>
+            <option value="entertainment">🎬 エンタメ</option>
+            <option value="mohinga">🍜 食べたいもの</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="asReason">おすすめポイント <span class="req">必須</span></label>
+          <textarea id="asReason" class="form-textarea" placeholder="なぜ行きたいか、どんな場所か教えてください！（150文字以内）" maxlength="150" required></textarea>
+          <span class="char-count"><span id="asCharNum">0</span>/150</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="asUrl">参考URL（任意）</label>
+          <input type="url" id="asUrl" class="form-input" placeholder="食べログ・公式サイトなど">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="asNick">ニックネーム（任意）</label>
+          <input type="text" id="asNick" class="form-input" placeholder="匿名リスナー" maxlength="20">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" id="addSpotCancelBtn">キャンセル</button>
+          <button type="submit" class="btn-primary" id="addSpotSubmitBtn">追加する ✨</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
