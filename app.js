@@ -164,6 +164,17 @@ function listenPosts(callback) {
   }
 }
 
+function listenSuggestions(callback) {
+  if (db) {
+    db.collection('suggestions').orderBy('timestamp', 'desc').onSnapshot(snap => {
+      const suggestions = snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis?.() || Date.now() }));
+      callback(suggestions);
+    }, () => callback(localSuggestions));
+  } else {
+    callback(localSuggestions);
+  }
+}
+
 // ============================================================
 // 5. レンダリング関数
 // ============================================================
@@ -390,8 +401,29 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = '送信中...';
 
+  const nickname = document.getElementById('fNick').value.trim() || '匿名リスナー';
+
+  // もし自由入力で新しいスポットが入力されたら、行きたい場所リスト（suggestions）にも自動追加する
+  if (spotFree && !SPOTS.some(s => s.name === spotFree) && !localSuggestions.some(s => s.name === spotFree)) {
+    try {
+      await saveSpotSuggestion({
+        name: spotFree,
+        area: 'エリア不明（リスナー投稿）',
+        cat: 'food',
+        reason: 'リスナーさんが行っておすすめしてくれたスポットです！',
+        url: '',
+        nickname: nickname
+      });
+      // Spotsを再描画
+      const activeTab = document.querySelector('.tab.active');
+      renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+    } catch (err) {
+      console.warn('スポット自動追加に失敗', err);
+    }
+  }
+
   const postData = {
-    nickname: document.getElementById('fNick').value.trim(),
+    nickname: nickname === '匿名リスナー' ? '' : nickname,
     spotName,
     visitDate: document.getElementById('fDate').value,
     rating: selectedRating,
@@ -496,7 +528,15 @@ function bindEvents() {
 // ============================================================
 function init() {
   initFirebase();
-  renderSpotCards('all');
+  
+  // スポット追加をリッスン
+  listenSuggestions(suggestions => {
+    localSuggestions = suggestions;
+    localStorage.setItem('popopo_suggestions', JSON.stringify(localSuggestions));
+    const activeTab = document.querySelector('.tab.active');
+    renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+  });
+
   renderVisited();
 
   // 投稿をリッスン

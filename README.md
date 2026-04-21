@@ -31,6 +31,9 @@ service cloud.firestore {
       allow create: if request.resource.data.comment.size() <= 200
                     && request.resource.data.comment.size() >= 1;
     }
+    match /suggestions/{doc} {
+      allow read, create: if true;
+    }
     match /likes/{doc} {
       allow read, write: if true;
     }
