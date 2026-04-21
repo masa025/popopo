@@ -258,9 +258,10 @@ function formatMemo(memo) {
   return `<p>${escHtml(memo)}</p>`;
 }
 
-function renderVisited() {
+function renderVisited(posts = []) {
   const grid = document.getElementById('visitedGrid');
-  grid.innerHTML = VISITED.map(v => `
+  
+  const officialHtml = VISITED.map(v => `
     <div class="visited-card">
       <div class="visited-card-body">
         <span class="visited-category-badge ${v.cat}">${v.cat === 'food' ? '🍽️ グルメ' : '🎨 美術館'}</span>
@@ -280,6 +281,27 @@ function renderVisited() {
       </div>
     </div>
   `).join('');
+
+  const listenerHtml = posts.map(p => {
+    const dateStr = p.visitDate ? new Date(p.visitDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
+    return `
+    <div class="visited-card">
+      <div class="visited-card-body">
+        <span class="visited-category-badge" style="background:var(--accent);color:#fff;">✨ リスナー報告</span>
+        <div class="visited-name">${escHtml(p.spotName)}</div>
+        <div class="visited-area">👤 ${escHtml(p.nickname || '匿名リスナー')} &nbsp; 📅 ${dateStr}</div>
+        <div class="visited-rating">${renderStars(p.rating || 0)}</div>
+        <div class="visited-review">"${escHtml(p.comment)}"</div>
+        <div class="visited-photos">
+          ${p.photoUrl ? `<a href="${escHtml(p.photoUrl)}" target="_blank" rel="noopener" class="visited-photo-link">📷 写真・リンクを見る</a>` : ''}
+        </div>
+      </div>
+    </div>
+    `;
+  }).join('');
+
+  grid.innerHTML = officialHtml + listenerHtml;
+  document.getElementById('statVisited').textContent = VISITED.length + posts.length;
 }
 
 function renderPosts(posts) {
@@ -566,18 +588,16 @@ function init() {
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
   });
 
-  renderVisited();
-
   // 投稿をリッスン
   listenPosts(posts => {
     allPosts = posts;
     renderPosts(posts);
     populateSpotFilter(posts);
+    renderVisited(posts); // リスナーの投稿も「行った場所」セクションに追加
   });
 
   // 統計
   document.getElementById('statSpots').textContent = SPOTS.length;
-  document.getElementById('statVisited').textContent = VISITED.length;
   trackPageView();
 
   bindEvents();
