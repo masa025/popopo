@@ -175,6 +175,27 @@ function listenSuggestions(callback) {
   }
 }
 
+async function trackPageView() {
+  const viewsEl = document.getElementById('statViews');
+  if (db) {
+    try {
+      const ref = db.collection('likes').doc('page_views');
+      ref.onSnapshot(doc => {
+        viewsEl.textContent = doc.exists ? (doc.data().count || 0) : 0;
+      });
+      if (!sessionStorage.getItem('popopo_viewed')) {
+        await ref.set({ count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+        sessionStorage.setItem('popopo_viewed', 'true');
+      }
+    } catch (e) {
+      console.warn('Page view tracking failed', e);
+      viewsEl.textContent = '-';
+    }
+  } else {
+    viewsEl.textContent = 'Demo';
+  }
+}
+
 // ============================================================
 // 5. レンダリング関数
 // ============================================================
@@ -549,6 +570,7 @@ function init() {
   // 統計
   document.getElementById('statSpots').textContent = SPOTS.length;
   document.getElementById('statVisited').textContent = VISITED.length;
+  trackPageView();
 
   bindEvents();
 }
