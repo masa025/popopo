@@ -11,7 +11,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260423-1">
+  <link rel="stylesheet" href="style.css?v=20260423-2">
 </head>
 <body>
 
@@ -47,6 +47,7 @@
       <div class="orb orb-2"></div>
       <div class="orb orb-3"></div>
     </div>
+    <div class="hero-showcase" id="heroShowcase" aria-hidden="true"></div>
     <div class="hero-content">
       <div class="hero-badge">🎙️ POPOPO リスナーコミュニティ</div>
       <h1 class="hero-title">みんなで作る<br><span class="hero-accent">休日お出かけマップ</span></h1>
@@ -192,8 +193,35 @@
           <span class="char-count"><span id="charNum">0</span>/200</span>
         </div>
         <div class="form-group">
-          <label class="form-label" for="fPhoto">写真・投稿URL（任意）</label>
-          <input type="url" id="fPhoto" class="form-input" placeholder="InstagramやXの投稿URLなど">
+          <label class="form-label">写真・投稿URL（任意・最大3件）</label>
+          <div class="resource-inputs">
+            <div class="resource-row resource-row--post post-resource-row">
+              <select id="fMediaKind1" class="form-input resource-kind-select resource-kind-select--post post-resource-kind">
+                <option value="photo">写真</option>
+                <option value="post">投稿URL</option>
+                <option value="info">情報</option>
+              </select>
+              <input type="url" id="fMediaUrl1" class="form-input resource-url-input resource-url-input--post post-resource-url" placeholder="InstagramやXの投稿URLなど">
+            </div>
+            <div class="resource-row resource-row--post post-resource-row">
+              <select id="fMediaKind2" class="form-input resource-kind-select resource-kind-select--post post-resource-kind">
+                <option value="photo">写真</option>
+                <option value="post">投稿URL</option>
+                <option value="info">情報</option>
+              </select>
+              <input type="url" id="fMediaUrl2" class="form-input resource-url-input resource-url-input--post post-resource-url" placeholder="写真や投稿のURL">
+            </div>
+            <div class="resource-row resource-row--post post-resource-row">
+              <select id="fMediaKind3" class="form-input resource-kind-select resource-kind-select--post post-resource-kind">
+                <option value="photo">写真</option>
+                <option value="post">投稿URL</option>
+                <option value="info">情報</option>
+              </select>
+              <input type="url" id="fMediaUrl3" class="form-input resource-url-input resource-url-input--post post-resource-url" placeholder="補足情報のURL">
+            </div>
+          </div>
+          <p class="form-hint">写真URLならカード内にプレビュー表示されます。投稿URLや補足情報も種類を選んで分けられます。</p>
+          <p class="form-error" id="fMediaError" aria-live="polite"></p>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-ghost" id="cancelBtn">キャンセル</button>
@@ -250,13 +278,34 @@
           <span class="char-count"><span id="asCharNum">0</span>/150</span>
         </div>
         <div class="form-group">
-          <label class="form-label" for="asUrl1">参考URL（任意・最大3件）</label>
-          <div class="url-inputs">
-            <input type="url" id="asUrl1" class="form-input as-url-input" placeholder="公式サイト・食べログなど">
-            <input type="url" id="asUrl2" class="form-input as-url-input" placeholder="参考URL 2">
-            <input type="url" id="asUrl3" class="form-input as-url-input" placeholder="参考URL 3">
+          <label class="form-label">参考URL（任意・最大3件）</label>
+          <div class="resource-inputs">
+            <div class="resource-row resource-row--spot spot-resource-row">
+              <select id="asKind1" class="form-input resource-kind-select resource-kind-select--spot spot-resource-kind">
+                <option value="reference">参考URL</option>
+                <option value="photo">写真</option>
+                <option value="info">情報</option>
+              </select>
+              <input type="url" id="asUrl1" class="form-input resource-url-input resource-url-input--spot spot-resource-url" placeholder="公式サイト・食べログなど">
+            </div>
+            <div class="resource-row resource-row--spot spot-resource-row">
+              <select id="asKind2" class="form-input resource-kind-select resource-kind-select--spot spot-resource-kind">
+                <option value="reference">参考URL</option>
+                <option value="photo">写真</option>
+                <option value="info">情報</option>
+              </select>
+              <input type="url" id="asUrl2" class="form-input resource-url-input resource-url-input--spot spot-resource-url" placeholder="画像のURLや記事URL">
+            </div>
+            <div class="resource-row resource-row--spot spot-resource-row">
+              <select id="asKind3" class="form-input resource-kind-select resource-kind-select--spot spot-resource-kind">
+                <option value="reference">参考URL</option>
+                <option value="photo">写真</option>
+                <option value="info">情報</option>
+              </select>
+              <input type="url" id="asUrl3" class="form-input resource-url-input resource-url-input--spot spot-resource-url" placeholder="補足情報のURL">
+            </div>
           </div>
-          <p class="form-hint">画像URL（.jpg / .png / .webp など）を入れると、スポットカードにプレビュー表示されます。</p>
+          <p class="form-hint">種類を選ぶと、あとでカードに「参考URL」「写真」「情報」として表示されます。画像URLならプレビューも出ます。</p>
           <p class="form-error" id="asUrlError" aria-live="polite"></p>
         </div>
         <div class="form-group">
@@ -323,6 +372,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260423-1"></script>
+  <script src="app.js?v=20260423-2"></script>
 </body>
 </html>
