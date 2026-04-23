@@ -92,8 +92,15 @@ let localSuggestions = JSON.parse(localStorage.getItem('popopo_suggestions') || 
 let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 let selectedRating = 0;
 let allPosts = [];
+let allChats = [];
 let latestRemoteChats = [];
 let currentReviewSpotName = '';
+const INITIAL_SPOT_COUNT = 6;
+const INITIAL_REVIEW_COUNT = 6;
+const INITIAL_CHAT_COUNT = 5;
+let visibleSpotCount = INITIAL_SPOT_COUNT;
+let visibleReviewCount = INITIAL_REVIEW_COUNT;
+let visibleChatCount = INITIAL_CHAT_COUNT;
 
 function setStatText(id, value) {
   const el = document.getElementById(id);
@@ -189,9 +196,11 @@ function mergeChats(remoteChats = latestRemoteChats) {
   return Array.from(byKey.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
-function updateChatsView(chats = mergeChats()) {
-  renderChats(chats);
-  setStatText('statPosts', chats.length);
+function updateChatsView(chats = null) {
+  if (Array.isArray(chats)) allChats = chats;
+  const currentChats = Array.isArray(chats) ? chats : (allChats.length ? allChats : mergeChats());
+  renderChats(currentChats);
+  setStatText('statPosts', currentChats.length);
 }
 
 function listenChats(callback) {
@@ -271,6 +280,71 @@ function sortNewest(items = []) {
   return [...items].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
+function getSpotUrls(spot) {
+  if (Array.isArray(spot.urls)) return spot.urls.filter(Boolean);
+  return spot.url ? [spot.url] : [];
+}
+
+function isDirectImageUrl(url) {
+  return /\.(png|jpe?g|gif|webp|avif)(\?.*)?$/i.test(url || '');
+}
+
+function getSpotPreviewImage(spot) {
+  return getSpotUrls(spot).find(isDirectImageUrl) || '';
+}
+
+function isValidHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (e) {
+    return false;
+  }
+}
+
+function setUrlError(message) {
+  const error = document.getElementById('asUrlError');
+  if (error) error.textContent = message;
+  document.querySelectorAll('.as-url-input').forEach(input => {
+    input.classList.toggle('has-error', Boolean(message && input.value.trim()));
+    input.setAttribute('aria-invalid', Boolean(message && input.value.trim()).toString());
+  });
+}
+
+function getSuggestionUrls() {
+  return Array.from(document.querySelectorAll('.as-url-input'))
+    .map(input => input.value.trim())
+    .filter(Boolean);
+}
+
+function validateSuggestionUrls() {
+  const urls = getSuggestionUrls();
+  const invalid = urls.find(url => !isValidHttpUrl(url));
+  if (invalid) {
+    setUrlError('参考URLは https:// または http:// から始まるURLを入力してください。');
+    return null;
+  }
+  setUrlError('');
+  return urls;
+}
+
+function updateMoreButton(id, total, visible, initialCount) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  if (total <= initialCount) {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'inline-flex';
+  if (visible >= total) {
+    btn.textContent = '表示を少なくする';
+    btn.dataset.mode = 'collapse';
+  } else {
+    btn.textContent = `もっと見る（残り${total - visible}件）`;
+    btn.dataset.mode = 'more';
+  }
+}
+
 function getSpotReviews(spotName) {
   const target = String(spotName || '').trim();
   if (!target) return [];
@@ -286,7 +360,7 @@ function renderSpotCards(cat = 'all') {
   const suggestedSpots = sortNewest(localSuggestions).map(s => ({
     id: s.id, cat: s.cat, catLabel: getCatLabel(s.cat),
     name: s.name, area: s.area, pref: '',
-    url: s.url || '', memo: s.reason, suggested: true,
+    url: s.url || '', urls: getSpotUrls(s), memo: s.reason, suggested: true,
     suggestedBy: s.nickname || '匿名リスナー'
   }));
   const allSpots = [
@@ -294,8 +368,11 @@ function renderSpotCards(cat = 'all') {
     ...SPOTS
   ];
   const filtered = cat === 'all' ? allSpots : allSpots.filter(s => s.cat === cat);
-  grid.innerHTML = filtered.map(s => {
+  const visibleSpots = filtered.slice(0, visibleSpotCount);
+  grid.innerHTML = visibleSpots.map(s => {
     const reviewCount = getSpotReviews(s.name).length;
+    const urls = getSpotUrls(s);
+    const previewImage = getSpotPreviewImage(s);
     return `
     <div class="spot-card" data-cat="${s.cat}" data-id="${s.id}">
       <div class="spot-card-top">
@@ -304,12 +381,13 @@ function renderSpotCards(cat = 'all') {
           ${localLikes[s.id] ? '❤️' : '🤍'} <span id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
         </button>
       </div>
+      ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
       <div class="spot-name">${escHtml(s.name)}</div>
       <div class="spot-area"><span>📍 ${escHtml(s.area)}${s.pref && s.pref !== '東京' && s.pref !== '全国' && s.pref !== 'オンライン' ? '（' + escHtml(s.pref) + '）' : ''}</span></div>
       ${s.memo ? `<div class="spot-memo">${escHtml(s.memo)}</div>` : ''}
       ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">提案者：${escHtml(s.suggestedBy)}</div>` : ''}
       <div class="spot-footer">
-        ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener" class="spot-link">🔗 詳細を見る</a>` : ''}
+        ${urls.map((url, i) => `<a href="${escHtml(url)}" target="_blank" rel="noopener" class="spot-link">🔗 参考URL${urls.length > 1 ? i + 1 : ''}</a>`).join('')}
         <button class="spot-reviews-btn" data-spotname="${escHtml(s.name)}">💬 みんなの感想（${reviewCount}件）</button>
         <button class="spot-post-btn" data-spotname="${escHtml(s.name)}">📝 行ってみた！</button>
       </div>
@@ -334,6 +412,7 @@ function renderSpotCards(cat = 'all') {
 
   // スポット数更新（提案含む）
   setStatText('statSpots', allSpots.length);
+  updateMoreButton('spotsMoreBtn', filtered.length, Math.min(visibleSpotCount, filtered.length), INITIAL_SPOT_COUNT);
 }
 
 function getCatLabel(cat) {
@@ -366,7 +445,7 @@ function renderVisited(posts = []) {
   const grid = document.getElementById('visitedGrid');
   const sortedPosts = sortNewest(posts);
   
-  const officialHtml = VISITED.map(v => `
+  const officialCards = VISITED.map(v => `
     <div class="visited-card">
       <div class="visited-card-body">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(v.cat)}</span>
@@ -385,9 +464,9 @@ function renderVisited(posts = []) {
           </div>` : ''}
       </div>
     </div>
-  `).join('');
+  `);
 
-  const listenerHtml = sortedPosts.map(p => {
+  const listenerCards = sortedPosts.map(p => {
     const dateStr = formatVisitDate(p.visitDate);
     const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
     const nickname = p.nickname || '匿名リスナー';
@@ -405,10 +484,12 @@ function renderVisited(posts = []) {
       </div>
     </div>
     `;
-  }).join('');
+  });
 
-  grid.innerHTML = listenerHtml + officialHtml;
-  setStatText('statVisited', VISITED.length + posts.length);
+  const allCards = [...listenerCards, ...officialCards];
+  grid.innerHTML = allCards.slice(0, visibleReviewCount).join('');
+  setStatText('statVisited', allCards.length);
+  updateMoreButton('visitedMoreBtn', allCards.length, Math.min(visibleReviewCount, allCards.length), INITIAL_REVIEW_COUNT);
 }
 
 function renderChats(chats) {
@@ -419,11 +500,13 @@ function renderChats(chats) {
     empty.style.display = 'block';
     empty.innerHTML = '<div class="empty-icon">💬</div><p>まだつぶやきがありません。<br>最初のメッセージを書き込んでみませんか？</p>';
     grid.innerHTML = '';
+    updateMoreButton('chatsMoreBtn', 0, 0, INITIAL_CHAT_COUNT);
     return;
   }
   empty.style.display = 'none';
 
-  grid.innerHTML = chats.map(chat => {
+  const visibleChats = chats.slice(0, visibleChatCount);
+  grid.innerHTML = visibleChats.map(chat => {
     const dateStr = new Date(chat.timestamp).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     const nick = chat.nickname || '匿名リスナー';
     const initial = Array.from(nick)[0].toUpperCase();
@@ -440,6 +523,7 @@ function renderChats(chats) {
       </div>
     `;
   }).join('');
+  updateMoreButton('chatsMoreBtn', chats.length, Math.min(visibleChatCount, chats.length), INITIAL_CHAT_COUNT);
 }
 
 function populateModalSpotSelect(preselect = '') {
@@ -461,6 +545,7 @@ function openAddSpotModal() {
   document.body.style.overflow = 'hidden';
   document.getElementById('addSpotForm').reset();
   document.getElementById('asCharNum').textContent = '0';
+  setUrlError('');
 }
 function closeAddSpotModal() {
   document.getElementById('addSpotModal').classList.remove('is-open');
@@ -533,13 +618,16 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
   const area = document.getElementById('asArea').value.trim();
   const reason = document.getElementById('asReason').value.trim();
   if (!name || !area || !reason) { alert('必須項目を入力してください'); return; }
+  const urls = validateSuggestionUrls();
+  if (!urls) return;
   const btn = document.getElementById('addSpotSubmitBtn');
   btn.disabled = true; btn.textContent = '送信中...';
   const data = {
     name, area,
     cat: document.getElementById('asCat').value,
     reason,
-    url: document.getElementById('asUrl').value.trim(),
+    url: urls[0] || '',
+    urls,
     nickname: document.getElementById('asNick').value.trim()
   };
   try {
@@ -681,7 +769,7 @@ function bindEvents() {
   document.querySelectorAll('.nav-mobile-link').forEach(l => {
     l.addEventListener('click', () => document.getElementById('navMobile').classList.remove('open'));
   });
-  ['navPostBtn','mobilePostBtn','heroPostBtn','emptyPostBtn'].forEach(id => {
+  ['heroPostBtn','emptyPostBtn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', () => openModal());
   });
@@ -722,6 +810,11 @@ function bindEvents() {
   document.getElementById('asReason').addEventListener('input', function() {
     document.getElementById('asCharNum').textContent = this.value.length;
   });
+  document.querySelectorAll('.as-url-input').forEach(input => {
+    input.addEventListener('input', () => {
+      if (document.getElementById('asUrlError')?.textContent) validateSuggestionUrls();
+    });
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); }
   });
@@ -730,7 +823,27 @@ function bindEvents() {
     if (!tab) return;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
+    visibleSpotCount = INITIAL_SPOT_COUNT;
     renderSpotCards(tab.dataset.cat);
+  });
+  document.getElementById('spotsMoreBtn').addEventListener('click', (e) => {
+    visibleSpotCount = e.currentTarget.dataset.mode === 'collapse'
+      ? INITIAL_SPOT_COUNT
+      : visibleSpotCount + INITIAL_SPOT_COUNT;
+    const activeTab = document.querySelector('.tab.active');
+    renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+  });
+  document.getElementById('visitedMoreBtn').addEventListener('click', (e) => {
+    visibleReviewCount = e.currentTarget.dataset.mode === 'collapse'
+      ? INITIAL_REVIEW_COUNT
+      : visibleReviewCount + INITIAL_REVIEW_COUNT;
+    renderVisited(allPosts);
+  });
+  document.getElementById('chatsMoreBtn').addEventListener('click', (e) => {
+    visibleChatCount = e.currentTarget.dataset.mode === 'collapse'
+      ? INITIAL_CHAT_COUNT
+      : visibleChatCount + INITIAL_CHAT_COUNT;
+    updateChatsView(allChats);
   });
   document.getElementById('starPicker').addEventListener('click', (e) => {
     const btn = e.target.closest('.star-btn');

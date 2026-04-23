@@ -11,7 +11,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260422-3">
+  <link rel="stylesheet" href="style.css?v=20260423-1">
 </head>
 <body>
 
@@ -28,7 +28,6 @@
         <a href="#community" class="nav-link">💬 フリートーク掲示板</a>
         <a href="how-to.html" class="nav-link" id="navHowToBtn">💡 使い方</a>
       </div>
-      <button class="btn-post-nav" id="navPostBtn">📝 感想を投稿</button>
       <button class="hamburger" id="hamburger" aria-label="メニュー">
         <span></span><span></span><span></span>
       </button>
@@ -38,7 +37,6 @@
       <a href="#visited" class="nav-mobile-link">💬 みんなの感想</a>
       <a href="#community" class="nav-mobile-link">💬 フリートーク掲示板</a>
       <a href="how-to.html" class="nav-mobile-link" id="mobileHowToBtn">💡 使い方を見る</a>
-      <button class="btn-post-nav" id="mobilePostBtn">📝 感想を投稿</button>
     </div>
   </nav>
 
@@ -92,6 +90,9 @@
         <button class="tab" data-cat="entertainment">🎬 エンタメ</button>
       </div>
       <div class="spots-grid" id="spotsGrid"></div>
+      <div class="section-actions">
+        <button type="button" class="btn-outline btn-section-more" id="spotsMoreBtn">もっと見る</button>
+      </div>
     </div>
   </section>
 
@@ -103,6 +104,9 @@
         <p class="sec-sub">実際に訪れたスポットの感想を集めています</p>
       </div>
       <div class="visited-grid" id="visitedGrid"></div>
+      <div class="section-actions">
+        <button type="button" class="btn-outline btn-section-more" id="visitedMoreBtn">もっと見る</button>
+      </div>
     </div>
   </section>
 
@@ -123,6 +127,9 @@
       </div>
       <div class="chats-grid" id="chatsGrid">
         <!-- チャットカードがここに入る -->
+      </div>
+      <div class="section-actions">
+        <button type="button" class="btn-outline btn-section-more" id="chatsMoreBtn">もっと見る</button>
       </div>
     </div>
   </section>
@@ -215,7 +222,7 @@
   <div id="addSpotModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="addSpotTitle">
     <div class="modal-box">
       <div class="modal-head">
-        <h3 id="addSpotTitle" class="modal-title">✨ 行きたい場所を追加する</h3>
+        <h3 id="addSpotTitle" class="modal-title">✨ スポットを追加する</h3>
         <button class="modal-close" id="addSpotModalClose" aria-label="閉じる">✕</button>
       </div>
       <form id="addSpotForm" class="modal-form" novalidate>
@@ -239,12 +246,18 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="asReason">おすすめポイント <span class="req">必須</span></label>
-          <textarea id="asReason" class="form-textarea" placeholder="なぜ行きたいか、どんな場所か教えてください！（150文字以内）" maxlength="150" required></textarea>
+          <textarea id="asReason" class="form-textarea" placeholder="どんな場所か教えて下さい！（150文字以内）" maxlength="150" required></textarea>
           <span class="char-count"><span id="asCharNum">0</span>/150</span>
         </div>
         <div class="form-group">
-          <label class="form-label" for="asUrl">参考URL（任意）</label>
-          <input type="url" id="asUrl" class="form-input" placeholder="食べログ・公式サイトなど">
+          <label class="form-label" for="asUrl1">参考URL（任意・最大3件）</label>
+          <div class="url-inputs">
+            <input type="url" id="asUrl1" class="form-input as-url-input" placeholder="公式サイト・食べログなど">
+            <input type="url" id="asUrl2" class="form-input as-url-input" placeholder="参考URL 2">
+            <input type="url" id="asUrl3" class="form-input as-url-input" placeholder="参考URL 3">
+          </div>
+          <p class="form-hint">画像URL（.jpg / .png / .webp など）を入れると、スポットカードにプレビュー表示されます。</p>
+          <p class="form-error" id="asUrlError" aria-live="polite"></p>
         </div>
         <div class="form-group">
           <label class="form-label" for="asNick">ニックネーム（任意）</label>
@@ -310,6 +323,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260422-3"></script>
+  <script src="app.js?v=20260423-1"></script>
 </body>
 </html>
