@@ -866,6 +866,30 @@ function closeChatModal() {
   document.body.style.overflow = '';
 }
 
+function openGalleryModal(imageSrc, title, caption, alt) {
+  const modal = document.getElementById('galleryModal');
+  const image = document.getElementById('galleryModalImage');
+  const titleEl = document.getElementById('galleryModalTitle');
+  const captionEl = document.getElementById('galleryModalCaption');
+  if (!modal || !image || !titleEl || !captionEl) return;
+  image.src = imageSrc;
+  image.alt = alt || title || '配信で届いた作品';
+  titleEl.textContent = title || '配信で届いた作品';
+  captionEl.textContent = caption || '';
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGalleryModal() {
+  const modal = document.getElementById('galleryModal');
+  const image = document.getElementById('galleryModalImage');
+  if (!modal || !image) return;
+  modal.classList.remove('is-open');
+  image.src = '';
+  image.alt = '';
+  document.body.style.overflow = '';
+}
+
 // スポット別感想モーダル
 function openSpotReviews(spotName) {
   currentReviewSpotName = spotName;
@@ -1093,6 +1117,18 @@ function bindEvents() {
   if (chatModal) chatModal.addEventListener('click', (e) => {
     if (e.target === chatModal) closeChatModal();
   });
+  const listenerGallery = document.getElementById('heroGalleryMarquee');
+  if (listenerGallery) listenerGallery.addEventListener('click', (e) => {
+    const card = e.target.closest('.hero-gallery-item');
+    if (!card) return;
+    openGalleryModal(card.dataset.image, card.dataset.title, card.dataset.caption, card.dataset.alt);
+  });
+  const galleryModalClose = document.getElementById('galleryModalClose');
+  if (galleryModalClose) galleryModalClose.addEventListener('click', closeGalleryModal);
+  const galleryModal = document.getElementById('galleryModal');
+  if (galleryModal) galleryModal.addEventListener('click', (e) => {
+    if (e.target === galleryModal) closeGalleryModal();
+  });
   document.getElementById('spotReviewsClose').addEventListener('click', closeSpotReviews);
   document.getElementById('spotReviewsCancelBtn').addEventListener('click', closeSpotReviews);
   document.getElementById('spotReviewsPostBtn').addEventListener('click', () => {
@@ -1131,7 +1167,7 @@ function bindEvents() {
     });
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); }
+    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); }
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
