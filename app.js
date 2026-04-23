@@ -128,6 +128,8 @@ let heroBackdropTimer = null;
 let heroBackdropVisibilityBound = false;
 let heroBackdropResizeTimer = null;
 let heroBackdropResizeBound = false;
+let heroGalleryResizeTimer = null;
+let heroGalleryResizeBound = false;
 
 function isMobileHeroLayout() {
   return window.matchMedia('(max-width: 768px)').matches;
@@ -142,6 +144,51 @@ function setStatText(id, value) {
   if (!el) return;
   el.textContent = value;
   el.classList.remove('is-loading');
+}
+
+function setupHeroGallery() {
+  const marquee = document.getElementById('heroGalleryMarquee');
+  const track = marquee?.querySelector('.hero-gallery-track');
+  if (!marquee || !track) return;
+
+  const baseItems = Array.from(track.querySelectorAll('.hero-gallery-item:not([aria-hidden="true"])'));
+  if (!baseItems.length) return;
+
+  const trackStyle = window.getComputedStyle(track);
+  const gap = parseFloat(trackStyle.columnGap || trackStyle.gap || '0') || 0;
+  const firstItem = baseItems[0];
+  const lastItem = baseItems[baseItems.length - 1];
+  const baseWidth = (lastItem.offsetLeft + lastItem.offsetWidth) - firstItem.offsetLeft;
+  const loopDistance = Math.max(baseWidth + gap, 1);
+  const repeatCount = Math.max(4, Math.ceil((marquee.offsetWidth + loopDistance) / loopDistance) + 1);
+  const fragment = document.createDocumentFragment();
+
+  for (let copyIndex = 0; copyIndex < repeatCount; copyIndex += 1) {
+    baseItems.forEach((item) => {
+      const clone = item.cloneNode(true);
+      if (copyIndex > 0) {
+        clone.setAttribute('aria-hidden', 'true');
+        clone.tabIndex = -1;
+        const image = clone.querySelector('.hero-gallery-thumb');
+        if (image) image.alt = '';
+      } else {
+        clone.removeAttribute('aria-hidden');
+        clone.removeAttribute('tabindex');
+      }
+      fragment.appendChild(clone);
+    });
+  }
+
+  track.replaceChildren(fragment);
+  track.style.setProperty('--hero-gallery-loop-distance', `${loopDistance}px`);
+
+  if (!heroGalleryResizeBound) {
+    window.addEventListener('resize', () => {
+      clearTimeout(heroGalleryResizeTimer);
+      heroGalleryResizeTimer = setTimeout(setupHeroGallery, 140);
+    });
+    heroGalleryResizeBound = true;
+  }
 }
 
 function showFirebaseNotice() {
@@ -1239,6 +1286,7 @@ function init() {
   listenLikes(); // いいね数をリアルタイム同期
 
   trackPageView();
+  setupHeroGallery();
   renderHeroBackdrop();
   startHeroBackdropRotation();
 
