@@ -3,9 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>POPOPO お出かけマップ | みんなの休日スポット共有</title>
-  <meta name="description" content="POPOPOで紹介された面白い休日スポットをリスナーと一緒に楽しもう。おすすめスポットやみんなの感想を共有できるコミュニティサイト。">
+  <title>POPOPO お出かけマップ | リスナーおすすめスポットと感想共有</title>
+  <meta name="description" content="POPOPOリスナーのおすすめスポット、行ってみた感想、フリートークを集めるコミュニティサイト。休日のお出かけ先探しやPOPOPOの感想共有に使えます。">
   <meta name="google-site-verification" content="QZMkVUNM2MBvgmuVahQX4sgTYkAAfBdRGzGwmafOM1A" />
+  <meta name="author" content="masa0a">
+  <link rel="canonical" href="https://popopo-comm.netlify.app/">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="POPOPO お出かけマップ">
+  <meta property="og:title" content="POPOPO お出かけマップ | リスナーおすすめスポットと感想共有">
+  <meta property="og:description" content="POPOPOリスナーのおすすめスポット、行ってみた感想、フリートークを集めるコミュニティサイト。">
+  <meta property="og:url" content="https://popopo-comm.netlify.app/">
+  <meta property="og:image" content="https://popopo-comm.netlify.app/assets/listener-gallery/listener-art-05.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="POPOPO お出かけマップ">
+  <meta name="twitter:description" content="POPOPOリスナーのおすすめスポットと感想をみんなで共有するコミュニティサイト。">
+  <meta name="twitter:image" content="https://popopo-comm.netlify.app/assets/listener-gallery/listener-art-05.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -13,6 +26,26 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <link rel="stylesheet" href="style.css?v=20260423-2">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "POPOPO お出かけマップ",
+    "alternateName": [
+      "POPOPO リスナーコミュニティ",
+      "POPOPO おすすめスポット"
+    ],
+    "url": "https://popopo-comm.netlify.app/",
+    "description": "POPOPOリスナーのおすすめスポット、行ってみた感想、フリートークを集めるコミュニティサイト。",
+    "inLanguage": "ja",
+    "image": "https://popopo-comm.netlify.app/assets/listener-gallery/listener-art-05.jpg",
+    "publisher": {
+      "@type": "Person",
+      "name": "masa0a",
+      "url": "https://bsky.app/profile/masa0a.bsky.social"
+    }
+  }
+  </script>
 </head>
 <body>
 
@@ -211,9 +244,7 @@
           <img id="galleryModalImage" class="gallery-modal-image" src="" alt="">
         </div>
         <div class="gallery-modal-copy">
-          <span class="gallery-modal-kicker">リスナー作品</span>
           <p id="galleryModalCaption" class="gallery-modal-caption"></p>
-          <p class="gallery-modal-tip">配信中に届いた作品を、管理者が手動で掲載しています。</p>
         </div>
       </div>
     </div>

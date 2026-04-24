@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://popopo-comm.netlify.app/sitemap.xml
