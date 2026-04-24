@@ -1142,6 +1142,8 @@ function showToast(msg) {
 function bindEvents() {
   window.addEventListener('scroll', () => {
     document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    const scrollHint = document.querySelector('.scroll-hint');
+    if (scrollHint) scrollHint.classList.toggle('is-hidden', window.scrollY > 90);
   });
   document.getElementById('hamburger').addEventListener('click', () => {
     document.getElementById('navMobile').classList.toggle('open');
