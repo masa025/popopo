@@ -31,7 +31,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260423-2">
+  <link rel="stylesheet" href="style.css?v=20260426-1">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -118,6 +118,12 @@
             <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-06.jpg" data-title="鉛筆のポートレート" data-caption="やわらかな陰影で描かれた、静かな雰囲気のポートレート。" data-alt="鉛筆で描かれた鹿のポートレート">
               <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-06.jpg" alt="鉛筆で描かれた鹿のポートレート" loading="lazy">
             </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-07.jpg" data-title="POPOPO用語辞典" data-caption="リスナーさんが作ってくれた、POPOPO内で生まれた言葉の辞典風作品。配信の空気感が、そのまま一冊のページになったような一枚です。" data-alt="POPOPO内で生まれた言葉を辞典風にまとめたリスナー作品" data-lock-answer="TimTam" data-lock-hint="ある配信者が牛乳の中に落としたお菓子は何でしょうか？">
+              <img class="hero-gallery-thumb is-document-thumb" src="assets/listener-gallery/listener-art-07.jpg" alt="POPOPO内で生まれた言葉を辞典風にまとめたリスナー作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-08.jpg" data-title="森の奥の小さな鹿" data-caption="木々の間に小さな鹿がそっと立つ、物語の一場面のようなスケッチ。手描きの線に、静かな空気が残る一枚です。" data-alt="森の中に小さな鹿が描かれたリスナー作品">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-08.jpg" alt="森の中に小さな鹿が描かれたリスナー作品" loading="lazy">
+            </button>
             <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-01.jpg" data-title="小さな鹿たち" data-caption="やわらかな鉛筆線で、4頭の小さな鹿がのびのび並ぶ一枚。" data-alt="4頭の鹿が描かれた鉛筆スケッチ" aria-hidden="true" tabindex="-1">
               <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-01.jpg" alt="" loading="lazy">
             </button>
@@ -135,6 +141,12 @@
             </button>
             <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-06.jpg" data-title="鉛筆のポートレート" data-caption="やわらかな陰影で描かれた、静かな雰囲気のポートレート。" data-alt="鉛筆で描かれた鹿のポートレート" aria-hidden="true" tabindex="-1">
               <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-06.jpg" alt="" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-07.jpg" data-title="POPOPO用語辞典" data-caption="リスナーさんが作ってくれた、POPOPO内で生まれた言葉の辞典風作品。配信の空気感が、そのまま一冊のページになったような一枚です。" data-alt="POPOPO内で生まれた言葉を辞典風にまとめたリスナー作品" data-lock-answer="TimTam" data-lock-hint="ある配信者が牛乳の中に落としたお菓子は何でしょうか？" aria-hidden="true" tabindex="-1">
+              <img class="hero-gallery-thumb is-document-thumb" src="assets/listener-gallery/listener-art-07.jpg" alt="" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-08.jpg" data-title="森の奥の小さな鹿" data-caption="木々の間に小さな鹿がそっと立つ、物語の一場面のようなスケッチ。手描きの線に、静かな空気が残る一枚です。" data-alt="森の中に小さな鹿が描かれたリスナー作品" aria-hidden="true" tabindex="-1">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-08.jpg" alt="" loading="lazy">
             </button>
           </div>
         </div>
@@ -257,10 +269,23 @@
         <button class="modal-close" id="galleryModalClose" aria-label="閉じる">✕</button>
       </div>
       <div class="gallery-modal-layout">
-        <div class="gallery-modal-visual">
+        <div class="gallery-modal-visual" id="galleryModalVisual">
+          <div id="galleryLockVisual" class="gallery-lock-visual" hidden>
+            <span class="gallery-lock-icon">🔒</span>
+            <span>合言葉で開く作品</span>
+          </div>
           <img id="galleryModalImage" class="gallery-modal-image" src="" alt="">
         </div>
         <div class="gallery-modal-copy">
+          <div id="galleryLockPanel" class="gallery-lock-panel" hidden>
+            <p class="gallery-lock-label">合言葉</p>
+            <p id="galleryLockHint" class="gallery-lock-hint"></p>
+            <div class="gallery-lock-row">
+              <input id="galleryLockInput" class="gallery-lock-input" type="text" placeholder="答えを入力" autocomplete="off">
+              <button id="galleryLockSubmit" class="gallery-lock-submit" type="button">開く</button>
+            </div>
+            <p id="galleryLockMessage" class="gallery-lock-message" aria-live="polite"></p>
+          </div>
           <p id="galleryModalCaption" class="gallery-modal-caption"></p>
         </div>
       </div>
@@ -486,6 +511,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260423-2"></script>
+  <script src="app.js?v=20260426-1"></script>
 </body>
 </html>

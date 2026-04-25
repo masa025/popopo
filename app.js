@@ -130,6 +130,7 @@ let heroBackdropResizeTimer = null;
 let heroBackdropResizeBound = false;
 let heroGalleryResizeTimer = null;
 let heroGalleryResizeBound = false;
+let pendingGalleryUnlock = null;
 
 function isMobileHeroLayout() {
   return window.matchMedia('(max-width: 768px)').matches;
@@ -320,10 +321,7 @@ async function savePost(postData) {
 }
 
 function mergePosts(remotePosts = latestRemotePosts) {
-  const byKey = new Map();
-  localPosts.forEach(post => byKey.set(post.clientId || post.id, post));
-  remotePosts.forEach(post => byKey.set(post.clientId || post.id, post));
-  return Array.from(byKey.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  return sortNewest(dedupePosts([...localPosts, ...remotePosts]));
 }
 
 function listenPosts(callback) {
@@ -388,6 +386,95 @@ function renderStars(n, max = 5) {
 
 function sortNewest(items = []) {
   return [...items].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
+function normalizeDedupeValue(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function getPostFingerprint(post = {}) {
+  const media = Array.isArray(post.media)
+    ? post.media.map(item => typeof item === 'string'
+      ? item
+      : `${item.kind || item.type || ''}:${item.url || ''}`).join('|')
+    : (post.photoUrl || '');
+  return [
+    post.spotName,
+    post.comment,
+    post.visitDate,
+    post.nickname,
+    post.rating,
+    post.cat,
+    post.area,
+    media
+  ].map(normalizeDedupeValue).join('|');
+}
+
+function getReviewDisplayFingerprint(item = {}) {
+  return [
+    item.spotName || item.name,
+    item.comment || item.review,
+    item.rating,
+    item.cat,
+    item.area
+  ].map(normalizeDedupeValue).join('|');
+}
+
+function hasReviewCore(item = {}) {
+  return Boolean(
+    normalizeDedupeValue(item.spotName || item.name) &&
+    normalizeDedupeValue(item.comment || item.review)
+  );
+}
+
+function getPostSyncScore(post = {}) {
+  const id = String(post.id || '');
+  let score = 0;
+  if (post.clientId) score += 1;
+  if (id && id !== post.clientId && !id.startsWith('p_')) score += 2;
+  if (post.timestamp) score += 1;
+  return score;
+}
+
+function preferPostRecord(current, next) {
+  const currentScore = getPostSyncScore(current);
+  const nextScore = getPostSyncScore(next);
+  if (nextScore !== currentScore) return nextScore > currentScore ? next : current;
+  return (next.timestamp || 0) >= (current.timestamp || 0) ? next : current;
+}
+
+function dedupePosts(posts = []) {
+  const byIdentity = new Map();
+  const withoutIdentity = [];
+
+  posts.forEach(post => {
+    if (!post) return;
+    const identity = post.clientId || post.id;
+    if (!identity) {
+      withoutIdentity.push(post);
+      return;
+    }
+    const key = `id:${identity}`;
+    const current = byIdentity.get(key);
+    byIdentity.set(key, current ? preferPostRecord(current, post) : post);
+  });
+
+  const byContent = new Map();
+  const strictIndex = new Map();
+  const displayIndex = new Map();
+  [...byIdentity.values(), ...withoutIdentity].forEach(post => {
+    const strictFingerprint = hasReviewCore(post) ? getPostFingerprint(post) : '';
+    const displayFingerprint = hasReviewCore(post) ? getReviewDisplayFingerprint(post) : '';
+    const existingKey = (strictFingerprint && strictIndex.get(strictFingerprint)) ||
+      (displayFingerprint && displayIndex.get(displayFingerprint));
+    const key = existingKey || strictFingerprint || displayFingerprint || `item:${post.id || Math.random()}`;
+    const current = byContent.get(key);
+    byContent.set(key, current ? preferPostRecord(current, post) : post);
+    if (strictFingerprint) strictIndex.set(strictFingerprint, key);
+    if (displayFingerprint) displayIndex.set(displayFingerprint, key);
+  });
+
+  return Array.from(byContent.values());
 }
 
 function isDirectImageUrl(url) {
@@ -572,14 +659,7 @@ function buildHeroCards() {
       accent: spot.cat
     }))
   ]);
-  const heroPosts = sortNewest([
-    ...allPosts,
-    ...localPosts
-  ].reduce((map, post) => {
-    const key = post.clientId || post.id;
-    if (key) map.set(key, post);
-    return map;
-  }, new Map()).values());
+  const heroPosts = sortNewest(dedupePosts([...allPosts, ...localPosts]));
   const reviews = shuffleItems([
     ...heroPosts.map(post => ({
       kind: 'review',
@@ -694,7 +774,7 @@ function updateMoreButton(id, total, visible, initialCount) {
 function getSpotReviews(spotName) {
   const target = String(spotName || '').trim();
   if (!target) return [];
-  return sortNewest(allPosts.filter(p => String(p.spotName || '').trim() === target));
+  return sortNewest(dedupePosts(allPosts).filter(p => String(p.spotName || '').trim() === target));
 }
 
 function formatVisitDate(date) {
@@ -793,9 +873,12 @@ function renderSpotReviewCards(reviews) {
 
 function renderVisited(posts = []) {
   const grid = document.getElementById('visitedGrid');
-  const sortedPosts = sortNewest(posts);
+  const sortedPosts = sortNewest(dedupePosts(posts));
+  const listenerReviewKeys = new Set(sortedPosts.map(getReviewDisplayFingerprint));
   
-  const officialCards = VISITED.map(v => `
+  const officialCards = VISITED
+    .filter(v => !listenerReviewKeys.has(getReviewDisplayFingerprint(v)))
+    .map(v => `
     <div class="visited-card">
       <div class="visited-card-body">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(v.cat)}</span>
@@ -913,18 +996,120 @@ function closeChatModal() {
   document.body.style.overflow = '';
 }
 
-function openGalleryModal(imageSrc, title, caption, alt) {
+function normalizeGalleryAnswer(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\s　・･._＿\-ー−—–]/g, '')
+    .replace(/[\u3041-\u3096]/g, char => String.fromCharCode(char.charCodeAt(0) + 0x60));
+}
+
+function isGalleryUnlockAnswer(value) {
+  const answer = normalizeGalleryAnswer(value);
+  return answer.includes('timtam') ||
+    answer.includes('ティムタム') ||
+    answer.includes('テイムタム');
+}
+
+function getGalleryUnlockKey(imageSrc) {
+  return `popopo_gallery_unlocked_${imageSrc || 'item'}`;
+}
+
+function isGalleryUnlocked(imageSrc) {
+  try {
+    return sessionStorage.getItem(getGalleryUnlockKey(imageSrc)) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+function rememberGalleryUnlock(imageSrc) {
+  try {
+    sessionStorage.setItem(getGalleryUnlockKey(imageSrc), 'true');
+  } catch (e) {
+    // Safariのプライベート環境などでは保存できないことがあるため、その場で開ければ十分。
+  }
+}
+
+function setGalleryLockState(locked, hint = '') {
+  const visual = document.getElementById('galleryModalVisual');
+  const lockVisual = document.getElementById('galleryLockVisual');
+  const lockPanel = document.getElementById('galleryLockPanel');
+  const lockHint = document.getElementById('galleryLockHint');
+  const lockInput = document.getElementById('galleryLockInput');
+  const lockMessage = document.getElementById('galleryLockMessage');
+
+  visual?.classList.toggle('is-locked', locked);
+  if (lockVisual) lockVisual.hidden = !locked;
+  if (lockPanel) lockPanel.hidden = !locked;
+  if (lockHint) lockHint.textContent = hint;
+  if (lockInput) lockInput.value = '';
+  if (lockMessage) {
+    lockMessage.textContent = '';
+    lockMessage.classList.remove('is-success');
+  }
+}
+
+function showGalleryImage(imageSrc, title, caption, alt) {
   const modal = document.getElementById('galleryModal');
   const image = document.getElementById('galleryModalImage');
   const titleEl = document.getElementById('galleryModalTitle');
   const captionEl = document.getElementById('galleryModalCaption');
   if (!modal || !image || !titleEl || !captionEl) return;
+  setGalleryLockState(false);
   image.src = imageSrc;
   image.alt = alt || title || '配信で届いた作品';
   titleEl.textContent = title || '配信で届いた作品';
   captionEl.textContent = caption || '';
+}
+
+function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHint = '') {
+  const modal = document.getElementById('galleryModal');
+  const image = document.getElementById('galleryModalImage');
+  const titleEl = document.getElementById('galleryModalTitle');
+  const captionEl = document.getElementById('galleryModalCaption');
+  if (!modal || !image || !titleEl || !captionEl) return;
+
+  const needsUnlock = Boolean(lockAnswer);
+  const isUnlocked = needsUnlock && isGalleryUnlocked(imageSrc);
+  titleEl.textContent = title || '配信で届いた作品';
+  captionEl.textContent = caption || '';
+
+  if (needsUnlock && !isUnlocked) {
+    pendingGalleryUnlock = { imageSrc, title, caption, alt };
+    image.src = '';
+    image.alt = '';
+    setGalleryLockState(true, lockHint || '合言葉を入力してください。');
+    window.setTimeout(() => document.getElementById('galleryLockInput')?.focus(), 60);
+  } else {
+    pendingGalleryUnlock = null;
+    showGalleryImage(imageSrc, title, caption, alt);
+  }
+
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
+}
+
+function submitGalleryUnlock() {
+  const input = document.getElementById('galleryLockInput');
+  const message = document.getElementById('galleryLockMessage');
+  if (!input || !message || !pendingGalleryUnlock) return;
+
+  if (!isGalleryUnlockAnswer(input.value)) {
+    message.textContent = 'ちょっと違うかも。英字でもカタカナでも大丈夫です。';
+    message.classList.remove('is-success');
+    input.select();
+    return;
+  }
+
+  const { imageSrc, title, caption, alt } = pendingGalleryUnlock;
+  rememberGalleryUnlock(imageSrc);
+  message.textContent = '正解です。POPOPO用語辞典を開きます。';
+  message.classList.add('is-success');
+  window.setTimeout(() => {
+    showGalleryImage(imageSrc, title, caption, alt);
+    pendingGalleryUnlock = null;
+  }, 240);
 }
 
 function closeGalleryModal() {
@@ -934,6 +1119,8 @@ function closeGalleryModal() {
   modal.classList.remove('is-open');
   image.src = '';
   image.alt = '';
+  pendingGalleryUnlock = null;
+  setGalleryLockState(false);
   document.body.style.overflow = '';
 }
 
@@ -1170,10 +1357,16 @@ function bindEvents() {
   if (listenerGallery) listenerGallery.addEventListener('click', (e) => {
     const card = e.target.closest('.hero-gallery-item');
     if (!card) return;
-    openGalleryModal(card.dataset.image, card.dataset.title, card.dataset.caption, card.dataset.alt);
+    openGalleryModal(card.dataset.image, card.dataset.title, card.dataset.caption, card.dataset.alt, card.dataset.lockAnswer, card.dataset.lockHint);
   });
   const galleryModalClose = document.getElementById('galleryModalClose');
   if (galleryModalClose) galleryModalClose.addEventListener('click', closeGalleryModal);
+  const galleryLockSubmit = document.getElementById('galleryLockSubmit');
+  if (galleryLockSubmit) galleryLockSubmit.addEventListener('click', submitGalleryUnlock);
+  const galleryLockInput = document.getElementById('galleryLockInput');
+  if (galleryLockInput) galleryLockInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitGalleryUnlock();
+  });
   const galleryModal = document.getElementById('galleryModal');
   if (galleryModal) galleryModal.addEventListener('click', (e) => {
     if (e.target === galleryModal) closeGalleryModal();
