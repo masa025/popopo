@@ -88,6 +88,7 @@ const VISITED = [
 let db = null;
 let localPosts = JSON.parse(localStorage.getItem('popopo_posts') || '[]');
 let localLikes = JSON.parse(localStorage.getItem('popopo_likes') || '{}');
+let localSeenReviews = JSON.parse(localStorage.getItem('popopo_seen_reviews') || '{}');
 let localSuggestions = JSON.parse(localStorage.getItem('popopo_suggestions') || '[]');
 let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 let selectedRating = 0;
@@ -251,6 +252,41 @@ async function saveLike(spotId) {
   }
 }
 
+function getSeenReviewCount(reviewId) {
+  return globalLikes[reviewId] || (localSeenReviews[reviewId] ? 1 : 0);
+}
+
+function updateSeenReviewButton(reviewId) {
+  const count = getSeenReviewCount(reviewId);
+  const isSeen = Boolean(localSeenReviews[reviewId]);
+  document.querySelectorAll('.review-seen-btn').forEach(btn => {
+    if (btn.dataset.reviewSeenId !== reviewId) return;
+    btn.classList.toggle('is-seen', isSeen);
+    btn.setAttribute('aria-pressed', isSeen ? 'true' : 'false');
+    const text = btn.querySelector('.review-seen-text');
+    const countEl = btn.querySelector('.review-seen-count');
+    if (text) text.textContent = isSeen ? '見たよ済み' : '見たよ';
+    if (countEl) countEl.textContent = count;
+  });
+}
+
+async function saveSeenReview(reviewId) {
+  if (!reviewId || localSeenReviews[reviewId]) return;
+  localSeenReviews[reviewId] = Date.now();
+  localStorage.setItem('popopo_seen_reviews', JSON.stringify(localSeenReviews));
+  globalLikes[reviewId] = (globalLikes[reviewId] || 0) + 1;
+  updateSeenReviewButton(reviewId);
+
+  if (db) {
+    try {
+      await db.collection('likes').doc(reviewId).set({
+        count: firebase.firestore.FieldValue.increment(1),
+        kind: 'review_seen'
+      }, { merge: true });
+    } catch (e) { console.warn(e); }
+  }
+}
+
 function listenLikes() {
   if (db) {
     db.collection('likes').onSnapshot(snap => {
@@ -259,6 +295,7 @@ function listenLikes() {
         globalLikes[doc.id] = doc.data().count || 0;
         const countSpan = document.getElementById(`like-count-${doc.id}`);
         if (countSpan) countSpan.textContent = globalLikes[doc.id];
+        if (doc.id.startsWith('review_seen_')) updateSeenReviewButton(doc.id);
       });
     });
   }
@@ -392,6 +429,14 @@ function normalizeDedupeValue(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+function hashString(value = '') {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
 function getPostFingerprint(post = {}) {
   const media = Array.isArray(post.media)
     ? post.media.map(item => typeof item === 'string'
@@ -475,6 +520,24 @@ function dedupePosts(posts = []) {
   });
 
   return Array.from(byContent.values());
+}
+
+function getReviewReactionId(item = {}, scope = 'review') {
+  const rawId = item.clientId || item.id || '';
+  const fingerprint = getReviewDisplayFingerprint(item);
+  return `review_seen_${hashString(`${scope}|${rawId}|${fingerprint}`)}`;
+}
+
+function renderSeenReviewButton(reviewId) {
+  const isSeen = Boolean(localSeenReviews[reviewId]);
+  const count = getSeenReviewCount(reviewId);
+  return `
+    <button type="button" class="review-seen-btn ${isSeen ? 'is-seen' : ''}" data-review-seen-id="${escHtml(reviewId)}" aria-pressed="${isSeen ? 'true' : 'false'}">
+      <span class="review-seen-icon">👀</span>
+      <span class="review-seen-text">${isSeen ? '見たよ済み' : '見たよ'}</span>
+      <span class="review-seen-count" id="like-count-${escHtml(reviewId)}">${count}</span>
+    </button>
+  `;
 }
 
 function isDirectImageUrl(url) {
@@ -856,6 +919,7 @@ function renderSpotReviewCards(reviews) {
     const nickname = p.nickname || '匿名リスナー';
     const media = getPostMedia(p);
     const previewImage = getResourcePreviewImage(media);
+    const reviewSeenId = getReviewReactionId(p, 'listener');
     return `
       <article class="spot-review-card">
         <div class="spot-review-head">
@@ -866,6 +930,7 @@ function renderSpotReviewCards(reviews) {
         ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
         <div class="spot-review-comment">"${escHtml(p.comment)}"</div>
         ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
+        <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
       </article>
     `;
   }).join('');
@@ -878,7 +943,9 @@ function renderVisited(posts = []) {
   
   const officialCards = VISITED
     .filter(v => !listenerReviewKeys.has(getReviewDisplayFingerprint(v)))
-    .map(v => `
+    .map(v => {
+      const reviewSeenId = getReviewReactionId(v, 'official');
+      return `
     <div class="visited-card">
       <div class="visited-card-body">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(v.cat)}</span>
@@ -895,9 +962,11 @@ function renderVisited(posts = []) {
             📚 <strong>関連本：</strong><a href="${v.book.url}" target="_blank" rel="noopener">${v.book.title}</a><br>
             <span style="font-size:0.78rem;opacity:0.7;">${v.book.note}</span>
           </div>` : ''}
+        <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
       </div>
     </div>
-  `);
+  `;
+    });
 
   const listenerCards = sortedPosts.map(p => {
     const dateStr = formatVisitDate(p.visitDate);
@@ -905,6 +974,7 @@ function renderVisited(posts = []) {
     const nickname = p.nickname || '匿名リスナー';
     const media = getPostMedia(p);
     const previewImage = getResourcePreviewImage(media);
+    const reviewSeenId = getReviewReactionId(p, 'listener');
     return `
     <div class="visited-card">
       <div class="visited-card-body">
@@ -915,6 +985,7 @@ function renderVisited(posts = []) {
         ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
         <div class="visited-review">"${escHtml(p.comment)}"</div>
         ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
+        <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
       </div>
     </div>
     `;
@@ -1380,6 +1451,11 @@ function bindEvents() {
   });
   document.getElementById('spotReviewsModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('spotReviewsModal')) closeSpotReviews();
+  });
+  document.addEventListener('click', (e) => {
+    const seenBtn = e.target.closest('.review-seen-btn');
+    if (!seenBtn) return;
+    saveSeenReview(seenBtn.dataset.reviewSeenId);
   });
 
   document.getElementById('modalClose').addEventListener('click', closeModal);
