@@ -282,6 +282,22 @@ section{padding:80px 0;}
 .kiriban-share-note{margin-top:10px;color:var(--text);}
 .kiriban-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;position:relative;z-index:1;}
 @keyframes kiribanPop{from{opacity:0;transform:translateY(18px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+.intro-story-modal{padding:18px;background:rgba(17,25,48,0.6);}
+.intro-story-card{position:relative;width:min(100%,760px);padding:30px;border-radius:28px;background:linear-gradient(145deg,rgba(255,255,255,0.96),rgba(239,246,255,0.94));border:1px solid rgba(255,255,255,0.78);box-shadow:0 30px 90px rgba(13,24,52,0.36);overflow:hidden;}
+.intro-story-card::before{content:'STORY';position:absolute;right:-18px;bottom:-24px;font-family:'Outfit',sans-serif;font-size:clamp(4.5rem,18vw,9rem);font-weight:900;line-height:1;color:rgba(91,141,238,0.075);pointer-events:none;}
+.intro-story-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;background:#fff;border:1.5px solid rgba(91,141,238,0.18);color:var(--text-muted);display:flex;align-items:center;justify-content:center;z-index:2;}
+.intro-story-frame{position:relative;min-height:330px;display:grid;align-items:center;padding:24px 18px 12px;}
+.intro-story-slide{grid-area:1/1;opacity:0;transform:translateY(14px);pointer-events:none;transition:opacity .42s ease,transform .42s ease;}
+.intro-story-slide.is-active{opacity:1;transform:translateY(0);pointer-events:auto;}
+.intro-story-kicker{font-family:'Outfit',sans-serif;color:var(--blue);font-size:0.82rem;font-weight:800;margin-bottom:18px;}
+.intro-story-slide h3{max-width:620px;color:var(--text);font-size:clamp(1.75rem,6vw,3rem);line-height:1.28;margin-bottom:18px;letter-spacing:0;text-wrap:balance;}
+.intro-story-slide p{max-width:620px;color:#53627f;font-size:1rem;line-height:1.9;}
+.intro-story-slide p[lang="en"]{margin-top:14px;color:#7a86a3;font-family:'Outfit','Noto Sans JP',sans-serif;font-size:0.92rem;}
+.intro-story-dots{display:flex;gap:8px;justify-content:center;margin:6px 0 22px;position:relative;z-index:1;}
+.intro-story-dots button{width:34px;height:8px;border-radius:999px;background:rgba(91,141,238,0.18);transition:all .25s;}
+.intro-story-dots button.is-active{width:54px;background:var(--blue);}
+.intro-story-dots span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+.intro-story-actions{position:relative;z-index:1;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 .modal-form{padding:24px 28px;}
 .spot-reviews-body{padding:24px 28px 8px;}
 .spot-review-list{display:flex;flex-direction:column;gap:14px;}

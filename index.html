@@ -31,7 +31,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260426-6">
+  <link rel="stylesheet" href="style.css?v=20260426-7">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -501,6 +501,50 @@
     </div>
   </div>
 
+  <div id="introStoryModal" class="modal-bg intro-story-modal" role="dialog" aria-modal="true" aria-labelledby="introStoryTitle">
+    <div class="intro-story-card">
+      <button class="intro-story-close" id="introStoryClose" type="button" aria-label="閉じる">✕</button>
+      <div class="intro-story-frame">
+        <section class="intro-story-slide is-active" data-intro-story-slide>
+          <p class="intro-story-kicker">STORY 01</p>
+          <h3 id="introStoryTitle">検索でもAIでもなく、誰かの言葉から。</h3>
+          <p>POPOPOリスナーとの会話が、知らなかった場所へ連れていってくれました。</p>
+          <p lang="en">A conversation opened a route search and AI never showed.</p>
+        </section>
+        <section class="intro-story-slide" data-intro-story-slide>
+          <p class="intro-story-kicker">STORY 02</p>
+          <h3>人から人へ伝わるおすすめ。</h3>
+          <p>誰かが実際に見て、感じて、話してくれたからこそ、行ってみたくなる。</p>
+          <p lang="en">A recommendation carries someone’s experience, curiosity, and feeling.</p>
+        </section>
+        <section class="intro-story-slide" data-intro-story-slide>
+          <p class="intro-story-kicker">STORY 03</p>
+          <h3>アルゴリズムから少し離れて。</h3>
+          <p>この場所は、人と人のあいだで生まれる発見を集めるためのコミュニティです。</p>
+          <p lang="en">A small place to gather discoveries that happen between people.</p>
+        </section>
+        <section class="intro-story-slide" data-intro-story-slide>
+          <p class="intro-story-kicker">STORY 04</p>
+          <h3>あなたの小さな発見も、ここへ。</h3>
+          <p>おすすめや感想を持ち寄って、次の休日を少し楽しくしましょう。</p>
+          <p lang="en">Share places, memories, and impressions freely with POPOPO.</p>
+        </section>
+      </div>
+      <div class="intro-story-dots" aria-label="ストーリーのページ">
+        <button type="button" class="is-active" data-intro-story-dot="0" aria-current="true"><span>1</span></button>
+        <button type="button" data-intro-story-dot="1" aria-current="false"><span>2</span></button>
+        <button type="button" data-intro-story-dot="2" aria-current="false"><span>3</span></button>
+        <button type="button" data-intro-story-dot="3" aria-current="false"><span>4</span></button>
+      </div>
+      <div class="intro-story-actions">
+        <button type="button" class="btn-ghost" id="introStorySkipBtn">スキップ</button>
+        <button type="button" class="btn-outline" id="introStoryNextBtn">次へ</button>
+        <a href="about.html" class="btn-outline" id="introStoryReadBtn">全文を読む</a>
+        <button type="button" class="btn-primary" id="introStoryEnterBtn">サイトを見る</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 使い方モーダル -->
   <div id="howToModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="howToTitle">
     <div class="modal-box">
@@ -533,6 +577,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260426-6"></script>
+  <script src="app.js?v=20260426-7"></script>
 </body>
 </html>

@@ -124,6 +124,8 @@ const HERO_CARD_SLOTS_MOBILE = [
 const HERO_BACKDROP_ROTATE_MS = 12000;
 const KIRIBAN_ROUND_INTERVAL = 100;
 const KIRIBAN_MIN_COUNT = 100;
+const INTRO_STORY_STORAGE_KEY = 'popopo_intro_story_seen_v1';
+const INTRO_STORY_SLIDE_MS = 5200;
 let visibleSpotCount = INITIAL_SPOT_COUNT;
 let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
@@ -133,6 +135,8 @@ let heroBackdropVisibilityBound = false;
 let heroBackdropResizeTimer = null;
 let heroBackdropResizeBound = false;
 let heroGalleryResizeTimer = null;
+let introStoryTimer = null;
+let introStoryIndex = 0;
 let heroGalleryResizeBound = false;
 let pendingGalleryUnlock = null;
 
@@ -473,6 +477,70 @@ async function shareKiriban() {
   } catch (e) {
     console.warn('Kiriban share failed', e);
   }
+}
+
+function getIntroStorySlides() {
+  return Array.from(document.querySelectorAll('[data-intro-story-slide]'));
+}
+
+function setIntroStorySlide(index) {
+  const slides = getIntroStorySlides();
+  const dots = Array.from(document.querySelectorAll('[data-intro-story-dot]'));
+  if (!slides.length) return;
+  introStoryIndex = ((index % slides.length) + slides.length) % slides.length;
+  slides.forEach((slide, i) => {
+    slide.classList.toggle('is-active', i === introStoryIndex);
+  });
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('is-active', i === introStoryIndex);
+    dot.setAttribute('aria-current', i === introStoryIndex ? 'true' : 'false');
+  });
+}
+
+function startIntroStoryFlow() {
+  window.clearInterval(introStoryTimer);
+  introStoryTimer = window.setInterval(() => {
+    setIntroStorySlide(introStoryIndex + 1);
+  }, INTRO_STORY_SLIDE_MS);
+}
+
+function markIntroStorySeen() {
+  try {
+    localStorage.setItem(INTRO_STORY_STORAGE_KEY, 'true');
+  } catch (e) {
+    // Storageが使えない環境では、その回で閉じられれば十分。
+  }
+}
+
+function closeIntroStoryModal() {
+  const modal = document.getElementById('introStoryModal');
+  if (!modal) return;
+  window.clearInterval(introStoryTimer);
+  introStoryTimer = null;
+  modal.classList.remove('is-open');
+  document.body.style.overflow = '';
+  markIntroStorySeen();
+}
+
+function maybeShowIntroStory() {
+  const modal = document.getElementById('introStoryModal');
+  if (!modal || !getIntroStorySlides().length) return;
+  try {
+    if (localStorage.getItem(INTRO_STORY_STORAGE_KEY) === 'true') return;
+  } catch (e) {
+    // 読み取りできない環境でも、表示自体は続ける。
+  }
+  const openWhenQuiet = (attempt = 0) => {
+    if (document.querySelector('.modal-bg.is-open')) {
+      if (attempt < 6) window.setTimeout(() => openWhenQuiet(attempt + 1), 1200);
+      return;
+    }
+    setIntroStorySlide(0);
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    startIntroStoryFlow();
+  };
+  window.setTimeout(openWhenQuiet, 900);
 }
 
 // ============================================================
@@ -1554,6 +1622,27 @@ function bindEvents() {
   });
   const kiribanShare = document.getElementById('kiribanShareBtn');
   if (kiribanShare) kiribanShare.addEventListener('click', shareKiriban);
+  const introStoryModal = document.getElementById('introStoryModal');
+  if (introStoryModal) introStoryModal.addEventListener('click', (e) => {
+    if (e.target === introStoryModal) closeIntroStoryModal();
+  });
+  ['introStoryClose', 'introStorySkipBtn', 'introStoryEnterBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', closeIntroStoryModal);
+  });
+  const introStoryReadBtn = document.getElementById('introStoryReadBtn');
+  if (introStoryReadBtn) introStoryReadBtn.addEventListener('click', markIntroStorySeen);
+  document.querySelectorAll('[data-intro-story-dot]').forEach(dot => {
+    dot.addEventListener('click', () => {
+      setIntroStorySlide(Number(dot.dataset.introStoryDot) || 0);
+      startIntroStoryFlow();
+    });
+  });
+  const introStoryNextBtn = document.getElementById('introStoryNextBtn');
+  if (introStoryNextBtn) introStoryNextBtn.addEventListener('click', () => {
+    setIntroStorySlide(introStoryIndex + 1);
+    startIntroStoryFlow();
+  });
   document.getElementById('spotReviewsClose').addEventListener('click', closeSpotReviews);
   document.getElementById('spotReviewsCancelBtn').addEventListener('click', closeSpotReviews);
   document.getElementById('spotReviewsPostBtn').addEventListener('click', () => {
@@ -1597,7 +1686,7 @@ function bindEvents() {
     });
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); closeKiribanModal(); }
+    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); closeKiribanModal(); closeIntroStoryModal(); }
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
@@ -1681,6 +1770,7 @@ function init() {
   startHeroBackdropRotation();
 
   bindEvents();
+  maybeShowIntroStory();
 }
 
 document.addEventListener('DOMContentLoaded', init);
