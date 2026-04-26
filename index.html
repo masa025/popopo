@@ -31,7 +31,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260426-2">
+  <link rel="stylesheet" href="style.css?v=20260426-4">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -194,6 +194,9 @@
         <button class="tab" data-cat="museum">🎨 美術館・博物館</button>
         <button class="tab" data-cat="event">🌿 イベント</button>
         <button class="tab" data-cat="entertainment">🎬 エンタメ</button>
+      </div>
+      <div class="spot-list-actions">
+        <button type="button" class="want-list-toggle" id="wantListToggleBtn" aria-pressed="false">🔖 行きたいリスト（0）</button>
       </div>
       <div class="spots-grid" id="spotsGrid"></div>
       <div class="section-actions">
@@ -492,25 +495,29 @@
       </div>
       <div style="padding:24px;line-height:1.8;color:var(--text);font-size:0.95rem;max-height:60vh;overflow-y:auto;">
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">1. お出かけスポットを探す 🗺️</h4>
-          <p>POPOPOで紹介された場所や、リスナーおすすめの場所が一覧になっています。タグで絞り込むこともできます。</p>
+          <h4 style="color:var(--blue);margin-bottom:8px;">1. リスナー作品を楽しむ 🎨</h4>
+          <p>トップの小さな作品アイコンを押すと、配信中に届いた作品を大きく見られます。一部の作品は、ヒントに答えると開ける合言葉つきです。</p>
         </div>
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">2. みんなの感想を見る・投稿する 📝</h4>
-          <p>スポットカードの「みんなの感想」から、その場所に寄せられた感想を確認できます。行ってみた場所があれば「行ってみた！」から投稿できます。</p>
+          <h4 style="color:var(--blue);margin-bottom:8px;">2. スポットを探す 🗺️</h4>
+          <p>POPOPOで紹介された場所や、リスナーおすすめの場所をカテゴリ別に見られます。気になる場所は「行きたい」を押すと、同じ端末の「行きたいリスト」に集められます。</p>
         </div>
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">3. フリートークで交流する 💬</h4>
-          <p>「フリートーク掲示板」では、POPOPOの感想、サイトへのご意見、今後のお出かけ予定など、なんでも自由につぶやけます。</p>
+          <h4 style="color:var(--blue);margin-bottom:8px;">3. みんなの感想を見る・投稿する 📝</h4>
+          <p>スポットカードの「みんなの感想」から、その場所に寄せられた感想を確認できます。読んだ感想には「見たよ」でリアクションできます。行ってみた場所があれば「行ってみた！」から投稿できます。</p>
         </div>
         <div style="margin-bottom:16px;">
           <h4 style="color:var(--blue);margin-bottom:8px;">4. 新しいスポットを提案する ✨</h4>
-          <p>「スポットを追加する」から、おすすめの場所を提案できます。追加された場所は、他のみんなも感想を書けるようになります！</p>
+          <p>「スポットを追加する」から、おすすめの場所を提案できます。参考URL・写真・情報を3件まで種類つきで登録できます。</p>
+        </div>
+        <div style="margin-bottom:16px;">
+          <h4 style="color:var(--blue);margin-bottom:8px;">5. フリートークで交流する 💬</h4>
+          <p>「フリートーク掲示板」では、POPOPOの感想、サイトへのご意見、今後のお出かけ予定など、自由につぶやけます。</p>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=20260426-2"></script>
+  <script src="app.js?v=20260426-4"></script>
 </body>
 </html>

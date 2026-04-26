@@ -125,6 +125,7 @@ const HERO_BACKDROP_ROTATE_MS = 12000;
 let visibleSpotCount = INITIAL_SPOT_COUNT;
 let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
+let showingWantList = false;
 let heroBackdropTimer = null;
 let heroBackdropVisibilityBound = false;
 let heroBackdropResizeTimer = null;
@@ -238,7 +239,8 @@ function mergeSuggestions(remoteSuggestions = latestRemoteSuggestions) {
 let globalLikes = {};
 
 async function saveLike(spotId) {
-  localLikes[spotId] = (localLikes[spotId] || 0) + 1;
+  if (!spotId || localLikes[spotId]) return false;
+  localLikes[spotId] = 1;
   localStorage.setItem('popopo_likes', JSON.stringify(localLikes));
   // 画面上のカウントを即座に増やす（リスナー発火までのラグ対策）
   const countSpan = document.getElementById(`like-count-${spotId}`);
@@ -250,6 +252,7 @@ async function saveLike(spotId) {
       await ref.set({ count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
     } catch (e) { console.warn(e); }
   }
+  return true;
 }
 
 function getSeenReviewCount(reviewId) {
@@ -842,6 +845,25 @@ function formatVisitDate(date) {
   return date ? new Date(date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
 }
 
+function getSavedSpotIds() {
+  return Object.keys(localLikes).filter(id => localLikes[id]);
+}
+
+function getActiveSpotCategory() {
+  return document.querySelector('.tab.active')?.dataset.cat || 'all';
+}
+
+function updateWantListButton() {
+  const btn = document.getElementById('wantListToggleBtn');
+  if (!btn) return;
+  const count = getSavedSpotIds().length;
+  btn.classList.toggle('active', showingWantList);
+  btn.setAttribute('aria-pressed', showingWantList ? 'true' : 'false');
+  btn.textContent = showingWantList
+    ? `すべてのスポットに戻る（${count}）`
+    : `🔖 行きたいリスト（${count}）`;
+}
+
 function renderSpotCards(cat = 'all') {
   const grid = document.getElementById('spotsGrid');
   const suggestedSpots = sortNewest(localSuggestions).map(s => ({
@@ -854,8 +876,23 @@ function renderSpotCards(cat = 'all') {
     ...suggestedSpots,
     ...SPOTS
   ];
-  const filtered = cat === 'all' ? allSpots : allSpots.filter(s => s.cat === cat);
+  let filtered = cat === 'all' ? allSpots : allSpots.filter(s => s.cat === cat);
+  if (showingWantList) {
+    filtered = filtered.filter(s => localLikes[s.id]);
+  }
   const visibleSpots = filtered.slice(0, visibleSpotCount);
+  updateWantListButton();
+  if (showingWantList && filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="spots-empty-card">
+        <strong>まだ行きたいスポットがありません</strong>
+        <span>気になるスポットの「🔖 行きたい」を押すと、ここに集まります。</span>
+      </div>
+    `;
+    setStatText('statSpots', allSpots.length);
+    updateMoreButton('spotsMoreBtn', 0, 0, INITIAL_SPOT_COUNT);
+    return;
+  }
   grid.innerHTML = visibleSpots.map(s => {
     const reviewCount = getSpotReviews(s.name).length;
     const resources = getSuggestionResources(s);
@@ -864,8 +901,10 @@ function renderSpotCards(cat = 'all') {
     <div class="spot-card" data-cat="${s.cat}" data-id="${s.id}">
       <div class="spot-card-top">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
-        <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}">
-          ${localLikes[s.id] ? '❤️' : '🤍'} <span id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
+        <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}" aria-pressed="${localLikes[s.id] ? 'true' : 'false'}">
+          <span class="spot-like-icon">${localLikes[s.id] ? '✅' : '🔖'}</span>
+          <span class="spot-like-label">${localLikes[s.id] ? '行きたい済み' : '行きたい'}</span>
+          <span class="spot-like-count" id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
         </button>
       </div>
       ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
@@ -886,9 +925,15 @@ function renderSpotCards(cat = 'all') {
   grid.querySelectorAll('.spot-like-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const sid = btn.dataset.id;
-      await saveLike(sid);
+      const saved = await saveLike(sid);
+      if (!saved) return;
       btn.classList.add('liked');
-      btn.querySelector('span').previousSibling.textContent = '❤️ ';
+      btn.setAttribute('aria-pressed', 'true');
+      const icon = btn.querySelector('.spot-like-icon');
+      const label = btn.querySelector('.spot-like-label');
+      if (icon) icon.textContent = '✅';
+      if (label) label.textContent = '行きたい済み';
+      updateWantListButton();
     });
   });
   grid.querySelectorAll('.spot-post-btn').forEach(btn => {
@@ -1493,12 +1538,19 @@ function bindEvents() {
     visibleSpotCount = INITIAL_SPOT_COUNT;
     renderSpotCards(tab.dataset.cat);
   });
+  const wantListToggleBtn = document.getElementById('wantListToggleBtn');
+  if (wantListToggleBtn) {
+    wantListToggleBtn.addEventListener('click', () => {
+      showingWantList = !showingWantList;
+      visibleSpotCount = INITIAL_SPOT_COUNT;
+      renderSpotCards(getActiveSpotCategory());
+    });
+  }
   document.getElementById('spotsMoreBtn').addEventListener('click', (e) => {
     visibleSpotCount = e.currentTarget.dataset.mode === 'collapse'
       ? INITIAL_SPOT_COUNT
       : visibleSpotCount + INITIAL_SPOT_COUNT;
-    const activeTab = document.querySelector('.tab.active');
-    renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+    renderSpotCards(getActiveSpotCategory());
   });
   document.getElementById('visitedMoreBtn').addEventListener('click', (e) => {
     visibleReviewCount = e.currentTarget.dataset.mode === 'collapse'
