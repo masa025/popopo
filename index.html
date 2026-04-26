@@ -31,7 +31,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260426-7">
+  <link rel="stylesheet" href="style.css?v=20260427-2">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -85,6 +85,13 @@
       <a href="about.html" class="nav-mobile-link">🌿 この場所を作った理由</a>
       <a href="how-to.html" class="nav-mobile-link" id="mobileHowToBtn">💡 使い方を見る</a>
     </div>
+    <div class="nav-discovery" id="weeklyDiscoveryCard" aria-label="今日の小さな発見">
+      <a id="weeklyDiscoveryLink" class="nav-discovery-link" href="#spots">
+        <span class="nav-discovery-kicker">今日の小さな発見</span>
+        <span id="weeklyDiscoveryTitle" class="nav-discovery-title">読み込み中</span>
+        <span id="weeklyDiscoveryText" class="nav-discovery-text">今日の小さな発見を準備しています</span>
+      </a>
+    </div>
   </nav>
 
   <!-- ヒーロー -->
@@ -123,6 +130,30 @@
             </button>
             <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-08.jpg" data-title="森の奥の小さな鹿" data-caption="木々の間に小さな鹿がそっと立つ、物語の一場面のようなスケッチ。手描きの線に、静かな空気が残る一枚です。" data-alt="森の中に小さな鹿が描かれたリスナー作品">
               <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-08.jpg" alt="森の中に小さな鹿が描かれたリスナー作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-09.jpg" data-title="POPOPO用語辞典 2" data-caption="見開きいっぱいにPOPOPOの言葉が並ぶ、辞典風作品の続編。ページをめくるように眺めたくなる一枚です。" data-alt="POPOPO内で生まれた言葉を辞典風にまとめた見開き作品" data-lock-answer="TimTam" data-lock-hint="ある配信者が牛乳の中に落としたお菓子は何でしょうか？">
+              <img class="hero-gallery-thumb is-document-thumb" src="assets/listener-gallery/listener-art-09.jpg" alt="POPOPO内で生まれた言葉を辞典風にまとめた見開き作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-10.jpg" data-title="POPOPO用語辞典 3" data-caption="ひとつの言葉が、配信の空気ごと閉じ込められたような辞典ページ。余白まで含めて味わい深い作品です。" data-alt="POPOPO用語辞典の追加ページ" data-lock-answer="TimTam" data-lock-hint="ある配信者が牛乳の中に落としたお菓子は何でしょうか？">
+              <img class="hero-gallery-thumb is-document-thumb" src="assets/listener-gallery/listener-art-10.jpg" alt="POPOPO用語辞典の追加ページ" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-11.jpg" data-title="小さな鹿のピアス" data-caption="手描きの小さな鹿が、銀色のアクセサリーになったような作品。静かな紙の質感もきれいです。" data-alt="小さな鹿をモチーフにしたピアス作品">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-11.jpg" alt="小さな鹿をモチーフにしたピアス作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-12.jpg" data-title="ポップな小さな鹿のピアス" data-caption="黄色い背景とカラフルなビーズで、小さな鹿がぱっと明るく見える一枚です。" data-alt="黄色い背景に置かれた小さな鹿のピアス作品">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-12.jpg" alt="黄色い背景に置かれた小さな鹿のピアス作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-13.jpg" data-title="かわいい雑貨風" data-caption="小さな鹿がタオルやポーチにそっと入った、雑貨カタログのようなやさしい作品です。" data-alt="小さな鹿をあしらった雑貨風のコラージュ作品">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-13.jpg" alt="小さな鹿をあしらった雑貨風のコラージュ作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-14.jpg" data-title="布の上の小さな鹿たち" data-caption="布の上に小さな鹿と葉の模様が広がる、手仕事のぬくもりを感じる作品です。" data-alt="布の上に小さな鹿と葉の模様が描かれた作品">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-14.jpg" alt="布の上に小さな鹿と葉の模様が描かれた作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-15.jpg" data-title="にんじん和紙テープ" data-caption="小さな鹿が和紙テープになった、思わず使ってみたくなる文具風の作品です。" data-alt="小さな鹿の絵が並ぶ和紙テープ作品">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-15.jpg" alt="小さな鹿の絵が並ぶ和紙テープ作品" loading="lazy">
+            </button>
+            <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-16.jpg" data-title="根元の生命スニーカー" data-caption="白いスニーカーに小さな鹿が描かれた、歩くたびに物語が始まりそうな作品です。" data-alt="白いスニーカーに小さな鹿が描かれた作品">
+              <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-16.jpg" alt="白いスニーカーに小さな鹿が描かれた作品" loading="lazy">
             </button>
             <button type="button" class="hero-gallery-item" data-gallery-item data-image="assets/listener-gallery/listener-art-01.jpg" data-title="小さな鹿たち" data-caption="やわらかな鉛筆線で、4頭の小さな鹿がのびのび並ぶ一枚。" data-alt="4頭の鹿が描かれた鉛筆スケッチ" aria-hidden="true" tabindex="-1">
               <img class="hero-gallery-thumb" src="assets/listener-gallery/listener-art-01.jpg" alt="" loading="lazy">
@@ -198,6 +229,10 @@
       <div class="spot-list-actions">
         <button type="button" class="want-list-toggle" id="wantListToggleBtn" aria-pressed="false">🔖 行きたいリスト（0）</button>
       </div>
+      <div class="want-list-hint" id="wantListHint" hidden>
+        <span>行ってみた場所があれば、感想を残してみませんか？</span>
+        <button type="button" class="btn-outline" id="wantListPostBtn">感想を投稿する</button>
+      </div>
       <div class="spots-grid" id="spotsGrid"></div>
       <div class="section-actions">
         <button type="button" class="btn-outline btn-section-more" id="spotsMoreBtn">もっと見る</button>
@@ -228,6 +263,13 @@
           <p class="sec-sub">お出かけの予定、POPOPOの感想、サイトへのご意見など自由に語り合いましょう！</p>
         </div>
         <button class="btn-primary" id="openChatModalBtn" style="margin-bottom:20px;">✏️ つぶやく</button>
+      </div>
+      <div class="daily-prompt-card" id="dailyPromptCard">
+        <div>
+          <p class="daily-prompt-kicker">今日のお題</p>
+          <p class="daily-prompt-text" id="dailyPromptText">最近気になっている場所はありますか？</p>
+        </div>
+        <button type="button" class="btn-outline" id="dailyPromptBtn">このお題でつぶやく</button>
       </div>
 
       <div class="posts-empty" id="chatsEmpty" style="display:block;">
@@ -577,6 +619,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260426-7"></script>
+  <script src="app.js?v=20260427-2"></script>
 </body>
 </html>

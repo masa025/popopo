@@ -26,6 +26,21 @@ Firestore → **「ルール」** タブ → 以下を貼り付けて **「公�
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function hasOnly(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+    function validCountCreate(fields) {
+      return hasOnly(fields)
+             && request.resource.data.count is int
+             && request.resource.data.count == 1;
+    }
+    function validCountIncrement(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields)
+             && request.resource.data.count is int
+             && resource.data.count is int
+             && request.resource.data.count == resource.data.count + 1;
+    }
+
     match /posts/{doc} {
       allow read: if true;
       allow create: if request.resource.data.comment.size() <= 200
@@ -37,8 +52,17 @@ service cloud.firestore {
     match /chats/{document=**} {
       allow read, create: if true;
     }
+    match /likes/page_views {
+      allow read: if true;
+      allow create: if validCountCreate(['count', 'updatedAt'])
+                    && request.resource.data.updatedAt == request.time;
+      allow update: if validCountIncrement(['count', 'updatedAt'])
+                    && request.resource.data.updatedAt == request.time;
+    }
     match /likes/{doc} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if doc != 'page_views' && validCountCreate(['count']);
+      allow update: if doc != 'page_views' && validCountIncrement(['count']);
     }
   }
 }

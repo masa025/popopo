@@ -89,6 +89,7 @@ let db = null;
 let localPosts = JSON.parse(localStorage.getItem('popopo_posts') || '[]');
 let localLikes = JSON.parse(localStorage.getItem('popopo_likes') || '{}');
 let localSeenReviews = JSON.parse(localStorage.getItem('popopo_seen_reviews') || '{}');
+let localChatReactions = JSON.parse(localStorage.getItem('popopo_chat_reactions') || '{}');
 let localSuggestions = JSON.parse(localStorage.getItem('popopo_suggestions') || '[]');
 let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 let selectedRating = 0;
@@ -126,6 +127,28 @@ const KIRIBAN_ROUND_INTERVAL = 100;
 const KIRIBAN_MIN_COUNT = 100;
 const INTRO_STORY_STORAGE_KEY = 'popopo_intro_story_seen_v1';
 const INTRO_STORY_SLIDE_MS = 5200;
+const DAILY_PROMPTS = [
+  '最近、気になっている場所はありますか？',
+  '誰かにそっとすすめたいお店はありますか？',
+  '次の休日に行ってみたい場所はどこですか？',
+  'POPOPOを聴きながら思い出した場所はありますか？',
+  '実際に行ってみて、予想よりよかった場所はありますか？',
+  'まだ行けていないけれど、気になっている場所はありますか？',
+  '今日の気分に合うお出かけ先を挙げるならどこですか？',
+  'ひとりでふらっと行きたい場所はありますか？',
+  '誰かと一緒に行ったら楽しそうな場所はありますか？',
+  '最近食べてみたいものはありますか？',
+  '雨の日でも行きたい場所はありますか？',
+  'もう一度行きたい場所はありますか？',
+  '誰かの投稿を見て気になった場所はありますか？',
+  'POPOPOリスナーに聞いてみたいおすすめはありますか？',
+  'このサイトで、もっと見やすくしたいところはありますか？',
+  'このサイトに追加されたら便利だと思う機能はありますか？',
+  'スポットや感想の表示で、分かりにくいところはありますか？',
+  '初めて来た人に向けて、あると親切だと思う案内はありますか？',
+  '投稿しやすくなるために、どんな工夫があるとよさそうですか？',
+  'POPOPOコミュニティらしい遊び心のアイデアはありますか？'
+];
 let visibleSpotCount = INITIAL_SPOT_COUNT;
 let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
@@ -135,9 +158,16 @@ let heroBackdropVisibilityBound = false;
 let heroBackdropResizeTimer = null;
 let heroBackdropResizeBound = false;
 let heroGalleryResizeTimer = null;
+let heroGalleryResizeBound = false;
+let heroGalleryMotionFrame = null;
+let heroGalleryLastFrame = 0;
+let heroGalleryLoopDistance = 0;
+let heroGalleryOffset = 0;
+let heroGalleryIsDragging = false;
+let heroGallerySuppressClick = false;
 let introStoryTimer = null;
 let introStoryIndex = 0;
-let heroGalleryResizeBound = false;
+let currentDiscoveryItem = null;
 let pendingGalleryUnlock = null;
 
 function isMobileHeroLayout() {
@@ -153,6 +183,100 @@ function setStatText(id, value) {
   if (!el) return;
   el.textContent = value;
   el.classList.remove('is-loading');
+}
+
+function normalizeHeroGalleryOffset(offset) {
+  if (!heroGalleryLoopDistance) return offset;
+  const distance = heroGalleryLoopDistance;
+  let nextOffset = offset;
+  while (nextOffset <= -distance) nextOffset += distance;
+  while (nextOffset > 0) nextOffset -= distance;
+  return nextOffset;
+}
+
+function applyHeroGalleryOffset(track) {
+  if (!track) return;
+  track.style.setProperty('--hero-gallery-offset', `${heroGalleryOffset}px`);
+}
+
+function startHeroGalleryMotion() {
+  if (heroGalleryMotionFrame) return;
+  heroGalleryLastFrame = performance.now();
+  const tick = (time) => {
+    const marquee = document.getElementById('heroGalleryMarquee');
+    const track = marquee?.querySelector('.hero-gallery-track');
+    if (!marquee || !track) {
+      heroGalleryMotionFrame = null;
+      return;
+    }
+    const delta = Math.min(time - heroGalleryLastFrame, 48);
+    heroGalleryLastFrame = time;
+
+    if (!heroGalleryIsDragging && !document.hidden && !marquee.matches(':hover')) {
+      heroGalleryOffset = normalizeHeroGalleryOffset(heroGalleryOffset - delta * 0.032);
+      applyHeroGalleryOffset(track);
+    }
+    heroGalleryMotionFrame = requestAnimationFrame(tick);
+  };
+  heroGalleryMotionFrame = requestAnimationFrame(tick);
+}
+
+function bindHeroGalleryDrag(marquee, track) {
+  if (!marquee || !track || marquee.dataset.dragBound === 'true') return;
+  let startX = 0;
+  let startOffset = 0;
+  let moved = false;
+  let pressItem = null;
+
+  const stopDrag = (e) => {
+    if (!heroGalleryIsDragging) return;
+    heroGalleryIsDragging = false;
+    marquee.classList.remove('is-dragging');
+    if (!moved && pressItem) {
+      heroGallerySuppressClick = true;
+      openGalleryItem(pressItem);
+      window.setTimeout(() => { heroGallerySuppressClick = false; }, 120);
+    } else if (moved) {
+      heroGallerySuppressClick = true;
+      window.setTimeout(() => { heroGallerySuppressClick = false; }, 120);
+    }
+    pressItem = null;
+    try {
+      marquee.releasePointerCapture(e.pointerId);
+    } catch (err) {
+      // Pointer capture may already be released on Safari.
+    }
+  };
+
+  marquee.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    heroGalleryIsDragging = true;
+    heroGallerySuppressClick = false;
+    moved = false;
+    startX = e.clientX;
+    startOffset = heroGalleryOffset;
+    pressItem = e.target.closest('.hero-gallery-item');
+    marquee.classList.add('is-dragging');
+    try {
+      marquee.setPointerCapture(e.pointerId);
+    } catch (err) {
+      // Some older mobile browsers do not support capture here.
+    }
+  });
+
+  marquee.addEventListener('pointermove', (e) => {
+    if (!heroGalleryIsDragging) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    heroGalleryOffset = normalizeHeroGalleryOffset(startOffset + dx);
+    applyHeroGalleryOffset(track);
+    if (e.cancelable) e.preventDefault();
+  });
+
+  marquee.addEventListener('pointerup', stopDrag);
+  marquee.addEventListener('pointercancel', stopDrag);
+  marquee.addEventListener('lostpointercapture', stopDrag);
+  marquee.dataset.dragBound = 'true';
 }
 
 function setupHeroGallery() {
@@ -189,7 +313,12 @@ function setupHeroGallery() {
   }
 
   track.replaceChildren(fragment);
+  heroGalleryLoopDistance = loopDistance;
+  heroGalleryOffset = normalizeHeroGalleryOffset(heroGalleryOffset);
   track.style.setProperty('--hero-gallery-loop-distance', `${loopDistance}px`);
+  applyHeroGalleryOffset(track);
+  bindHeroGalleryDrag(marquee, track);
+  startHeroGalleryMotion();
 
   if (!heroGalleryResizeBound) {
     window.addEventListener('resize', () => {
@@ -295,6 +424,49 @@ async function saveSeenReview(reviewId) {
   }
 }
 
+function getChatReactionId(chat = {}, type = 'thanks') {
+  const key = chat.clientId || chat.id || [
+    chat.nickname,
+    chat.message,
+    chat.timestamp
+  ].map(normalizeDedupeValue).join('|');
+  return `chat_${type}_${hashString(key)}`;
+}
+
+function getChatReactionCount(reactionId) {
+  return globalLikes[reactionId] || (localChatReactions[reactionId] ? 1 : 0);
+}
+
+function updateChatReactionButton(reactionId) {
+  const count = getChatReactionCount(reactionId);
+  const reacted = Boolean(localChatReactions[reactionId]);
+  document.querySelectorAll('.chat-reaction-btn').forEach(btn => {
+    if (btn.dataset.chatReactionId !== reactionId) return;
+    btn.classList.toggle('is-reacted', reacted);
+    btn.setAttribute('aria-pressed', reacted ? 'true' : 'false');
+    const text = btn.querySelector('.chat-reaction-text');
+    const countEl = btn.querySelector('.chat-reaction-count');
+    if (text) text.textContent = reacted ? btn.dataset.reactedLabel : btn.dataset.defaultLabel;
+    if (countEl) countEl.textContent = count;
+  });
+}
+
+async function saveChatReaction(reactionId) {
+  if (!reactionId || localChatReactions[reactionId]) return;
+  localChatReactions[reactionId] = Date.now();
+  localStorage.setItem('popopo_chat_reactions', JSON.stringify(localChatReactions));
+  globalLikes[reactionId] = (globalLikes[reactionId] || 0) + 1;
+  updateChatReactionButton(reactionId);
+
+  if (db) {
+    try {
+      await db.collection('likes').doc(reactionId).set({
+        count: firebase.firestore.FieldValue.increment(1)
+      }, { merge: true });
+    } catch (e) { console.warn(e); }
+  }
+}
+
 function listenLikes() {
   if (db) {
     db.collection('likes').onSnapshot(snap => {
@@ -304,6 +476,7 @@ function listenLikes() {
         const countSpan = document.getElementById(`like-count-${doc.id}`);
         if (countSpan) countSpan.textContent = globalLikes[doc.id];
         if (doc.id.startsWith('review_seen_')) updateSeenReviewButton(doc.id);
+        if (doc.id.startsWith('chat_')) updateChatReactionButton(doc.id);
       });
     });
   }
@@ -335,7 +508,7 @@ function mergeChats(remoteChats = latestRemoteChats) {
 
 function updateChatsView(chats = null) {
   if (Array.isArray(chats)) allChats = chats;
-  const currentChats = Array.isArray(chats) ? chats : (allChats.length ? allChats : mergeChats());
+  const currentChats = Array.isArray(chats) ? chats : mergeChats();
   renderChats(currentChats);
   setStatText('statPosts', currentChats.length);
 }
@@ -404,10 +577,15 @@ function listenSuggestions(callback) {
 async function trackPageView() {
   const viewsEl = document.getElementById('statViews');
   if (db) {
+    let hasViewCount = false;
     try {
       const ref = db.collection('likes').doc('page_views');
       ref.onSnapshot(doc => {
+        hasViewCount = true;
         setStatText('statViews', doc.exists ? (doc.data().count || 0) : 0);
+      }, e => {
+        console.warn('Page view read failed', e);
+        if (!hasViewCount) setStatText('statViews', '-');
       });
       if (!sessionStorage.getItem('popopo_viewed')) {
         const newCount = await db.runTransaction(async transaction => {
@@ -425,7 +603,9 @@ async function trackPageView() {
       }
     } catch (e) {
       console.warn('Page view tracking failed', e);
-      setStatText('statViews', '-');
+      if (!hasViewCount && (!viewsEl || viewsEl.textContent === '読み込み中')) {
+        setStatText('statViews', '-');
+      }
     }
   } else {
     setStatText('statViews', 'Demo');
@@ -554,6 +734,136 @@ function sortNewest(items = []) {
   return [...items].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
+function getDayIndex() {
+  const today = new Date();
+  return Math.floor(new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() / 86400000);
+}
+
+function getDailyPrompt() {
+  return DAILY_PROMPTS[getDayIndex() % DAILY_PROMPTS.length];
+}
+
+function renderDailyPrompt() {
+  const text = document.getElementById('dailyPromptText');
+  if (text) text.textContent = getDailyPrompt();
+}
+
+function getDiscoveryItems() {
+  const suggestionItems = localSuggestions.map(s => ({
+    kind: 'spot',
+    id: s.id || s.clientId || '',
+    spotName: s.name,
+    title: s.name,
+    text: s.reason || `${s.area || 'どこか'}で気になっているスポットです。`,
+    href: '#spots',
+    action: 'スポットを見る'
+  }));
+  const spotItems = SPOTS.map(s => ({
+    kind: 'spot',
+    id: s.id,
+    spotName: s.name,
+    title: s.name,
+    text: s.memo || `${s.area}のおすすめスポットです。`,
+    href: '#spots',
+    action: 'スポットを見る'
+  }));
+  const reviewItems = sortNewest(dedupePosts(allPosts)).slice(0, 12).map(p => ({
+    kind: 'review',
+    id: p.id || p.clientId || '',
+    spotName: p.spotName,
+    title: p.spotName,
+    text: p.comment,
+    href: '#visited',
+    action: '感想を見る'
+  }));
+  return [...reviewItems, ...suggestionItems, ...spotItems].filter(item => item.title && item.text);
+}
+
+function renderWeeklyDiscovery() {
+  const card = document.getElementById('weeklyDiscoveryCard');
+  const title = document.getElementById('weeklyDiscoveryTitle');
+  const text = document.getElementById('weeklyDiscoveryText');
+  const link = document.getElementById('weeklyDiscoveryLink');
+  if (!card || !title || !text || !link) return;
+  const items = getDiscoveryItems();
+  if (!items.length) return;
+  const item = items[(getDayIndex() * 17) % items.length];
+  currentDiscoveryItem = item;
+  title.textContent = item.title;
+  text.textContent = item.text.length > 92 ? `${item.text.slice(0, 92)}...` : item.text;
+  link.href = item.href;
+  link.dataset.discoveryKind = item.kind;
+  link.dataset.discoveryId = item.id || '';
+  link.dataset.discoverySpot = item.spotName || item.title;
+  link.setAttribute('aria-label', `${item.title}を開く`);
+}
+
+function setActiveSpotCategory(cat = 'all') {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.cat === cat);
+  });
+}
+
+function getSuggestedSpotItems() {
+  return sortNewest(localSuggestions).map(s => ({
+    id: s.id || s.clientId || '',
+    cat: s.cat,
+    catLabel: getCatLabel(s.cat),
+    name: s.name,
+    area: s.area,
+    pref: '',
+    url: s.url || '',
+    resources: getSuggestionResources(s),
+    memo: s.reason,
+    suggested: true,
+    suggestedBy: s.nickname || '匿名リスナー'
+  }));
+}
+
+function getAllSpotItemsForDisplay() {
+  return [
+    ...getSuggestedSpotItems(),
+    ...SPOTS
+  ];
+}
+
+function highlightDiscoveryElement(el) {
+  if (!el) return;
+  document.querySelectorAll('.is-discovery-target').forEach(node => {
+    node.classList.remove('is-discovery-target');
+  });
+  el.classList.add('is-discovery-target');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  window.setTimeout(() => el.classList.remove('is-discovery-target'), 2800);
+}
+
+function openDiscoveryItem(item = currentDiscoveryItem) {
+  if (!item) return;
+  if (item.kind === 'review') {
+    openSpotReviews(item.spotName || item.title);
+    return;
+  }
+
+  showingWantList = false;
+  setActiveSpotCategory('all');
+  const allSpots = getAllSpotItemsForDisplay();
+  const spotIndex = allSpots.findIndex(spot => {
+    return spot.id === item.id || spot.name === item.spotName || spot.name === item.title;
+  });
+  visibleSpotCount = spotIndex >= 0
+    ? Math.max(INITIAL_SPOT_COUNT, Math.ceil((spotIndex + 1) / INITIAL_SPOT_COUNT) * INITIAL_SPOT_COUNT)
+    : Math.max(INITIAL_SPOT_COUNT, allSpots.length);
+  renderSpotCards('all');
+  window.setTimeout(() => {
+    const cards = Array.from(document.querySelectorAll('.spot-card'));
+    const target = cards.find(card => {
+      const name = card.querySelector('.spot-name')?.textContent || '';
+      return card.dataset.id === item.id || name === (item.spotName || item.title);
+    });
+    highlightDiscoveryElement(target || document.getElementById('spots'));
+  }, 80);
+}
+
 function normalizeDedupeValue(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
@@ -654,6 +964,18 @@ function dedupePosts(posts = []) {
 function getReviewReactionId(item = {}, scope = 'review') {
   const fingerprint = getReviewDisplayFingerprint(item);
   return `review_seen_${hashString(`${scope}|${fingerprint}`)}`;
+}
+
+function renderChatReactionButton(reactionId, icon, label, reactedLabel) {
+  const reacted = Boolean(localChatReactions[reactionId]);
+  const count = getChatReactionCount(reactionId);
+  return `
+    <button type="button" class="chat-reaction-btn ${reacted ? 'is-reacted' : ''}" data-chat-reaction-id="${escHtml(reactionId)}" data-default-label="${escHtml(label)}" data-reacted-label="${escHtml(reactedLabel)}" aria-pressed="${reacted ? 'true' : 'false'}">
+      <span>${icon}</span>
+      <span class="chat-reaction-text">${reacted ? escHtml(reactedLabel) : escHtml(label)}</span>
+      <span class="chat-reaction-count">${count}</span>
+    </button>
+  `;
 }
 
 function renderSeenReviewButton(reviewId) {
@@ -991,24 +1313,22 @@ function updateWantListButton() {
     : `🔖 行きたいリスト（${count}）`;
 }
 
+function updateWantListHint(visibleSavedCount = 0) {
+  const hint = document.getElementById('wantListHint');
+  if (!hint) return;
+  hint.hidden = !(showingWantList && visibleSavedCount > 0);
+}
+
 function renderSpotCards(cat = 'all') {
   const grid = document.getElementById('spotsGrid');
-  const suggestedSpots = sortNewest(localSuggestions).map(s => ({
-    id: s.id, cat: s.cat, catLabel: getCatLabel(s.cat),
-    name: s.name, area: s.area, pref: '',
-    url: s.url || '', resources: getSuggestionResources(s), memo: s.reason, suggested: true,
-    suggestedBy: s.nickname || '匿名リスナー'
-  }));
-  const allSpots = [
-    ...suggestedSpots,
-    ...SPOTS
-  ];
+  const allSpots = getAllSpotItemsForDisplay();
   let filtered = cat === 'all' ? allSpots : allSpots.filter(s => s.cat === cat);
   if (showingWantList) {
     filtered = filtered.filter(s => localLikes[s.id]);
   }
   const visibleSpots = filtered.slice(0, visibleSpotCount);
   updateWantListButton();
+  updateWantListHint(filtered.length);
   if (showingWantList && filtered.length === 0) {
     grid.innerHTML = `
       <div class="spots-empty-card">
@@ -1185,6 +1505,8 @@ function renderChats(chats) {
     const dateStr = new Date(chat.timestamp).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     const nick = chat.nickname || '匿名リスナー';
     const initial = Array.from(nick)[0].toUpperCase();
+    const thanksId = getChatReactionId(chat, 'thanks');
+    const curiousId = getChatReactionId(chat, 'curious');
     return `
       <div class="chat-card">
         <div class="chat-avatar">${escHtml(initial)}</div>
@@ -1194,6 +1516,10 @@ function renderChats(chats) {
             <span class="chat-date">${dateStr}</span>
           </div>
           <div class="chat-msg">${escHtml(chat.message)}</div>
+          <div class="chat-reactions">
+            ${renderChatReactionButton(thanksId, '💐', 'ありがとう', 'ありがとう済み')}
+            ${renderChatReactionButton(curiousId, '👀', '気になる', '気になる済み')}
+          </div>
         </div>
       </div>
     `;
@@ -1228,9 +1554,15 @@ function closeAddSpotModal() {
 }
 
 // 掲示板投稿モーダル
-function openChatModal() {
+function openChatModal(prefill = '') {
   document.getElementById('chatModal').classList.add('is-open');
   document.body.style.overflow = 'hidden';
+  const message = document.getElementById('cMsg');
+  if (prefill && message && !message.value.trim()) {
+    message.value = prefill;
+    message.focus();
+    message.setSelectionRange(message.value.length, message.value.length);
+  }
 }
 function closeChatModal() {
   document.getElementById('chatModal').classList.remove('is-open');
@@ -1329,6 +1661,11 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
 
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
+}
+
+function openGalleryItem(card) {
+  if (!card) return;
+  openGalleryModal(card.dataset.image, card.dataset.title, card.dataset.caption, card.dataset.alt, card.dataset.lockAnswer, card.dataset.lockHint);
 }
 
 function submitGalleryUnlock() {
@@ -1440,7 +1777,8 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     closeAddSpotModal();
     const activeTab = document.querySelector('.tab.active');
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
-    showToast('スポットを追加しました！ありがとうございます ✨');
+    renderWeeklyDiscovery();
+    showToast('スポットを追加しました！誰かの次の休日のヒントになります。');
   } catch(err) {
     alert('追加に失敗しました。もう一度お試しください。');
   } finally {
@@ -1464,7 +1802,7 @@ document.getElementById('chatForm').addEventListener('submit', async (e) => {
     updateChatsView();
     closeChatModal();
     document.getElementById('chatForm').reset();
-    showToast('つぶやきを投稿しました！ 🎉');
+    showToast('投稿しました！あなたの一言が、会話のきっかけになります。');
   } catch(err) {
     alert('エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
@@ -1532,8 +1870,9 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
     renderVisited(allPosts);
     const activeTab = document.querySelector('.tab.active');
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+    renderWeeklyDiscovery();
     closeModal();
-    showToast('投稿しました！ありがとうございます 🎉');
+    showToast('感想を投稿しました！あなたの体験が、誰かの背中を押します。');
   } catch (err) {
     console.error(err);
     alert('投稿に失敗しました。もう一度お試しください。');
@@ -1558,7 +1897,8 @@ function showToast(msg) {
     background:var(--blue);color:#fff;font-weight:700;
     padding:14px 28px;border-radius:50px;
     box-shadow:0 8px 32px rgba(91,141,238,0.4);z-index:9999;
-    animation:fadeUp 0.3s ease;font-size:0.92rem;white-space:nowrap;
+    animation:fadeUp 0.3s ease;font-size:0.92rem;max-width:min(92vw,560px);
+    text-align:center;line-height:1.6;
   `;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
@@ -1585,7 +1925,23 @@ function bindEvents() {
   });
   
   const openChatBtn = document.getElementById('openChatModalBtn');
-  if (openChatBtn) openChatBtn.addEventListener('click', openChatModal);
+  if (openChatBtn) openChatBtn.addEventListener('click', () => openChatModal());
+  const dailyPromptBtn = document.getElementById('dailyPromptBtn');
+  if (dailyPromptBtn) dailyPromptBtn.addEventListener('click', () => {
+    openChatModal(`今日のお題：${getDailyPrompt()}\n`);
+  });
+  const wantListPostBtn = document.getElementById('wantListPostBtn');
+  if (wantListPostBtn) wantListPostBtn.addEventListener('click', () => openModal());
+  const weeklyDiscoveryLink = document.getElementById('weeklyDiscoveryLink');
+  if (weeklyDiscoveryLink) weeklyDiscoveryLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    openDiscoveryItem({
+      kind: weeklyDiscoveryLink.dataset.discoveryKind,
+      id: weeklyDiscoveryLink.dataset.discoveryId || '',
+      spotName: weeklyDiscoveryLink.dataset.discoverySpot || '',
+      title: document.getElementById('weeklyDiscoveryTitle')?.textContent || ''
+    });
+  });
   const chatClose = document.getElementById('chatModalClose');
   if (chatClose) chatClose.addEventListener('click', closeChatModal);
   const chatCancel = document.getElementById('chatCancelBtn');
@@ -1596,9 +1952,13 @@ function bindEvents() {
   });
   const listenerGallery = document.getElementById('heroGalleryMarquee');
   if (listenerGallery) listenerGallery.addEventListener('click', (e) => {
+    if (heroGallerySuppressClick) {
+      e.preventDefault();
+      return;
+    }
     const card = e.target.closest('.hero-gallery-item');
     if (!card) return;
-    openGalleryModal(card.dataset.image, card.dataset.title, card.dataset.caption, card.dataset.alt, card.dataset.lockAnswer, card.dataset.lockHint);
+    openGalleryItem(card);
   });
   const galleryModalClose = document.getElementById('galleryModalClose');
   if (galleryModalClose) galleryModalClose.addEventListener('click', closeGalleryModal);
@@ -1657,6 +2017,11 @@ function bindEvents() {
     const seenBtn = e.target.closest('.review-seen-btn');
     if (!seenBtn) return;
     saveSeenReview(seenBtn.dataset.reviewSeenId);
+  });
+  document.addEventListener('click', (e) => {
+    const reactionBtn = e.target.closest('.chat-reaction-btn');
+    if (!reactionBtn) return;
+    saveChatReaction(reactionBtn.dataset.chatReactionId);
   });
 
   document.getElementById('modalClose').addEventListener('click', closeModal);
@@ -1747,6 +2112,7 @@ function init() {
     localStorage.setItem('popopo_suggestions', JSON.stringify(localSuggestions));
     const activeTab = document.querySelector('.tab.active');
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+    renderWeeklyDiscovery();
   });
 
   // 投稿をリッスン
@@ -1755,6 +2121,7 @@ function init() {
     renderVisited(posts); // リスナーの投稿は「みんなの感想」セクションに追加
     const activeTab = document.querySelector('.tab.active');
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+    renderWeeklyDiscovery();
   });
 
   // フリートークをリッスン
@@ -1765,6 +2132,8 @@ function init() {
   listenLikes(); // いいね数をリアルタイム同期
 
   trackPageView();
+  renderDailyPrompt();
+  renderWeeklyDiscovery();
   setupHeroGallery();
   renderHeroBackdrop();
   startHeroBackdropRotation();
