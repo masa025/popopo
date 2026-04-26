@@ -280,8 +280,7 @@ async function saveSeenReview(reviewId) {
   if (db) {
     try {
       await db.collection('likes').doc(reviewId).set({
-        count: firebase.firestore.FieldValue.increment(1),
-        kind: 'review_seen'
+        count: firebase.firestore.FieldValue.increment(1)
       }, { merge: true });
     } catch (e) { console.warn(e); }
   }
@@ -523,9 +522,8 @@ function dedupePosts(posts = []) {
 }
 
 function getReviewReactionId(item = {}, scope = 'review') {
-  const rawId = item.clientId || item.id || '';
   const fingerprint = getReviewDisplayFingerprint(item);
-  return `review_seen_${hashString(`${scope}|${rawId}|${fingerprint}`)}`;
+  return `review_seen_${hashString(`${scope}|${fingerprint}`)}`;
 }
 
 function renderSeenReviewButton(reviewId) {
