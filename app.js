@@ -122,6 +122,8 @@ const HERO_CARD_SLOTS_MOBILE = [
   { top: '58%', right: '12%', width: '116px', rot: '4deg', scale: '0.86', delay: '-3s' }
 ];
 const HERO_BACKDROP_ROTATE_MS = 12000;
+const KIRIBAN_ROUND_INTERVAL = 100;
+const KIRIBAN_MIN_COUNT = 100;
 let visibleSpotCount = INITIAL_SPOT_COUNT;
 let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
@@ -404,8 +406,18 @@ async function trackPageView() {
         setStatText('statViews', doc.exists ? (doc.data().count || 0) : 0);
       });
       if (!sessionStorage.getItem('popopo_viewed')) {
-        await ref.set({ count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+        const newCount = await db.runTransaction(async transaction => {
+          const doc = await transaction.get(ref);
+          const currentCount = doc.exists ? (Number(doc.data().count) || 0) : 0;
+          const nextCount = currentCount + 1;
+          transaction.set(ref, {
+            count: nextCount,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          return nextCount;
+        });
         sessionStorage.setItem('popopo_viewed', 'true');
+        showKiribanModalIfNeeded(newCount);
       }
     } catch (e) {
       console.warn('Page view tracking failed', e);
@@ -413,6 +425,53 @@ async function trackPageView() {
     }
   } else {
     setStatText('statViews', 'Demo');
+  }
+}
+
+function isKiribanCount(count) {
+  if (!Number.isInteger(count) || count < KIRIBAN_MIN_COUNT) return false;
+  if (count % KIRIBAN_ROUND_INTERVAL === 0) return true;
+  const countText = String(count);
+  return countText.length >= 3 && new Set(countText).size === 1;
+}
+
+function showKiribanModalIfNeeded(count) {
+  if (!isKiribanCount(count)) return;
+  const modal = document.getElementById('kiribanModal');
+  const countEl = document.getElementById('kiribanCount');
+  if (!modal || !countEl) return;
+  const storageKey = `popopo_kiriban_${count}`;
+  if (sessionStorage.getItem(storageKey)) return;
+  sessionStorage.setItem(storageKey, 'true');
+  countEl.textContent = count.toLocaleString('ja-JP');
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeKiribanModal() {
+  const modal = document.getElementById('kiribanModal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
+async function shareKiriban() {
+  const count = document.getElementById('kiribanCount')?.textContent || '';
+  const shareText = `POPOPO お出かけマップで訪問者数 ${count} のキリ番を見ました！`;
+  const shareData = {
+    title: 'POPOPO キリ番',
+    text: `${shareText}\nPOPOPOで共有しましょう。`,
+    url: window.location.href
+  };
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      return;
+    }
+    await navigator.clipboard?.writeText(`${shareData.text}\n${shareData.url}`);
+    showToast('共有用の文章をコピーしました');
+  } catch (e) {
+    console.warn('Kiriban share failed', e);
   }
 }
 
@@ -1485,6 +1544,16 @@ function bindEvents() {
   if (galleryModal) galleryModal.addEventListener('click', (e) => {
     if (e.target === galleryModal) closeGalleryModal();
   });
+  const kiribanModal = document.getElementById('kiribanModal');
+  if (kiribanModal) kiribanModal.addEventListener('click', (e) => {
+    if (e.target === kiribanModal) closeKiribanModal();
+  });
+  ['kiribanClose', 'kiribanDismissBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', closeKiribanModal);
+  });
+  const kiribanShare = document.getElementById('kiribanShareBtn');
+  if (kiribanShare) kiribanShare.addEventListener('click', shareKiriban);
   document.getElementById('spotReviewsClose').addEventListener('click', closeSpotReviews);
   document.getElementById('spotReviewsCancelBtn').addEventListener('click', closeSpotReviews);
   document.getElementById('spotReviewsPostBtn').addEventListener('click', () => {
@@ -1528,7 +1597,7 @@ function bindEvents() {
     });
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); }
+    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); closeKiribanModal(); }
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
