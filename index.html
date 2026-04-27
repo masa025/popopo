@@ -222,6 +222,23 @@
             <span style="color:var(--text-muted); font-size:0.85rem;">取得中...</span>
           </div>
         </div>
+        <button class="weather-settings-btn" id="weatherSettingsBtn" aria-label="表示する都市を設定">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 天気 都市選択モーダル -->
+  <div class="weather-city-modal" id="weatherCityModal" role="dialog" aria-modal="true" aria-labelledby="weatherCityTitle">
+    <div class="weather-city-box">
+      <div class="weather-city-head">
+        <h3 id="weatherCityTitle" class="weather-city-title">🌤️ 表示する都市を選択</h3>
+        <button class="modal-close" id="weatherCityClose" aria-label="閉じる">✕</button>
+      </div>
+      <p class="weather-city-hint">選んだ都市の天気が上のバーに表示されます（次回も記憶します）</p>
+      <div class="weather-city-grid" id="weatherCityGrid"><!-- JSで生成 --></div>
+      <div class="weather-city-actions">
+        <button type="button" class="btn-ghost" id="weatherCityCancelBtn">キャンセル</button>
+        <button type="button" class="btn-primary" id="weatherCitySaveBtn">保存する ✓</button>
       </div>
     </div>
   </div>
@@ -639,8 +656,8 @@
   </div>
 
   <!-- フローティング「つぶやく」ボタン（PC専用） -->
-  <button class="fab-btn" id="fabChatBtn" aria-label="フリートークでつぶやく" style="position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; background:var(--blue); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 8px 24px rgba(91,141,238,0.4); z-index:900; transition:transform 0.3s, box-shadow 0.3s; cursor:pointer;">
-    <span class="fab-icon" style="transform:translateY(-2px);">💬</span>
+  <button class="fab-btn" id="fabChatBtn" aria-label="フリートークでつぶやく">
+    <span class="fab-icon">💬</span>
   </button>
 
   <!-- スマホ用 Bottom Navigation Bar -->

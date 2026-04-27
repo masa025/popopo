@@ -464,6 +464,25 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   border-color: var(--blue);
   transform: translateY(-2px);
 }
+.fab-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 8px 24px rgba(91,141,238,0.4);
+  z-index: 900;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  border: none;
+}
 .fab-btn:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 28px rgba(91,141,238,0.5);
@@ -477,8 +496,112 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     padding: 8px 12px;
   }
   .fab-btn {
-    display: none; /* スマホはbottom navの「つぶやく」ボタンで代替 */
+    display: none !important; /* スマホはbottom navの「つぶやく」で代替 */
   }
+}
+
+/* 天気バー 都市設定ボタン */
+.weather-settings-btn {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+.weather-settings-btn:hover {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+/* 天気 都市選択モーダル */
+.weather-city-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(30,40,69,0.55);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.weather-city-modal.is-open {
+  display: flex;
+}
+.weather-city-box {
+  background: var(--card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lg);
+  padding: 28px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.weather-city-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.weather-city-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.weather-city-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.weather-city-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+@media (max-width: 480px) {
+  .weather-city-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.weather-city-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.weather-city-chip.is-selected {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 600;
+}
+.weather-city-chip .chip-check {
+  display: none;
+  font-size: 0.75rem;
+}
+.weather-city-chip.is-selected .chip-check {
+  display: inline;
+}
+.weather-city-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
 /* 天気情報バー */

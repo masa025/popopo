@@ -2162,87 +2162,191 @@ function bindEvents() {
   });
 }
 
-// ============================================================
-// 10. 天気情報取得 (JMA API)
-// ============================================================
-const WEATHER_CITIES = [
+// 選択可能な全国主要都市一覧
+const ALL_WEATHER_CITIES = [
   { id: '016000', name: '札幌' },
+  { id: '020000', name: '青森' },
+  { id: '040000', name: '仙台' },
+  { id: '050000', name: '秋田' },
+  { id: '060000', name: '山形' },
+  { id: '070000', name: '福島' },
+  { id: '080000', name: '水戸' },
+  { id: '090000', name: '宇都宮' },
+  { id: '100000', name: '前橋' },
+  { id: '110000', name: 'さいたま' },
+  { id: '120000', name: '千葉' },
   { id: '130000', name: '東京' },
+  { id: '140000', name: '横浜' },
+  { id: '150000', name: '新潟' },
+  { id: '160000', name: '富山' },
+  { id: '170000', name: '金沢' },
+  { id: '180000', name: '福井' },
+  { id: '190000', name: '甲府' },
+  { id: '200000', name: '長野' },
+  { id: '210000', name: '岐阜' },
+  { id: '220000', name: '静岡' },
   { id: '230000', name: '名古屋' },
+  { id: '240000', name: '津' },
+  { id: '250000', name: '大津' },
+  { id: '260000', name: '京都' },
   { id: '270000', name: '大阪' },
-  { id: '400000', name: '福岡' }
+  { id: '280000', name: '神戸' },
+  { id: '290000', name: '奈良' },
+  { id: '300000', name: '和歌山' },
+  { id: '310000', name: '鳥取' },
+  { id: '320000', name: '松江' },
+  { id: '330000', name: '岡山' },
+  { id: '340000', name: '広島' },
+  { id: '350000', name: '山口' },
+  { id: '360000', name: '徳島' },
+  { id: '370000', name: '高松' },
+  { id: '380000', name: '松山' },
+  { id: '390000', name: '高知' },
+  { id: '400000', name: '福岡' },
+  { id: '410000', name: '佐賀' },
+  { id: '420000', name: '長崎' },
+  { id: '430000', name: '熊本' },
+  { id: '440000', name: '大分' },
+  { id: '450000', name: '宮崎' },
+  { id: '460100', name: '鹿児島' },
+  { id: '471000', name: '那覇' }
 ];
+
+const WEATHER_CITY_STORAGE_KEY = 'popopo_weather_cities';
+const DEFAULT_WEATHER_CITY_IDS = ['016000', '130000', '230000', '270000', '400000'];
+
+function getSelectedWeatherCities() {
+  try {
+    const saved = localStorage.getItem(WEATHER_CITY_STORAGE_KEY);
+    if (saved) {
+      const ids = JSON.parse(saved);
+      if (Array.isArray(ids) && ids.length > 0) {
+        return ALL_WEATHER_CITIES.filter(c => ids.includes(c.id));
+      }
+    }
+  } catch(e) {}
+  return ALL_WEATHER_CITIES.filter(c => DEFAULT_WEATHER_CITY_IDS.includes(c.id));
+}
 
 function getWeatherIcon(code) {
   const c = parseInt(code, 10);
-  if (c >= 100 && c < 200) return '☀️'; // 晴れ
-  if (c >= 200 && c < 300) return '☁️'; // 曇り
-  if (c >= 300 && c < 400) return '☔'; // 雨
-  if (c >= 400) return '⛄'; // 雪
+  if (c >= 100 && c < 200) return '☀️';
+  if (c >= 200 && c < 300) return '☁️';
+  if (c >= 300 && c < 400) return '☔';
+  if (c >= 400) return '⛄';
   return '☁️';
+}
+
+async function fetchCityWeather(city) {
+  const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${city.id}.json`);
+  if (!res.ok) throw new Error('Network error');
+  const data = await res.json();
+
+  const weatherCode = data[0].timeSeries[0].areas[0].weatherCodes[0];
+  const icon = getWeatherIcon(weatherCode);
+
+  let maxTemp = '';
+  try {
+    const tempsMax = data[1].timeSeries[1].areas[0].tempsMax;
+    const validTemp = tempsMax.find(t => t !== '');
+    if (validTemp) maxTemp = validTemp;
+  } catch(e) {}
+
+  let pop = '';
+  try {
+    const pops = data[0].timeSeries[1].areas[0].pops;
+    const validPop = pops.find(p => p !== '');
+    if (validPop) pop = validPop;
+  } catch(e) {}
+
+  return `
+    <div class="weather-item">
+      <span class="w-name">📍${city.name}</span>
+      <span class="w-icon">${icon}</span>
+      ${maxTemp ? `<span class="w-temp">${maxTemp}℃</span>` : ''}
+      ${pop ? `<span class="w-pop">☂️${pop}%</span>` : ''}
+    </div>
+  `;
 }
 
 async function renderWeather() {
   const container = document.getElementById('weatherItems');
   if (!container) return;
-  
-  const cacheKey = 'popopo_weather_cache';
+
+  const cities = getSelectedWeatherCities();
+
+  // キャッシュキーには選択中の都市IDリストを含める（選択変更時に再取得）
+  const cacheKey = `popopo_weather_cache_${cities.map(c => c.id).join('_')}`;
   const cached = sessionStorage.getItem(cacheKey);
   if (cached) {
     container.innerHTML = cached;
     return;
   }
-  
+
+  container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">取得中...</span>';
+
   try {
-    const promises = WEATHER_CITIES.map(async (city) => {
-      const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${city.id}.json`);
-      if (!res.ok) throw new Error('Network error');
-      const data = await res.json();
-      
-      // 今日の天気コード（data[0].timeSeries[0].areas[0].weatherCodes[0]）
-      const weatherCode = data[0].timeSeries[0].areas[0].weatherCodes[0];
-      const icon = getWeatherIcon(weatherCode);
-      
-      // 今日の最高気温（data[1].timeSeries[1].areas[0].tempsMax[1] が翌日, [0]は空, [1]が今日）
-      let maxTemp = '';
-      try {
-        const tempsMax = data[1].timeSeries[1].areas[0].tempsMax;
-        // tempsMax[0]は空文字の場合があるため、最初の有効な値を探す
-        const validTemp = tempsMax.find(t => t !== '');
-        if (validTemp) maxTemp = validTemp;
-      } catch(e) {
-        // 温度データが取れない場合はスキップ
-      }
-      
-      // 降水確率（今日の午前中〜午後）
-      let pop = '';
-      try {
-        const pops = data[0].timeSeries[1].areas[0].pops;
-        // 最初の有効な降水確率を取得
-        const validPop = pops.find(p => p !== '');
-        if (validPop) pop = validPop;
-      } catch(e) {}
-      
-      return `
-        <div class="weather-item">
-          <span class="w-name">📍${city.name}</span>
-          <span class="w-icon">${icon}</span>
-          ${maxTemp ? `<span class="w-temp">${maxTemp}℃</span>` : ''}
-          ${pop ? `<span class="w-pop">☂️${pop}%</span>` : ''}
-        </div>
-      `;
-    });
-    
-    const results = await Promise.all(promises);
+    const results = await Promise.all(cities.map(fetchCityWeather));
     const html = results.join('');
-    // 無限スクロール用に3セット分複製（CSSで-50%移動するので2セット以上が必要）
     container.innerHTML = html + html + html;
     sessionStorage.setItem(cacheKey, html);
-    
   } catch (error) {
     console.error('Weather fetch failed:', error);
     container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">一時的に取得できません</span>';
   }
+}
+
+// 都市選択モーダルの初期化
+function initWeatherCityPicker() {
+  const modal = document.getElementById('weatherCityModal');
+  const grid = document.getElementById('weatherCityGrid');
+  const settingsBtn = document.getElementById('weatherSettingsBtn');
+  const closeBtn = document.getElementById('weatherCityClose');
+  const cancelBtn = document.getElementById('weatherCityCancelBtn');
+  const saveBtn = document.getElementById('weatherCitySaveBtn');
+  if (!modal || !grid) return;
+
+  const openModal = () => {
+    const savedIds = getSelectedWeatherCities().map(c => c.id);
+    grid.innerHTML = ALL_WEATHER_CITIES.map(city => `
+      <button type="button"
+        class="weather-city-chip ${savedIds.includes(city.id) ? 'is-selected' : ''}"
+        data-city-id="${city.id}">
+        <span class="chip-check">✓</span>${city.name}
+      </button>
+    `).join('');
+
+    grid.querySelectorAll('.weather-city-chip').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('is-selected'));
+    });
+
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = () => {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  };
+
+  settingsBtn?.addEventListener('click', openModal);
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  saveBtn?.addEventListener('click', () => {
+    const selected = Array.from(grid.querySelectorAll('.weather-city-chip.is-selected'))
+      .map(c => c.dataset.cityId);
+    if (selected.length === 0) {
+      showToast('1つ以上の都市を選択してください');
+      return;
+    }
+    localStorage.setItem(WEATHER_CITY_STORAGE_KEY, JSON.stringify(selected));
+    sessionStorage.clear(); // 天気キャッシュをリセット
+    closeModal();
+    renderWeather(); // 再取得して表示更新
+    showToast('都市の設定を保存しました ✓');
+  });
 }
 
 // ============================================================
@@ -2285,6 +2389,7 @@ function init() {
   startHeroBackdropRotation();
 
   bindEvents();
+  initWeatherCityPicker();
   maybeShowIntroStory();
 }
 
