@@ -124,9 +124,41 @@
           </section>
         </article>
         <p class="about-story-closing about-story-closing-luxury">人から人へ。小さな発見が、次の休日を少し楽しくしてくれますように。</p>
+
+        <!-- 動画CTA -->
+        <div class="about-video-cta">
+          <button class="about-video-thumb" id="openVideoBtn" aria-label="ストーリー動画を再生する">
+            <div class="about-video-thumb-inner">
+              <div class="about-video-play">
+                <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <div class="about-video-thumb-text">
+                <span class="about-video-label">STORY FILM</span>
+                <span class="about-video-title">人から人へ — 30秒のストーリー</span>
+              </div>
+            </div>
+          </button>
+        </div>
       </div>
     </section>
   </main>
+
+  <!-- 動画モーダル -->
+  <div class="about-video-modal" id="videoModal" role="dialog" aria-modal="true" aria-label="ストーリー動画" hidden>
+    <div class="about-video-modal-inner">
+      <button class="about-video-modal-close" id="closeVideoBtn" aria-label="閉じる">✕</button>
+      <div class="about-video-wrapper">
+        <iframe id="vimeoFrame"
+          src=""
+          data-src="https://player.vimeo.com/video/1186945251?autoplay=1&title=0&byline=0&portrait=0&color=5b8dee&dnt=1"
+          frameborder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowfullscreen
+          title="人から人へ — POPOPO お出かけマップ"
+        ></iframe>
+      </div>
+    </div>
+  </div>
 
   <footer id="siteFooter">
     <div class="footer-inner">
@@ -149,6 +181,123 @@
     </div>
   </footer>
 
+  <style>
+    /* 動画CTA */
+    .about-video-cta {
+      margin-top: 48px;
+      display: flex;
+      justify-content: center;
+    }
+    .about-video-thumb {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      width: 100%;
+      max-width: 560px;
+    }
+    .about-video-thumb-inner {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--card, #fff);
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 16px;
+      padding: 20px 28px;
+      box-shadow: 0 4px 20px rgba(30,40,69,0.08);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .about-video-thumb:hover .about-video-thumb-inner {
+      box-shadow: 0 8px 32px rgba(91,141,238,0.18);
+      transform: translateY(-2px);
+    }
+    .about-video-play {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5b8dee, #7c6eef);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(91,141,238,0.4);
+    }
+    .about-video-thumb-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .about-video-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--blue, #5b8dee);
+      text-transform: uppercase;
+    }
+    .about-video-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text, #1e2845);
+    }
+
+    /* 動画モーダル */
+    .about-video-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: rgba(10,12,24,0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+    }
+    .about-video-modal:not([hidden]) {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .about-video-modal[hidden] { display: flex !important; pointer-events: none; }
+    .about-video-modal-inner {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+    }
+    .about-video-modal-close {
+      position: absolute;
+      top: -44px;
+      right: 0;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .about-video-modal-close:hover { background: rgba(255,255,255,0.28); }
+    .about-video-wrapper {
+      position: relative;
+      padding-top: 56.25%; /* 16:9 */
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    .about-video-wrapper iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+
   <script>
     document.getElementById('hamburger')?.addEventListener('click', () => {
       document.getElementById('navMobile')?.classList.toggle('open');
@@ -156,6 +305,32 @@
     document.querySelectorAll('.nav-mobile-link').forEach(link => {
       link.addEventListener('click', () => document.getElementById('navMobile')?.classList.remove('open'));
     });
+
+    // 動画モーダル
+    const videoModal = document.getElementById('videoModal');
+    const vimeoFrame = document.getElementById('vimeoFrame');
+    const openBtn    = document.getElementById('openVideoBtn');
+    const closeBtn   = document.getElementById('closeVideoBtn');
+
+    function openVideoModal() {
+      vimeoFrame.src = vimeoFrame.dataset.src; // 初回のみロード
+      videoModal.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => videoModal.style.opacity = '1', 10);
+    }
+    function closeVideoModal() {
+      videoModal.style.opacity = '0';
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        videoModal.setAttribute('hidden', '');
+        vimeoFrame.src = ''; // 停止
+      }, 260);
+    }
+
+    openBtn?.addEventListener('click', openVideoModal);
+    closeBtn?.addEventListener('click', closeVideoModal);
+    videoModal?.addEventListener('click', (e) => { if (e.target === videoModal) closeVideoModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !videoModal.hasAttribute('hidden')) closeVideoModal(); });
   </script>
 </body>
 </html>
