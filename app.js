@@ -99,6 +99,8 @@ let latestRemotePosts = [];
 let latestRemoteSuggestions = [];
 let latestRemoteChats = [];
 let currentReviewSpotName = '';
+let editingId = null;
+let editingClientId = null;
 const INITIAL_SPOT_COUNT = 6;
 const INITIAL_REVIEW_COUNT = 6;
 const INITIAL_CHAT_COUNT = 5;
@@ -595,6 +597,80 @@ function listenPosts(callback) {
   } else {
     callback(mergePosts([]));
     renderHeroBackdrop();
+  }
+}
+
+// --- 自分の投稿判別・アクション表示 ---
+function isMyEntity(entity, type) {
+  const list = type === 'chat' ? localChats : localPosts;
+  const myIds = new Set(list.map(e => e.clientId || e.id));
+  return myIds.has(entity.clientId || entity.id);
+}
+
+function renderPostActions(entity, type) {
+  if (!isMyEntity(entity, type)) return '';
+  const id = entity.id || '';
+  const clientId = entity.clientId || '';
+  return `
+    <div class="post-actions">
+      <button class="btn-post-action is-edit" onclick="startEditEntity('${id}', '${clientId}', '${type}')" title="編集">✏️</button>
+      <button class="btn-post-action is-delete" onclick="requestDeleteEntity('${id}', '${clientId}', '${type}')" title="削除">🗑️</button>
+    </div>
+  `;
+}
+
+async function requestDeleteEntity(id, clientId, type) {
+  if (!confirm('この投稿を削除してもよろしいですか？\n削除すると元に戻せません。')) return;
+  
+  try {
+    if (type === 'chat') {
+      await deleteChatRecord(id, clientId);
+      showToast('つぶやきを削除しました。');
+    } else {
+      await deletePostRecord(id, clientId);
+      showToast('投稿を削除しました。');
+    }
+  } catch (err) {
+    console.error('Delete failed:', err);
+    alert('削除に失敗しました。管理者にお問い合わせください。');
+  }
+}
+
+async function deleteChatRecord(id, clientId) {
+  // Local 削除
+  localChats = localChats.filter(c => (c.clientId || c.id) !== clientId);
+  localStorage.setItem('popopo_chats', JSON.stringify(localChats));
+  
+  // Remote 削除
+  if (db && id) {
+    await db.collection('chats').doc(id).delete().catch(e => console.warn(e));
+  }
+  
+  updateChatsView();
+}
+
+async function deletePostRecord(id, clientId) {
+  // Local 削除
+  localPosts = localPosts.filter(p => (p.clientId || p.id) !== clientId);
+  localStorage.setItem('popopo_posts', JSON.stringify(localPosts));
+  
+  // Remote 削除
+  if (db && id) {
+    await db.collection('posts').doc(id).delete().catch(e => console.warn(e));
+  }
+  
+  allPosts = mergePosts(latestRemotePosts);
+  renderVisited(allPosts);
+  renderHeroBackdrop();
+}
+
+function startEditEntity(id, clientId, type) {
+  if (type === 'chat') {
+    const chat = allChats.find(c => (c.clientId || c.id) === clientId);
+    if (chat) openChatModal(chat.message, id, clientId);
+  } else {
+    const post = allPosts.find(p => (p.clientId || p.id) === clientId);
+    if (post) openModal(post.spotName, id, clientId);
   }
 }
 
@@ -1509,6 +1585,7 @@ function renderVisited(posts = []) {
         <div class="visited-review">"${escHtml(p.comment)}"</div>
         ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
         <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
+        ${renderPostActions(p, 'post')}
       </div>
     </div>
     `;
@@ -1553,6 +1630,7 @@ function renderChats(chats) {
             ${renderChatReactionButton(thanksId, '💐', 'ありがとう', 'ありがとう済み')}
             ${renderChatReactionButton(curiousId, '👀', '気になる', '気になる済み')}
           </div>
+          ${renderPostActions(chat, 'chat')}
         </div>
       </div>
     `;
@@ -1587,11 +1665,26 @@ function closeAddSpotModal() {
 }
 
 // 掲示板投稿モーダル
-function openChatModal(prefill = '') {
-  document.getElementById('chatModal').classList.add('is-open');
+function openChatModal(prefill = '', id = null, clientId = null) {
+  editingId = id;
+  editingClientId = clientId;
+  
+  const modal = document.getElementById('chatModal');
+  const title = modal.querySelector('.modal-title') || modal.querySelector('h3');
+  const btn = document.getElementById('chatSubmitBtn');
+  
+  if (editingClientId) {
+    if (title) title.textContent = '💬 つぶやきを編集';
+    if (btn) btn.textContent = '更新する 🚀';
+  } else {
+    if (title) title.textContent = '💬 つぶやく';
+    if (btn) btn.textContent = '投稿する 🚀';
+  }
+
+  modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
   const message = document.getElementById('cMsg');
-  if (prefill && message && !message.value.trim()) {
+  if (prefill && message) {
     message.value = prefill;
     message.focus();
     message.setSelectionRange(message.value.length, message.value.length);
@@ -1762,11 +1855,51 @@ function closeSpotReviews() {
 }
 
 // 投稿モーダル
-function openModal(preselect = '') {
-  document.getElementById('postModal').classList.add('is-open');
+function openModal(preselect = '', id = null, clientId = null) {
+  editingId = id;
+  editingClientId = clientId;
+  
+  const modal = document.getElementById('postModal');
+  const title = modal.querySelector('.modal-title') || modal.querySelector('h2');
+  const btn = document.getElementById('submitBtn');
+  
+  modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
   resetForm();
   populateModalSpotSelect(preselect);
+  
+  if (editingClientId) {
+    if (title) title.textContent = '🗺️ 感想を編集する';
+    if (btn) btn.textContent = '更新する 🚀';
+    
+    // 既存データを検索して埋める
+    const post = allPosts.find(p => (p.clientId || p.id) === editingClientId);
+    if (post) {
+      const spotEl = document.getElementById('fSpot');
+      // 既存の選択肢にないスポット（自由入力されたもの）の場合も考慮
+      if (!Array.from(spotEl.options).some(opt => opt.value === post.spotName)) {
+        const opt = document.createElement('option');
+        opt.value = post.spotName;
+        opt.textContent = post.spotName;
+        spotEl.appendChild(opt);
+      }
+      spotEl.value = post.spotName;
+      document.getElementById('fNick').value = post.nickname || '';
+      document.getElementById('fDate').value = post.visitDate || '';
+      document.getElementById('fComment').value = post.comment || '';
+      selectedRating = post.rating || 0;
+      updateStars();
+    }
+  } else {
+    if (title) title.textContent = '🗺️ 行った場所を共有';
+    if (btn) btn.textContent = '投稿する 🚀';
+  }
+}
+
+function updateStars() {
+  document.querySelectorAll('.star-btn').forEach((b, i) => {
+    b.classList.toggle('active', i < selectedRating);
+  });
 }
 
 function closeModal() {
@@ -1831,17 +1964,40 @@ document.getElementById('chatForm').addEventListener('submit', async (e) => {
   btn.disabled = true; btn.textContent = '送信中...';
 
   try {
-    await saveChat({ nickname, message });
+    if (editingClientId) {
+      await updateChatRecord(editingId, editingClientId, { nickname, message });
+      showToast('つぶやきを更新しました！');
+    } else {
+      await saveChat({ nickname, message });
+      showToast('投稿しました！あなたの一言が、会話のきっかけになります。');
+    }
     updateChatsView();
     closeChatModal();
     document.getElementById('chatForm').reset();
-    showToast('投稿しました！あなたの一言が、会話のきっかけになります。');
   } catch(err) {
+    console.error('Submit failed:', err);
     alert('エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
-    btn.disabled = false; btn.textContent = '投稿する 🚀';
+    btn.disabled = false;
+    btn.textContent = editingClientId ? '更新する 🚀' : '投稿する 🚀';
+    editingId = null;
+    editingClientId = null;
   }
 });
+
+async function updateChatRecord(id, clientId, data) {
+  // Local 更新
+  localChats = localChats.map(c => (c.clientId || c.id) === clientId ? { ...c, ...data, timestamp: Date.now() } : c);
+  localStorage.setItem('popopo_chats', JSON.stringify(localChats));
+  
+  // Remote 更新
+  if (db && id) {
+    await db.collection('chats').doc(id).update({
+      ...data,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
 
 // 行ってみた投稿フォーム送信
 document.getElementById('postForm').addEventListener('submit', async (e) => {
@@ -1898,21 +2054,43 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   };
 
   try {
-    const savedPost = await savePost(postData);
-    allPosts = mergePosts(allPosts);
+    if (editingClientId) {
+      await updatePostRecord(editingId, editingClientId, postData);
+      showToast('感想を更新しました！');
+    } else {
+      await savePost(postData);
+      showToast('感想を投稿しました！あなたの体験が、誰かの背中を押します。');
+    }
+    allPosts = mergePosts(latestRemotePosts);
     renderVisited(allPosts);
     const activeTab = document.querySelector('.tab.active');
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
     renderWeeklyDiscovery();
     closeModal();
-    showToast('感想を投稿しました！あなたの体験が、誰かの背中を押します。');
   } catch (err) {
-    console.error(err);
-    alert('投稿に失敗しました。もう一度お試しください。');
+    console.error('Submit failed:', err);
+    alert('エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
-    btn.disabled = false; btn.textContent = '投稿する 🚀';
+    btn.disabled = false;
+    btn.textContent = editingClientId ? '更新する 🚀' : '投稿する 🚀';
+    editingId = null;
+    editingClientId = null;
   }
 });
+
+async function updatePostRecord(id, clientId, data) {
+  // Local 更新
+  localPosts = localPosts.map(p => (p.clientId || p.id) === clientId ? { ...p, ...data, timestamp: Date.now() } : p);
+  localStorage.setItem('popopo_posts', JSON.stringify(localPosts));
+  
+  // Remote 更新
+  if (db && id) {
+    await db.collection('posts').doc(id).update({
+      ...data,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
 
 // ============================================================
 // 8. ユーティリティ

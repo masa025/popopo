@@ -857,3 +857,66 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     display: none;
   }
 }
+
+/* 投稿アクション（編集・削除） */
+.post-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+.visited-card:hover .post-actions,
+.chat-card:hover .post-actions {
+  opacity: 1;
+}
+.btn-post-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  padding: 0;
+}
+.btn-post-action:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.btn-post-action.is-delete:hover {
+  color: #ff4d4d;
+  border-color: #ffcccc;
+  background: #fff5f5;
+}
+.btn-post-action.is-edit:hover {
+  color: var(--blue);
+  border-color: var(--blue-light);
+  background: var(--blue-light);
+}
+
+@media (max-width: 768px) {
+  .post-actions {
+    opacity: 1; /* スマホは常に表示 */
+    top: 8px;
+    right: 8px;
+  }
+  .btn-post-action {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+}
+
+.visited-card, .chat-card {
+  position: relative; /* アクションボタンの基準点 */
+}
