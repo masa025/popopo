@@ -681,22 +681,15 @@ function closeKiribanModal() {
 
 async function shareKiriban() {
   const count = document.getElementById('kiribanCount')?.textContent || '';
-  const shareText = `POPOPO お出かけマップで訪問者数 ${count} のキリ番を見ました！`;
-  const shareData = {
-    title: 'POPOPO キリ番',
-    text: `${shareText}\nPOPOPOで共有しましょう。`,
-    url: window.location.href
-  };
-  try {
-    if (navigator.share) {
-      await navigator.share(shareData);
-      return;
-    }
-    await navigator.clipboard?.writeText(`${shareData.text}\n${shareData.url}`);
-    showToast('共有用の文章をコピーしました');
-  } catch (e) {
-    console.warn('Kiriban share failed', e);
-  }
+  const message = `【キリ番達成】POPOPO お出かけマップの ${count} 人目の訪問者になりました！🎉`;
+  
+  // キリ番モーダルを閉じる
+  closeKiribanModal();
+  
+  // フリートーク投稿モーダルを開く（メッセージを自動入力）
+  openChatModal(message);
+  
+  showToast('掲示板に報告しましょう！✨');
 }
 
 function getIntroStorySlides() {
