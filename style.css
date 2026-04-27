@@ -642,6 +642,7 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
 .weather-marquee {
   overflow: hidden;
   flex: 1;
+  /* デスクトップのみフェードグラデを適用（iOSでのアニメーション干渉を防ぐためモバイルは@mediaで除去） */
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
   mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
 }
@@ -651,14 +652,18 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   align-items: center;
   white-space: nowrap;
   animation: weatherScroll 10s linear infinite;
-  will-change: transform;
+  -webkit-animation: weatherScroll 10s linear infinite;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .weather-items:hover {
   animation-play-state: paused;
 }
 @keyframes weatherScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-33.33%); }
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-33.33%, 0, 0); }
 }
 .weather-item {
   display: inline-flex;
@@ -689,7 +694,13 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   .weather-bar {
     padding: 8px 0;
   }
+  /* iOSでmask-imageとCSSアニメーションが競合するため除去 */
+  .weather-marquee {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
   .weather-items {
+    -webkit-animation-duration: 4s;
     animation-duration: 4s;
   }
 }
@@ -779,9 +790,9 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     letter-spacing: 0.02em;
   }
 
-  /* 中央の「つぶやく」ボタンをグリーンのCTAに変更（青いアクティブ状態と明示的に区別） */
+  /* 中央の「つぶやく」ボタン — 現フェーズは主張を抑えた中立ピルスタイル */
   .bottom-nav-post {
-    color: #fff;
+    color: var(--text-muted);
     position: relative;
     flex: 1.2;
   }
@@ -790,26 +801,24 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     content: '';
     position: absolute;
     inset: 8px 10px;
-    background: linear-gradient(135deg, #34c759, #28a745);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
     border-radius: 16px;
     z-index: -1;
-    box-shadow: 0 4px 14px rgba(52, 199, 89, 0.45);
-    transition: transform 0.15s, box-shadow 0.15s;
-    animation: navPostPulse 2.8s ease-in-out infinite;
+    transition: border-color 0.2s, background 0.2s;
   }
 
-  @keyframes navPostPulse {
-    0%, 100% { box-shadow: 0 4px 14px rgba(52, 199, 89, 0.45); }
-    50%       { box-shadow: 0 4px 22px rgba(52, 199, 89, 0.7); }
+  .bottom-nav-post:active {
+    color: var(--blue);
   }
 
   .bottom-nav-post:active::before {
+    background: var(--blue-light);
+    border-color: var(--blue);
     transform: scale(0.94);
-    box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
-    animation: none;
   }
 
   .bottom-nav-post::after {
-    display: none; /* アクティブバーは不要 */
+    display: none;
   }
 }
