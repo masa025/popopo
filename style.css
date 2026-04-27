@@ -865,8 +865,13 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   right: 12px;
   display: flex;
   gap: 8px;
-  opacity: 1; /* 常に不透明にする */
+  opacity: 1;
   z-index: 10;
+}
+/* チャットカードでは日時の重なりを避けるため右下に配置 */
+.chat-card .post-actions {
+  top: auto;
+  bottom: 12px;
 }
 .btn-post-action {
   width: 34px;
