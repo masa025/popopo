@@ -531,7 +531,7 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   gap: 0;
   align-items: center;
   white-space: nowrap;
-  animation: weatherScroll 24s linear infinite;
+  animation: weatherScroll 10s linear infinite;
   will-change: transform;
 }
 .weather-items:hover {
@@ -571,6 +571,6 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     padding: 8px 0;
   }
   .weather-items {
-    animation-duration: 10s;
+    animation-duration: 4s;
   }
 }
