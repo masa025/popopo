@@ -83,6 +83,21 @@
       </div>
     </section>
 
+    <!-- 動画CTA：ヒーロー直後（感情を先に動かす）-->
+    <div class="about-video-cta">
+      <button class="about-video-thumb" id="openVideoBtn" aria-label="ストーリー動画を再生する">
+        <div class="about-video-thumb-inner">
+          <div class="about-video-play">
+            <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <div class="about-video-thumb-text">
+            <span class="about-video-label">STORY FILM</span>
+            <span class="about-video-title">人から人へ — 30秒のストーリー</span>
+          </div>
+        </div>
+      </button>
+    </div>
+
     <section class="about-story-section">
       <div class="container">
         <div class="about-story-heading">
@@ -124,21 +139,6 @@
           </section>
         </article>
         <p class="about-story-closing about-story-closing-luxury">人から人へ。小さな発見が、次の休日を少し楽しくしてくれますように。</p>
-
-        <!-- 動画CTA -->
-        <div class="about-video-cta">
-          <button class="about-video-thumb" id="openVideoBtn" aria-label="ストーリー動画を再生する">
-            <div class="about-video-thumb-inner">
-              <div class="about-video-play">
-                <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <div class="about-video-thumb-text">
-                <span class="about-video-label">STORY FILM</span>
-                <span class="about-video-title">人から人へ — 30秒のストーリー</span>
-              </div>
-            </div>
-          </button>
-        </div>
       </div>
     </section>
   </main>
@@ -184,7 +184,9 @@
   <style>
     /* 動画CTA */
     .about-video-cta {
-      margin-top: 48px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+      max-width: 640px;
       display: flex;
       justify-content: center;
     }
