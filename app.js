@@ -559,6 +559,7 @@ function listenChats(callback) {
   if (db) {
     db.collection('chats').orderBy('timestamp', 'desc').onSnapshot(snap => {
       latestRemoteChats = snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis?.() || Date.now() }));
+      syncLocalWithRemote('chat', latestRemoteChats);
       callback(mergeChats(latestRemoteChats));
     }, e => { console.warn('Chat listener failed:', e); callback(mergeChats([])); });
   } else {
@@ -588,6 +589,7 @@ function listenPosts(callback) {
   if (db) {
     db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snap => {
       latestRemotePosts = snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis?.() || Date.now() }));
+      syncLocalWithRemote('post', latestRemotePosts);
       callback(mergePosts(latestRemotePosts));
       renderHeroBackdrop();
     }, () => {
@@ -597,6 +599,33 @@ function listenPosts(callback) {
   } else {
     callback(mergePosts([]));
     renderHeroBackdrop();
+  }
+}
+
+function syncLocalWithRemote(type, remoteList) {
+  let localList = type === 'chat' ? localChats : localPosts;
+  const remoteClientIds = new Set(remoteList.map(r => r.clientId).filter(Boolean));
+  
+  const now = Date.now();
+  const threshold = 30000; // 30秒以内の新規投稿は維持（ラグ考慮）
+  
+  const newList = localList.filter(l => {
+    // 1. サーバー上に存在する
+    if (remoteClientIds.has(l.clientId)) return true;
+    // 2. まだ非常に新しい（サーバーに反映される前かもしれない）
+    if ((now - (l.timestamp || 0)) < threshold) return true;
+    // それ以外はサーバーで削除されたか、リストから外れたとみなす
+    return false;
+  });
+  
+  if (newList.length !== localList.length) {
+    if (type === 'chat') {
+      localChats = newList;
+      localStorage.setItem('popopo_chats', JSON.stringify(localChats));
+    } else {
+      localPosts = newList;
+      localStorage.setItem('popopo_posts', JSON.stringify(localPosts));
+    }
   }
 }
 
