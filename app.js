@@ -1948,11 +1948,27 @@ function showToast(msg) {
 // 9. イベントバインド
 // ============================================================
 function bindEvents() {
+  // Bottom Nav のアクティブ状態管理（スクロール連動）
+  const updateBottomNavActive = () => {
+    const sections = ['spots', 'visited', 'community'];
+    const scrollY = window.scrollY + window.innerHeight / 2;
+    let activeSection = '';
+    for (const id of sections) {
+      const el = document.getElementById(id);
+      if (el && el.offsetTop <= scrollY) activeSection = id;
+    }
+    document.querySelectorAll('.bottom-nav-item[data-section]').forEach(item => {
+      item.classList.toggle('is-active', item.dataset.section === activeSection);
+    });
+  };
+
   window.addEventListener('scroll', () => {
     document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
     const scrollHint = document.querySelector('.scroll-hint');
     if (scrollHint) scrollHint.classList.toggle('is-hidden', window.scrollY > 90);
-  });
+    updateBottomNavActive();
+  }, { passive: true });
+  updateBottomNavActive();
   document.getElementById('hamburger').addEventListener('click', () => {
     document.getElementById('navMobile').classList.toggle('open');
   });
@@ -1969,6 +1985,9 @@ function bindEvents() {
   
   const fabChatBtn = document.getElementById('fabChatBtn');
   if (fabChatBtn) fabChatBtn.addEventListener('click', () => openChatModal());
+
+  const bottomNavPost = document.getElementById('bottomNavPost');
+  if (bottomNavPost) bottomNavPost.addEventListener('click', () => openChatModal());
   const dailyPromptBtn = document.getElementById('dailyPromptBtn');
   if (dailyPromptBtn) dailyPromptBtn.addEventListener('click', () => {
     openChatModal(`今日のお題：${getDailyPrompt()}\n`);

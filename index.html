@@ -638,11 +638,31 @@
     </div>
   </div>
 
-  <!-- フローティング「つぶやく」ボタン -->
+  <!-- フローティング「つぶやく」ボタン（PC専用） -->
   <button class="fab-btn" id="fabChatBtn" aria-label="フリートークでつぶやく" style="position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; background:var(--blue); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 8px 24px rgba(91,141,238,0.4); z-index:900; transition:transform 0.3s, box-shadow 0.3s; cursor:pointer;">
     <span class="fab-icon" style="transform:translateY(-2px);">💬</span>
   </button>
 
-  <script src="app.js?v=20260427-2"></script>
+  <!-- スマホ用 Bottom Navigation Bar -->
+  <nav class="bottom-nav" id="bottomNav" aria-label="メインナビゲーション">
+    <a href="#spots" class="bottom-nav-item" data-section="spots">
+      <span class="bottom-nav-icon">🗺️</span>
+      <span class="bottom-nav-label">スポット</span>
+    </a>
+    <a href="#visited" class="bottom-nav-item" data-section="visited">
+      <span class="bottom-nav-icon">📝</span>
+      <span class="bottom-nav-label">感想</span>
+    </a>
+    <button type="button" class="bottom-nav-item bottom-nav-post" id="bottomNavPost">
+      <span class="bottom-nav-post-icon">💬</span>
+      <span class="bottom-nav-label">つぶやく</span>
+    </button>
+    <a href="#community" class="bottom-nav-item" data-section="community">
+      <span class="bottom-nav-icon">🆓</span>
+      <span class="bottom-nav-label">掲示板</span>
+    </a>
+  </nav>
+
+  <script src="app.js?v=20260427-3"></script>
 </body>
 </html>

@@ -477,11 +477,7 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     padding: 8px 12px;
   }
   .fab-btn {
-    width: 56px;
-    height: 56px;
-    font-size: 1.5rem;
-    bottom: 20px;
-    right: 20px;
+    display: none; /* スマホはbottom navの「つぶやく」ボタンで代替 */
   }
 }
 
@@ -572,5 +568,118 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   }
   .weather-items {
     animation-duration: 4s;
+  }
+}
+
+/* ============================================================
+   スマホ用 Bottom Navigation Bar
+   ============================================================ */
+.bottom-nav {
+  display: none; /* PCでは非表示 */
+}
+
+@media (max-width: 768px) {
+  /* コンテンツがナビに隠れないよう余白を追加 */
+  body {
+    padding-bottom: 68px;
+  }
+
+  .bottom-nav {
+    display: flex;
+    align-items: stretch;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 950;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(30, 40, 69, 0.08);
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 0;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  .bottom-nav-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 32px;
+    height: 3px;
+    background: var(--blue);
+    border-radius: 0 0 3px 3px;
+    transition: transform 0.2s;
+  }
+
+  .bottom-nav-item.is-active::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  .bottom-nav-item.is-active {
+    color: var(--blue);
+  }
+
+  .bottom-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .bottom-nav-icon,
+  .bottom-nav-post-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+
+  .bottom-nav-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* 中央の「つぶやく」ボタンをアクセントカラーに */
+  .bottom-nav-post {
+    color: #fff;
+    position: relative;
+    flex: 1.2;
+  }
+
+  .bottom-nav-post::before {
+    content: '';
+    position: absolute;
+    inset: 8px 10px;
+    background: var(--blue);
+    border-radius: 16px;
+    z-index: -1;
+    box-shadow: 0 4px 14px rgba(91, 141, 238, 0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .bottom-nav-post:active::before {
+    transform: scale(0.94);
+    box-shadow: 0 2px 8px rgba(91, 141, 238, 0.3);
+  }
+
+  .bottom-nav-post::after {
+    display: none; /* アクティブバーは不要 */
   }
 }
