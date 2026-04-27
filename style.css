@@ -571,6 +571,6 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     padding: 8px 0;
   }
   .weather-items {
-    animation-duration: 18s;
+    animation-duration: 10s;
   }
 }
