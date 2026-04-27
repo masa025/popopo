@@ -622,9 +622,12 @@ function syncLocalWithRemote(type, remoteList) {
     if (type === 'chat') {
       localChats = newList;
       localStorage.setItem('popopo_chats', JSON.stringify(localChats));
-    } else {
+    } else if (type === 'post') {
       localPosts = newList;
       localStorage.setItem('popopo_posts', JSON.stringify(localPosts));
+    } else if (type === 'suggestion') {
+      localSuggestions = newList;
+      localStorage.setItem('popopo_suggestions', JSON.stringify(localSuggestions));
     }
   }
 }
