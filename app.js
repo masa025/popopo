@@ -506,11 +506,51 @@ function mergeChats(remoteChats = latestRemoteChats) {
   return Array.from(byKey.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
+let tickerInterval = null;
+let currentTickerIndex = 0;
+
 function updateChatsView(chats = null) {
   if (Array.isArray(chats)) allChats = chats;
   const currentChats = Array.isArray(chats) ? chats : mergeChats();
   renderChats(currentChats);
   setStatText('statPosts', currentChats.length);
+
+  // ティッカー（速報）の更新
+  const ticker = document.getElementById('tickerContent');
+  if (ticker) {
+    if (tickerInterval) clearInterval(tickerInterval);
+    if (currentChats.length > 0) {
+      const displayChats = currentChats.slice(0, 5); // 最新5件をローテーション
+      
+      const updateTickerText = () => {
+        const chat = displayChats[currentTickerIndex];
+        const nick = chat.nickname || '匿名リスナー';
+        
+        // フェードアウト効果
+        ticker.style.opacity = '0';
+        setTimeout(() => {
+          ticker.textContent = `${nick}：${chat.message}`;
+          ticker.style.opacity = '1';
+        }, 300); // 300msで切り替え
+        
+        currentTickerIndex = (currentTickerIndex + 1) % displayChats.length;
+      };
+      
+      // 初回表示（アニメーションなし）
+      ticker.style.transition = 'opacity 0.3s ease';
+      const firstChat = displayChats[0];
+      ticker.textContent = `${firstChat.nickname || '匿名リスナー'}：${firstChat.message}`;
+      ticker.style.opacity = '1';
+      currentTickerIndex = 1 % displayChats.length;
+      
+      if (displayChats.length > 1) {
+        tickerInterval = setInterval(updateTickerText, 4000); // 4秒ごとに切り替え
+      }
+    } else {
+      ticker.textContent = '最初のつぶやきを待っています...';
+      ticker.style.opacity = '1';
+    }
+  }
 }
 
 function listenChats(callback) {
@@ -1926,6 +1966,9 @@ function bindEvents() {
   
   const openChatBtn = document.getElementById('openChatModalBtn');
   if (openChatBtn) openChatBtn.addEventListener('click', () => openChatModal());
+  
+  const fabChatBtn = document.getElementById('fabChatBtn');
+  if (fabChatBtn) fabChatBtn.addEventListener('click', () => openChatModal());
   const dailyPromptBtn = document.getElementById('dailyPromptBtn');
   if (dailyPromptBtn) dailyPromptBtn.addEventListener('click', () => {
     openChatModal(`今日のお題：${getDailyPrompt()}\n`);
@@ -2101,7 +2144,90 @@ function bindEvents() {
 }
 
 // ============================================================
-// 10. 初期化
+// 10. 天気情報取得 (JMA API)
+// ============================================================
+const WEATHER_CITIES = [
+  { id: '016000', name: '札幌' },
+  { id: '130000', name: '東京' },
+  { id: '230000', name: '名古屋' },
+  { id: '270000', name: '大阪' },
+  { id: '400000', name: '福岡' }
+];
+
+function getWeatherIcon(code) {
+  const c = parseInt(code, 10);
+  if (c >= 100 && c < 200) return '☀️'; // 晴れ
+  if (c >= 200 && c < 300) return '☁️'; // 曇り
+  if (c >= 300 && c < 400) return '☔'; // 雨
+  if (c >= 400) return '⛄'; // 雪
+  return '☁️';
+}
+
+async function renderWeather() {
+  const container = document.getElementById('weatherItems');
+  if (!container) return;
+  
+  const cacheKey = 'popopo_weather_cache';
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) {
+    container.innerHTML = cached;
+    return;
+  }
+  
+  try {
+    const promises = WEATHER_CITIES.map(async (city) => {
+      const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${city.id}.json`);
+      if (!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      
+      // 今日の天気コード（data[0].timeSeries[0].areas[0].weatherCodes[0]）
+      const weatherCode = data[0].timeSeries[0].areas[0].weatherCodes[0];
+      const icon = getWeatherIcon(weatherCode);
+      
+      // 今日の最高気温（data[1].timeSeries[1].areas[0].tempsMax[1] が翌日, [0]は空, [1]が今日）
+      let maxTemp = '';
+      try {
+        const tempsMax = data[1].timeSeries[1].areas[0].tempsMax;
+        // tempsMax[0]は空文字の場合があるため、最初の有効な値を探す
+        const validTemp = tempsMax.find(t => t !== '');
+        if (validTemp) maxTemp = validTemp;
+      } catch(e) {
+        // 温度データが取れない場合はスキップ
+      }
+      
+      // 降水確率（今日の午前中〜午後）
+      let pop = '';
+      try {
+        const pops = data[0].timeSeries[1].areas[0].pops;
+        // 最初の有効な降水確率を取得
+        const validPop = pops.find(p => p !== '');
+        if (validPop) pop = validPop;
+      } catch(e) {}
+      
+      return `
+        <div class="weather-item">
+          <span class="w-name">📍${city.name}</span>
+          <span class="w-icon">${icon}</span>
+          ${maxTemp ? `<span class="w-temp">${maxTemp}℃</span>` : ''}
+          ${pop ? `<span class="w-pop">☂️${pop}%</span>` : ''}
+        </div>
+      `;
+    });
+    
+    const results = await Promise.all(promises);
+    const html = results.join('');
+    // 無限スクロール用に3セット分複製（CSSで-50%移動するので2セット以上が必要）
+    container.innerHTML = html + html + html;
+    sessionStorage.setItem(cacheKey, html);
+    
+  } catch (error) {
+    console.error('Weather fetch failed:', error);
+    container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">一時的に取得できません</span>';
+  }
+}
+
+// ============================================================
+// 11. 初期化
 // ============================================================
 function init() {
   initFirebase();
@@ -2134,6 +2260,7 @@ function init() {
   trackPageView();
   renderDailyPrompt();
   renderWeeklyDiscovery();
+  renderWeather();
   setupHeroGallery();
   renderHeroBackdrop();
   startHeroBackdropRotation();

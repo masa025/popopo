@@ -103,7 +103,11 @@
     </div>
     <div class="hero-showcase" id="heroShowcase" aria-hidden="true"></div>
     <div class="hero-content">
-      <div class="hero-badge">🎙️ POPOPO リスナーコミュニティ</div>
+      <a href="#community" class="hero-badge" id="chatTicker" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; cursor:pointer; padding:6px 18px; transition:border-color 0.3s, background 0.3s;" aria-label="フリートーク掲示板へ">
+        <span style="font-size:0.85rem;">💬</span>
+        <span class="ticker-content" id="tickerContent" style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🎙️ POPOPO リスナーコミュニティ</span>
+        <span style="font-size:0.8rem; opacity:0.7;">→</span>
+      </a>
       <div class="hero-gallery-band" aria-label="配信で届いた作品">
         <div class="hero-gallery-marquee" id="heroGalleryMarquee">
           <div class="hero-gallery-track">
@@ -186,14 +190,14 @@
       <p class="hero-sub">人から人へ伝わる、ちいさな旅案内。<br>POPOPO コミュニティでおすすめや感想を<br>みんなで集めています。あなたのおすすめもぜひ教えてください！</p>
       <a href="about.html" class="hero-story-link">🌿 この場所を作った理由</a>
       <div class="hero-stats">
-        <div class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></div>
+        <a href="#spots" class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></a>
         <div class="stat-divider"></div>
-        <div class="stat">
+        <a href="#community" class="stat">
           <div class="stat-num is-loading" id="statPosts">読み込み中</div>
           <div class="stat-label">フリートーク投稿数</div>
-        </div>
+        </a>
         <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num is-loading" id="statVisited">読み込み中</span><span class="stat-label">みんなの感想</span></div>
+        <a href="#visited" class="stat"><span class="stat-num is-loading" id="statVisited">読み込み中</span><span class="stat-label">みんなの感想</span></a>
         <div class="stat-divider"></div>
         <div class="stat"><span class="stat-num is-loading" id="statViews">読み込み中</span><span class="stat-label">👀 訪問者数</span></div>
       </div>
@@ -207,6 +211,20 @@
       <div class="scroll-line"></div>
     </a>
   </section>
+
+  <!-- 今日の天気（お出かけ指数） -->
+  <div class="weather-bar-wrap">
+    <div class="container">
+      <div class="weather-bar" id="weatherBar">
+        <div class="weather-bar-label">🌤️ 今日の天気</div>
+        <div class="weather-marquee">
+          <div class="weather-items" id="weatherItems">
+            <span style="color:var(--text-muted); font-size:0.85rem;">取得中...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 行きたい場所 -->
   <section id="spots">
@@ -617,7 +635,13 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
+
+  <!-- フローティング「つぶやく」ボタン -->
+  <button class="fab-btn" id="fabChatBtn" aria-label="フリートークでつぶやく" style="position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; background:var(--blue); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 8px 24px rgba(91,141,238,0.4); z-index:900; transition:transform 0.3s, box-shadow 0.3s; cursor:pointer;">
+    <span class="fab-icon" style="transform:translateY(-2px);">💬</span>
+  </button>
 
   <script src="app.js?v=20260427-2"></script>
 </body>

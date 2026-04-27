@@ -73,7 +73,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;}
 .orb-2{width:350px;height:350px;background:radial-gradient(circle,#ffd6e7,transparent);bottom:-80px;left:-80px;animation-delay:-3s;}
 .orb-3{width:250px;height:250px;background:radial-gradient(circle,#c7f2ff,transparent);top:40%;left:25%;animation-delay:-6s;}
 @keyframes orbFloat{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-24px) scale(1.04);}}
-.hero-content{position:relative;z-index:2;text-align:center;max-width:800px;padding:0 20px;animation:fadeUp .8s ease both;margin-top:-60px;}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:800px;padding:0 20px;animation:fadeUp .8s ease both;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
 .hero-badge{display:inline-block;padding:8px 20px;border-radius:50px;background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.4);color:#fff;font-size:0.85rem;font-weight:500;margin-bottom:24px;backdrop-filter:blur(8px);}
 .hero-gallery-band{width:100vw;max-width:none;margin:0 calc(50% - 50vw) 22px;}
@@ -94,6 +94,8 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;}
 .hero-story-link:hover{color:#fff;background:rgba(255,255,255,0.22);transform:translateY(-1px);}
 .hero-stats{display:inline-flex;align-items:center;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:var(--r);padding:20px 32px;margin-bottom:36px;backdrop-filter:blur(10px);}
 .stat{text-align:center;padding:0 24px;}
+a.stat{text-decoration:none;color:inherit;transition:transform 0.2s, opacity 0.2s;}
+a.stat:hover{transform:translateY(-2px);opacity:0.8;}
 .stat-num{display:block;font-family:'Outfit',sans-serif;font-size:2rem;font-weight:700;color:#fff;}
 .stat-num.is-loading{font-family:'Noto Sans JP',sans-serif;font-size:0.92rem;line-height:2.2;white-space:nowrap;}
 .stat-label{font-size:0.8rem;color:rgba(255,255,255,0.75);}
@@ -455,4 +457,120 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
 @media(max-width:480px){
   .tabs{gap:6px;}
   .tab{padding:8px 14px;font-size:0.82rem;}
+}
+
+/* フリートーク視認性向上（ティッカー＆フローティングボタン） */
+#chatTicker:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+.fab-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(91,141,238,0.5);
+}
+.fab-btn:active {
+  transform: translateY(0);
+}
+@media (max-width: 768px) {
+  #chatTicker {
+    margin-top: -12px;
+    padding: 8px 12px;
+  }
+  .fab-btn {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
+/* 天気情報バー */
+.weather-bar-wrap {
+  width: 100%;
+  padding: 16px 20px 0;
+  background: var(--bg);
+}
+.weather-bar {
+  display: flex;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 0;
+  box-shadow: var(--shadow-sm);
+  gap: 0;
+  overflow: hidden;
+  position: relative;
+}
+.weather-bar::-webkit-scrollbar {
+  display: none;
+}
+.weather-bar-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--blue);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  z-index: 1;
+  background: var(--card);
+}
+.weather-marquee {
+  overflow: hidden;
+  flex: 1;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+.weather-items {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  white-space: nowrap;
+  animation: weatherScroll 24s linear infinite;
+  will-change: transform;
+}
+.weather-items:hover {
+  animation-play-state: paused;
+}
+@keyframes weatherScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.33%); }
+}
+.weather-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  padding: 0 24px;
+  border-right: 1px solid var(--border);
+}
+.weather-item .w-icon {
+  font-size: 1rem;
+}
+.weather-item .w-temp {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.weather-item .w-name {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.weather-item .w-pop {
+  color: #6eb0ff;
+  font-size: 0.78rem;
+}
+@media (max-width: 768px) {
+  .weather-bar {
+    padding: 8px 0;
+  }
+  .weather-items {
+    animation-duration: 18s;
+  }
 }
