@@ -878,20 +878,21 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   position: static;
 }
 .btn-post-action {
-  width: 34px;
   height: 34px;
-  border-radius: 50%;
+  padding: 0 14px;
+  border-radius: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fff;
   border: 1.5px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
-  padding: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  gap: 4px;
 }
 .btn-post-action:hover {
   transform: translateY(-2px) scale(1.1);
@@ -914,9 +915,9 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     right: 8px;
   }
   .btn-post-action {
-    width: 32px;
     height: 32px;
-    font-size: 0.8rem;
+    padding: 0 10px;
+    font-size: 0.78rem;
   }
 }
 

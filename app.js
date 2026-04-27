@@ -638,16 +638,16 @@ function syncLocalWithRemote(type, remoteList) {
 
 // --- 自分の投稿判別・アクション表示 ---
 function isMyEntity(entity, type) {
+  // セキュリティと安全のため、clientIdが確実にある場合のみ判定
+  if (!entity.clientId) return false;
+  
   let list = [];
   if (type === 'chat') list = localChats;
   else if (type === 'post') list = localPosts;
   else if (type === 'suggestion') list = localSuggestions;
   
-  const entityId = entity.clientId || entity.id;
-  if (!entityId) return false;
-  
-  const isMatch = list.some(e => (e.clientId || e.id) === entityId);
-  return isMatch;
+  // localListの中にも同じclientIdが存在するかチェック
+  return list.some(e => e.clientId === entity.clientId);
 }
 
 function renderPostActions(entity, type) {
@@ -656,31 +656,11 @@ function renderPostActions(entity, type) {
   const clientId = entity.clientId || '';
   return `
     <div class="post-actions" data-id="${id}" data-client-id="${clientId}">
-      <button class="btn-post-action is-edit" onclick="startEditEntity('${id}', '${clientId}', '${type}')" title="編集">✏️</button>
-      <button class="btn-post-action is-delete" onclick="requestDeleteEntity('${id}', '${clientId}', '${type}')" title="削除">🗑️</button>
+      <button class="btn-post-action is-edit" onclick="startEditEntity('${id}', '${clientId}', '${type}')" title="編集">✏️ 編集</button>
     </div>
   `;
 }
 
-async function requestDeleteEntity(id, clientId, type) {
-  if (!confirm('この内容を削除してもよろしいですか？\n削除すると元に戻せません。')) return;
-  
-  try {
-    if (type === 'chat') {
-      await deleteChatRecord(id, clientId);
-      showToast('つぶやきを削除しました。');
-    } else if (type === 'post') {
-      await deletePostRecord(id, clientId);
-      showToast('投稿を削除しました。');
-    } else if (type === 'suggestion') {
-      await deleteSuggestionRecord(id, clientId);
-      showToast('スポットの提案を削除しました。');
-    }
-  } catch (err) {
-    console.error('Delete failed:', err);
-    alert('削除に失敗しました。管理者にお問い合わせください。');
-  }
-}
 
 
 async function deleteChatRecord(id, clientId) {
