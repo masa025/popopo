@@ -865,33 +865,28 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   right: 12px;
   display: flex;
   gap: 8px;
-  opacity: 0.4;
-  transition: opacity 0.2s;
+  opacity: 1; /* 常に不透明にする */
   z-index: 10;
 }
-.visited-card:hover .post-actions,
-.chat-card:hover .post-actions {
-  opacity: 1;
-}
 .btn-post-action {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: #fff;
+  border: 1.5px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.85rem;
-  transition: all 0.2s;
+  font-size: 0.9rem;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
   padding: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 .btn-post-action:hover {
-  transform: translateY(-2px);
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
 }
 .btn-post-action.is-delete:hover {
   color: #ff4d4d;
@@ -906,14 +901,13 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
 
 @media (max-width: 768px) {
   .post-actions {
-    opacity: 1; /* スマホは常に表示 */
     top: 8px;
     right: 8px;
   }
   .btn-post-action {
-    width: 28px;
-    height: 28px;
-    font-size: 0.75rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
   }
 }
 

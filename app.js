@@ -603,8 +603,13 @@ function listenPosts(callback) {
 // --- 自分の投稿判別・アクション表示 ---
 function isMyEntity(entity, type) {
   const list = type === 'chat' ? localChats : localPosts;
-  const myIds = new Set(list.map(e => e.clientId || e.id));
-  return myIds.has(entity.clientId || entity.id);
+  const entityId = entity.clientId || entity.id;
+  if (!entityId) return false;
+  
+  const isMatch = list.some(e => (e.clientId || e.id) === entityId);
+  // Debug用（不具合調査）
+  if (isMatch) console.log(`[MyPost Match] Type: ${type}, ID: ${entityId}`);
+  return isMatch;
 }
 
 function renderPostActions(entity, type) {
@@ -612,7 +617,7 @@ function renderPostActions(entity, type) {
   const id = entity.id || '';
   const clientId = entity.clientId || '';
   return `
-    <div class="post-actions">
+    <div class="post-actions" data-id="${id}" data-client-id="${clientId}">
       <button class="btn-post-action is-edit" onclick="startEditEntity('${id}', '${clientId}', '${type}')" title="編集">✏️</button>
       <button class="btn-post-action is-delete" onclick="requestDeleteEntity('${id}', '${clientId}', '${type}')" title="削除">🗑️</button>
     </div>
