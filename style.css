@@ -651,19 +651,9 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   gap: 0;
   align-items: center;
   white-space: nowrap;
-  animation: weatherScroll 10s linear infinite;
-  -webkit-animation: weatherScroll 10s linear infinite;
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
+  will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-.weather-items:hover {
-  animation-play-state: paused;
-}
-@keyframes weatherScroll {
-  0%   { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-33.33%, 0, 0); }
 }
 .weather-item {
   display: inline-flex;
@@ -694,15 +684,11 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   .weather-bar {
     padding: 8px 0;
   }
-  /* iOSでmask-imageとCSSアニメーションが競合するため除去 */
   .weather-marquee {
     -webkit-mask-image: none;
     mask-image: none;
   }
-  .weather-items {
-    -webkit-animation-duration: 4s;
-    animation-duration: 4s;
-  }
+}
 }
 
 /* ============================================================

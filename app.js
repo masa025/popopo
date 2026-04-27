@@ -2269,17 +2269,71 @@ async function fetchCityWeather(city) {
   `;
 }
 
+// RAF マーキー管理
+let _weatherRaf = null;
+
+function startWeatherMarquee() {
+  const el = document.getElementById('weatherItems');
+  if (!el) return;
+
+  // 既存のアニメーションを停止
+  if (_weatherRaf) {
+    cancelAnimationFrame(_weatherRaf);
+    _weatherRaf = null;
+  }
+
+  // コンテンツが3セット複製されている前提で1セット分の幅を計算
+  let oneSetWidth = 0;
+  let x = 0;
+  let lastTime = null;
+  let paused = false;
+
+  // スピード: px/秒（スマホは速め）
+  const speed = window.matchMedia('(max-width: 768px)').matches ? 90 : 55;
+
+  const tick = (now) => {
+    if (!lastTime) lastTime = now;
+    const dt = Math.min((now - lastTime) / 1000, 0.05); // 最大50msで上限（タブ非表示復帰対策）
+    lastTime = now;
+
+    // 幅が未計算 or リサイズ後の再計算
+    if (!oneSetWidth && el.scrollWidth > 0) {
+      oneSetWidth = el.scrollWidth / 3;
+    }
+
+    if (!paused && oneSetWidth > 0) {
+      x -= speed * dt;
+      // 1セット分ずれたらリセット（シームレスループ）
+      if (x <= -oneSetWidth) x += oneSetWidth;
+      const val = `translate3d(${x.toFixed(2)}px, 0, 0)`;
+      el.style.transform = val;
+      el.style.webkitTransform = val;
+    }
+
+    _weatherRaf = requestAnimationFrame(tick);
+  };
+
+  // タッチ（スマホ）・マウス（PC）でホバー一時停止
+  el.addEventListener('mouseenter', () => { paused = true; });
+  el.addEventListener('mouseleave', () => { paused = false; });
+  el.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+  el.addEventListener('touchend',   () => { setTimeout(() => { paused = false; }, 800); }, { passive: true });
+
+  _weatherRaf = requestAnimationFrame(tick);
+}
+
 async function renderWeather() {
   const container = document.getElementById('weatherItems');
   if (!container) return;
 
   const cities = getSelectedWeatherCities();
 
-  // キャッシュキーには選択中の都市IDリストを含める（選択変更時に再取得）
   const cacheKey = `popopo_weather_cache_${cities.map(c => c.id).join('_')}`;
   const cached = sessionStorage.getItem(cacheKey);
   if (cached) {
-    container.innerHTML = cached;
+    container.innerHTML = cached + cached + cached;
+    // 少し待ってからアニメ開始（DOM描画完了を待つ）
+    setTimeout(startWeatherMarquee, 100);
     return;
   }
 
@@ -2290,6 +2344,8 @@ async function renderWeather() {
     const html = results.join('');
     container.innerHTML = html + html + html;
     sessionStorage.setItem(cacheKey, html);
+    // DOM描画後にアニメ開始
+    setTimeout(startWeatherMarquee, 100);
   } catch (error) {
     console.error('Weather fetch failed:', error);
     container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">一時的に取得できません</span>';
