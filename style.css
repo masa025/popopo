@@ -873,6 +873,10 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   top: auto;
   bottom: 12px;
 }
+/* スポットカードでは「行きたい」ボタンの隣に並べるため絶対配置を解除 */
+.spot-card .post-actions {
+  position: static;
+}
 .btn-post-action {
   width: 34px;
   height: 34px;

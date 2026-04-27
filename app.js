@@ -631,13 +631,15 @@ function syncLocalWithRemote(type, remoteList) {
 
 // --- 自分の投稿判別・アクション表示 ---
 function isMyEntity(entity, type) {
-  const list = type === 'chat' ? localChats : localPosts;
+  let list = [];
+  if (type === 'chat') list = localChats;
+  else if (type === 'post') list = localPosts;
+  else if (type === 'suggestion') list = localSuggestions;
+  
   const entityId = entity.clientId || entity.id;
   if (!entityId) return false;
   
   const isMatch = list.some(e => (e.clientId || e.id) === entityId);
-  // Debug用（不具合調査）
-  if (isMatch) console.log(`[MyPost Match] Type: ${type}, ID: ${entityId}`);
   return isMatch;
 }
 
@@ -654,21 +656,25 @@ function renderPostActions(entity, type) {
 }
 
 async function requestDeleteEntity(id, clientId, type) {
-  if (!confirm('この投稿を削除してもよろしいですか？\n削除すると元に戻せません。')) return;
+  if (!confirm('この内容を削除してもよろしいですか？\n削除すると元に戻せません。')) return;
   
   try {
     if (type === 'chat') {
       await deleteChatRecord(id, clientId);
       showToast('つぶやきを削除しました。');
-    } else {
+    } else if (type === 'post') {
       await deletePostRecord(id, clientId);
       showToast('投稿を削除しました。');
+    } else if (type === 'suggestion') {
+      await deleteSuggestionRecord(id, clientId);
+      showToast('スポットの提案を削除しました。');
     }
   } catch (err) {
     console.error('Delete failed:', err);
     alert('削除に失敗しました。管理者にお問い合わせください。');
   }
 }
+
 
 async function deleteChatRecord(id, clientId) {
   // Local 削除
@@ -698,13 +704,32 @@ async function deletePostRecord(id, clientId) {
   renderHeroBackdrop();
 }
 
+async function deleteSuggestionRecord(id, clientId) {
+  // Local 削除
+  localSuggestions = localSuggestions.filter(s => (s.clientId || s.id) !== clientId);
+  localStorage.setItem('popopo_suggestions', JSON.stringify(localSuggestions));
+  
+  // Remote 削除
+  if (db && id) {
+    await db.collection('suggestions').doc(id).delete().catch(e => console.warn(e));
+  }
+  
+  const activeTab = getActiveSpotCategory();
+  renderSpotCards(activeTab);
+  renderHeroBackdrop();
+}
+
 function startEditEntity(id, clientId, type) {
   if (type === 'chat') {
     const chat = allChats.find(c => (c.clientId || c.id) === clientId);
     if (chat) openChatModal(chat.message, id, clientId);
-  } else {
+  } else if (type === 'post') {
     const post = allPosts.find(p => (p.clientId || p.id) === clientId);
     if (post) openModal(post.spotName, id, clientId);
+  } else if (type === 'suggestion') {
+    const suggs = getAllSpotItemsForDisplay().filter(s => s.suggested);
+    const sugg = suggs.find(s => (s.clientId || s.id) === clientId);
+    if (sugg) openAddSpotModal(id, clientId);
   }
 }
 
@@ -712,6 +737,7 @@ function listenSuggestions(callback) {
   if (db) {
     db.collection('suggestions').orderBy('timestamp', 'desc').onSnapshot(snap => {
       latestRemoteSuggestions = snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis?.() || Date.now() }));
+      syncLocalWithRemote('suggestion', latestRemoteSuggestions);
       callback(mergeSuggestions(latestRemoteSuggestions));
       renderHeroBackdrop();
     }, () => {
@@ -1491,18 +1517,20 @@ function renderSpotCards(cat = 'all') {
     <div class="spot-card" data-cat="${s.cat}" data-id="${s.id}">
       <div class="spot-card-top">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
-        <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}" aria-pressed="${localLikes[s.id] ? 'true' : 'false'}">
-          <span class="spot-like-icon">${localLikes[s.id] ? '✅' : '🔖'}</span>
-          <span class="spot-like-label">${localLikes[s.id] ? '行きたい済み' : '行きたい'}</span>
-          <span class="spot-like-count" id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${s.suggested ? renderPostActions(s, 'suggestion') : ''}
+          <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}" aria-pressed="${localLikes[s.id] ? 'true' : 'false'}">
+            <span class="spot-like-icon">${localLikes[s.id] ? '✅' : '🔖'}</span>
+            <span class="spot-like-label">${localLikes[s.id] ? '行きたい済み' : '行きたい'}</span>
+            <span class="spot-like-count" id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
+          </button>
+        </div>
       </div>
       ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
       <div class="spot-name">${escHtml(s.name)}</div>
       <div class="spot-area"><span>📍 ${escHtml(s.area)}${s.pref && s.pref !== '東京' && s.pref !== '全国' && s.pref !== 'オンライン' ? '（' + escHtml(s.pref) + '）' : ''}</span></div>
-      ${s.memo ? `<div class="spot-memo">${escHtml(s.memo)}</div>` : ''}
+      ${s.memo || s.reason ? `<div class="spot-memo">${escHtml(s.memo || s.reason)}</div>` : ''}
       ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">提案者：${escHtml(s.suggestedBy)}</div>` : ''}
-      ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
       ${resources.length ? `<div class="spot-resources">${renderResourceLinks(resources, 'spot', 'spot-link')}</div>` : ''}
       <div class="spot-footer">
         <button class="spot-reviews-btn" data-spotname="${escHtml(s.name)}">💬 みんなの感想（${reviewCount}件）</button>
@@ -1686,12 +1714,38 @@ function populateModalSpotSelect(preselect = '') {
 // 6. モーダル制御
 // ============================================================
 // スポット追加モーダル
-function openAddSpotModal() {
-  document.getElementById('addSpotModal').classList.add('is-open');
+function openAddSpotModal(id = null, clientId = null) {
+  editingId = id;
+  editingClientId = clientId;
+
+  const modal = document.getElementById('addSpotModal');
+  const title = modal.querySelector('.modal-title') || modal.querySelector('h3');
+  const btn = document.getElementById('addSpotSubmitBtn');
+
+  modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
   document.getElementById('addSpotForm').reset();
   document.getElementById('asCharNum').textContent = '0';
   clearResourceValidation('spot');
+
+  if (editingClientId) {
+    if (title) title.textContent = '✨ スポット情報を編集';
+    if (btn) btn.textContent = '更新する 🚀';
+    
+    const suggs = getAllSpotItemsForDisplay().filter(s => s.suggested);
+    const s = suggs.find(item => (item.clientId || item.id) === editingClientId);
+    if (s) {
+      document.getElementById('asName').value = s.name || '';
+      document.getElementById('asArea').value = s.area || '';
+      document.getElementById('asCat').value = s.cat || 'food';
+      document.getElementById('asReason').value = s.reason || '';
+      document.getElementById('asUrl').value = s.url || '';
+      document.getElementById('asNick').value = s.nickname || '';
+    }
+  } else {
+    if (title) title.textContent = '✨ スポットを提案する';
+    if (btn) btn.textContent = '提案を送る 🚀';
+  }
 }
 function closeAddSpotModal() {
   document.getElementById('addSpotModal').classList.remove('is-open');
@@ -1973,18 +2027,41 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     nickname: document.getElementById('asNick').value.trim()
   };
   try {
-    await saveSpotSuggestion(data);
+    if (editingClientId) {
+      await updateSuggestionRecord(editingId, editingClientId, data);
+      showToast('スポット情報を更新しました！');
+    } else {
+      await saveSpotSuggestion(data);
+      showToast('スポットを提案しました！誰かの次の休日のヒントになります。');
+    }
     closeAddSpotModal();
     const activeTab = document.querySelector('.tab.active');
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
     renderWeeklyDiscovery();
-    showToast('スポットを追加しました！誰かの次の休日のヒントになります。');
   } catch(err) {
-    alert('追加に失敗しました。もう一度お試しください。');
+    console.error('Submit failed:', err);
+    alert('エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
-    btn.disabled = false; btn.textContent = '追加する ✨';
+    btn.disabled = false;
+    btn.textContent = editingClientId ? '更新する 🚀' : '提案を送る 🚀';
+    editingId = null;
+    editingClientId = null;
   }
 });
+
+async function updateSuggestionRecord(id, clientId, data) {
+  // Local 更新
+  localSuggestions = localSuggestions.map(s => (s.clientId || s.id) === clientId ? { ...s, ...data, timestamp: Date.now() } : s);
+  localStorage.setItem('popopo_suggestions', JSON.stringify(localSuggestions));
+  
+  // Remote 更新
+  if (db && id) {
+    await db.collection('suggestions').doc(id).update({
+      ...data,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
 
 // チャットフォーム送信
 document.getElementById('chatForm').addEventListener('submit', async (e) => {
