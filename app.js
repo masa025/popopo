@@ -603,7 +603,11 @@ function listenPosts(callback) {
 }
 
 function syncLocalWithRemote(type, remoteList) {
-  let localList = type === 'chat' ? localChats : localPosts;
+  let localList = [];
+  if (type === 'chat') localList = localChats;
+  else if (type === 'post') localList = localPosts;
+  else if (type === 'suggestion') localList = localSuggestions;
+  
   const remoteClientIds = new Set(remoteList.map(r => r.clientId).filter(Boolean));
   
   const now = Date.now();
@@ -977,7 +981,8 @@ function setActiveSpotCategory(cat = 'all') {
 }
 
 function getSuggestedSpotItems() {
-  return sortNewest(localSuggestions).map(s => ({
+  const merged = mergeSuggestions();
+  return merged.map(s => ({
     id: s.id || s.clientId || '',
     cat: s.cat,
     catLabel: getCatLabel(s.cat),
