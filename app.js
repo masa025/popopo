@@ -1952,7 +1952,7 @@ function bindEvents() {
   const updateBottomNavActive = () => {
     const sections = ['spots', 'visited', 'community'];
     const scrollY = window.scrollY + window.innerHeight / 2;
-    let activeSection = '';
+    let activeSection = 'spots'; // デフォルトはスポット（ページ最上部 = スポットへ誘導）
     for (const id of sections) {
       const el = document.getElementById(id);
       if (el && el.offsetTop <= scrollY) activeSection = id;
@@ -1968,7 +1968,7 @@ function bindEvents() {
     if (scrollHint) scrollHint.classList.toggle('is-hidden', window.scrollY > 90);
     updateBottomNavActive();
   }, { passive: true });
-  updateBottomNavActive();
+  updateBottomNavActive(); // 初期表示でスポットをアクティブに
   document.getElementById('hamburger').addEventListener('click', () => {
     document.getElementById('navMobile').classList.toggle('open');
   });

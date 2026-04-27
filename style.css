@@ -779,7 +779,7 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     letter-spacing: 0.02em;
   }
 
-  /* 中央の「つぶやく」ボタンをアクセントカラーに */
+  /* 中央の「つぶやく」ボタンをグリーンのCTAに変更（青いアクティブ状態と明示的に区別） */
   .bottom-nav-post {
     color: #fff;
     position: relative;
@@ -790,16 +790,23 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
     content: '';
     position: absolute;
     inset: 8px 10px;
-    background: var(--blue);
+    background: linear-gradient(135deg, #34c759, #28a745);
     border-radius: 16px;
     z-index: -1;
-    box-shadow: 0 4px 14px rgba(91, 141, 238, 0.4);
+    box-shadow: 0 4px 14px rgba(52, 199, 89, 0.45);
     transition: transform 0.15s, box-shadow 0.15s;
+    animation: navPostPulse 2.8s ease-in-out infinite;
+  }
+
+  @keyframes navPostPulse {
+    0%, 100% { box-shadow: 0 4px 14px rgba(52, 199, 89, 0.45); }
+    50%       { box-shadow: 0 4px 22px rgba(52, 199, 89, 0.7); }
   }
 
   .bottom-nav-post:active::before {
     transform: scale(0.94);
-    box-shadow: 0 2px 8px rgba(91, 141, 238, 0.3);
+    box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+    animation: none;
   }
 
   .bottom-nav-post::after {
