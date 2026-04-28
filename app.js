@@ -2015,11 +2015,18 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     name, area,
     cat: document.getElementById('asCat').value,
     reason,
-    url: resources[0]?.url || '',
-    urls: resources.map(r => r.url),
-    resources,
     nickname: document.getElementById('asNick').value.trim()
   };
+  
+  if (resources && resources.length > 0) {
+    data.url = resources[0]?.url || '';
+    data.urls = resources.map(r => r.url);
+    data.resources = resources;
+  } else if (!editingClientId) {
+    data.url = '';
+    data.urls = [];
+    data.resources = [];
+  }
   try {
     if (editingClientId) {
       await updateSuggestionRecord(editingId, editingClientId, data);
@@ -2153,10 +2160,16 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
     area: spotArea,
     visitDate: document.getElementById('fDate').value,
     rating: selectedRating,
-    comment,
-    media,
-    photoUrl: media.find(item => item.kind === 'photo')?.url || media[0]?.url || ''
+    comment
   };
+
+  if (media && media.length > 0) {
+    postData.media = media;
+    postData.photoUrl = media.find(item => item.kind === 'photo')?.url || media[0]?.url || '';
+  } else if (!editingClientId) {
+    postData.media = [];
+    postData.photoUrl = '';
+  }
 
   try {
     if (editingClientId) {
