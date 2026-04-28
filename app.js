@@ -1752,6 +1752,12 @@ function openChatModal(prefill = '', id = null, clientId = null) {
   if (editingClientId) {
     if (title) title.textContent = '💬 つぶやきを編集';
     if (btn) btn.textContent = '更新する 🚀';
+    
+    const chat = allChats.find(c => (c.clientId || c.id) === editingClientId);
+    if (chat) {
+      const nickInput = document.getElementById('cNick');
+      if (nickInput) nickInput.value = chat.nickname === '匿名リスナー' ? '' : (chat.nickname || '');
+    }
   } else {
     if (title) title.textContent = '💬 つぶやく';
     if (btn) btn.textContent = '投稿する 🚀';
