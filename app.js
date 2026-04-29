@@ -1941,7 +1941,23 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
 
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
+  // ズーム状態をリセット
+  image.classList.remove('is-zoomed');
 }
+
+// ズーム切り替えのイベントリスナー（ページ読み込み時に一度だけ登録）
+document.addEventListener('DOMContentLoaded', () => {
+  const modalImg = document.getElementById('galleryModalImage');
+  if (modalImg) {
+    modalImg.addEventListener('click', (e) => {
+      // 合言葉ロック中などは反応させない
+      if (modalImg.src && !document.getElementById('galleryLockVisual')?.offsetParent) {
+        e.stopPropagation();
+        modalImg.classList.toggle('is-zoomed');
+      }
+    });
+  }
+});
 
 function openGalleryItem(card) {
   if (!card) return;
@@ -2070,6 +2086,10 @@ function injectGalleryNavButtons() {
   // Clean up old buttons and page num
   visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
   if (pageNumEl) pageNumEl.hidden = true;
+  
+  // ページ切り替え時にズームを解除
+  const modalImg = document.getElementById('galleryModalImage');
+  if (modalImg) modalImg.classList.remove('is-zoomed');
 
   if (currentGalleryIndex < 0) return;
   
