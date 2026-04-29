@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>使い方 | POPOPO お出かけマップ</title>
-  <meta name="description" content="POPOPO お出かけマップの使い方。リスナー作品、行きたいリスト、おすすめスポット、みんなの感想、フリートーク、スポット追加の流れを紹介します。">
+  <meta name="description" content="POPOPO お出かけマップの使い方。今日の小さな発見、リスナー作品、行きたいリスト、おすすめスポット、みんなの感想、フリートーク、スポット追加の流れを紹介します。">
   <meta name="author" content="masa0a">
   <link rel="canonical" href="https://popopo-comm.netlify.app/how-to.html">
   <meta property="og:locale" content="ja_JP">
@@ -22,12 +22,12 @@
   <meta name="twitter:image" content="https://popopo-comm.netlify.app/assets/social-card.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Yomogi&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css?v=20260427-2">
+  <link rel="stylesheet" href="style.css?v=20260429-4">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -39,8 +39,13 @@
     "step": [
       {
         "@type": "HowToStep",
+        "name": "今日の小さな発見を見る",
+        "text": "ページ上部に毎日ランダムで表示されるおすすめを押して、スポットカードを開きます。"
+      },
+      {
+        "@type": "HowToStep",
         "name": "リスナー作品を見る",
-        "text": "トップの流れる作品アイコンを押して、配信中に届いた作品を大きく表示します。"
+        "text": "トップの流れる作品アイコンを押して、配信中に届いた作品や用語辞典を大きく表示します。"
       },
       {
         "@type": "HowToStep",
@@ -49,18 +54,18 @@
       },
       {
         "@type": "HowToStep",
-        "name": "みんなの感想を見る",
-        "text": "行ってみた感想や投稿されたコメントを確認し、見たよボタンで読んだことを伝えます。"
+        "name": "みんなの感想を見る・投稿する",
+        "text": "行ってみた感想や投稿されたコメントを確認し、見たよボタンで読んだことを伝えます。感想は同じ端末のブラウザから編集・削除できます。"
       },
       {
         "@type": "HowToStep",
         "name": "スポットを追加する",
-        "text": "気になる場所やおすすめしたい場所をスポットとして追加します。"
+        "text": "気になる場所やおすすめしたい場所をスポットとして追加します。追加したスポットは同じ端末のブラウザから編集・削除できます。"
       },
       {
         "@type": "HowToStep",
         "name": "フリートークに投稿する",
-        "text": "POPOPOの感想やサイトへの意見などを自由に投稿します。"
+        "text": "POPOPOの感想やサイトへの意見などを自由に投稿します。つぶやきは同じ端末のブラウザから編集・削除できます。"
       }
     ]
   }
@@ -97,9 +102,9 @@
         <span class="guide-kicker">はじめての方向け</span>
         <h1 class="guide-title">POPOPO お出かけマップの使い方</h1>
         <p class="guide-lead">
-          POPOPOお出かけマップは、詳しいレビューを書くだけの場所ではありません。<br>
+          POPOPO お出かけマップは、詳しいレビューを書くためだけの場所ではありません。<br>
           「ここ気になる」「行ってみたい」「ちょっと良かった」そんな一言から参加できます。<br>
-          あなたの小さな発見が、誰かの休日のきっかけになります。
+          あなたの小さな発見が、誰かのお出かけのきっかけになります。
         </p>
         <div class="guide-actions">
           <a href="index.html#spots" class="btn-primary">スポットを探す →</a>
@@ -113,43 +118,58 @@
         <div class="guide-grid">
           <article class="guide-card">
             <span class="guide-num">1</span>
-            <h2>リスナー作品を楽しむ</h2>
-            <p>トップの小さな作品アイコンは、配信中に届いた作品です。右から左へ流れるアイコンを押すと大きく表示されます。一部の作品は、ヒントに答えると開ける合言葉つきです。</p>
+            <h2>今日の小さな発見を見る</h2>
+            <p>ページ上部には、毎日ランダムでひとつのおすすめが表示されます。気になる名前を押すと、そのスポットカードまで移動できます。</p>
           </article>
           <article class="guide-card">
             <span class="guide-num">2</span>
+            <h2>リスナー作品を楽しむ</h2>
+            <p>トップの小さな作品アイコンは、配信中に届いた作品です。右から左へ流れるアイコンを押すと大きく表示されます。「すべての作品・辞典を見る」から一覧でも楽しめます。</p>
+          </article>
+          <article class="guide-card">
+            <span class="guide-num">3</span>
             <h2>スポットを探す</h2>
             <p>POPOPOで紹介された場所や、リスナーおすすめの場所をカテゴリ別に見られます。気になる場所は「行きたい」を押すと、同じ端末の「行きたいリスト」に集められます。</p>
           </article>
           <article class="guide-card">
-            <span class="guide-num">3</span>
+            <span class="guide-num">4</span>
             <h2>感想を見る・投稿する</h2>
             <p>スポットカードの「みんなの感想」から、その場所の感想一覧を見られます。読んだ感想には「見たよ」でリアクションできます。行ってみた場所は「行ってみた！」から評価やコメントを投稿できます。</p>
           </article>
           <article class="guide-card">
-            <span class="guide-num">4</span>
+            <span class="guide-num">5</span>
             <h2>スポットを追加する</h2>
             <p>おすすめしたい場所や気になっている場所があれば、「スポットを追加する」から提案できます。参考URL・写真・情報を3件まで種類つきで登録でき、画像URLならカードにプレビューも表示されます。</p>
           </article>
           <article class="guide-card">
-            <span class="guide-num">5</span>
+            <span class="guide-num">6</span>
             <h2>フリートークで話す</h2>
             <p>POPOPOの感想、サイトへのご意見、今度行きたい場所、ちょっとしたお出かけメモなどを自由に投稿できます。新しい投稿から順に表示され、必要な分だけ「もっと見る」で広げられます。</p>
           </article>
         </div>
-        <p class="guide-note">投稿内容は公開されます。個人情報の取り扱い等には十分に注意してください。写真は画像ファイルを直接アップロードする形式ではなく、SNSや共有リンクのURLを貼る形です。「行きたいリスト」はログイン不要で使えるよう、同じ端末のブラウザに保存されます。</p>
+        <p class="guide-note">投稿内容は公開されます。個人情報の取り扱い等には十分に注意してください。スポット・感想・つぶやきは、同じ端末のブラウザでは投稿後に編集・削除できます。写真は画像ファイルを直接アップロードする形式ではなく、SNSや共有リンクのURLを貼る形です。「行きたいリスト」はログイン不要で使えるよう、同じ端末のブラウザに保存されます。</p>
       </div>
     </section>
   </main>
 
-  <footer>
+  <footer id="siteFooter">
     <div class="footer-inner">
       <div class="footer-logo">
         <span class="logo-main">POPOPO</span>
         <span class="logo-sub">お出かけマップ</span>
       </div>
       <p class="footer-desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
-      <p class="footer-credit">Powered by POPOPO Community</p>
+      <p class="footer-update">最終更新：2026年4月29日</p>
+      <p class="footer-credit">Nurtured by everyone's kindness</p>
+      <div class="footer-admin">
+        <img class="footer-admin-avatar" src="assets/admin-profile.jpg" alt="お手入れ係 masa0a のプロフィール画像" width="96" height="96" loading="lazy">
+        <div class="footer-admin-body">
+          <p class="footer-admin-label">お手入れ係</p>
+          <a class="footer-admin-link" href="https://bsky.app/profile/masa0a.bsky.social" target="_blank" rel="noopener">
+            🦋 masa0a へ連絡する / Bluesky
+          </a>
+        </div>
+      </div>
     </div>
   </footer>
 

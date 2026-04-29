@@ -1884,6 +1884,73 @@ function rememberGalleryUnlock(imageSrc) {
   }
 }
 
+function isDictionaryGalleryItem(item) {
+  return Boolean(item && (item.type === 'dict' || item.type === 'dict_page'));
+}
+
+function getGalleryItemByImage(imageSrc) {
+  if (typeof GALLERY_ITEMS === 'undefined') return null;
+  return GALLERY_ITEMS.find(item => item.image === imageSrc) || null;
+}
+
+function getCurrentGalleryItem() {
+  if (typeof GALLERY_ITEMS === 'undefined' || currentGalleryIndex < 0) return null;
+  return GALLERY_ITEMS[currentGalleryIndex] || null;
+}
+
+function isCurrentGalleryDictionary() {
+  return isDictionaryGalleryItem(getCurrentGalleryItem());
+}
+
+function getSameGalleryTypeItems(currentItem) {
+  if (typeof GALLERY_ITEMS === 'undefined' || !currentItem) return [];
+  const isDict = isDictionaryGalleryItem(currentItem);
+  return GALLERY_ITEMS.map((item, idx) => ({ item, idx })).filter(entry => {
+    if (isDict) return isDictionaryGalleryItem(entry.item);
+    return entry.item.type === currentItem.type;
+  });
+}
+
+function setGalleryModalMode(imageSrc) {
+  const modalBox = document.querySelector('.gallery-modal-box');
+  const item = getCurrentGalleryItem() || getGalleryItemByImage(imageSrc);
+  if (modalBox) modalBox.classList.toggle('is-dictionary-mode', isDictionaryGalleryItem(item));
+}
+
+function hideDictionaryThumbs() {
+  const thumbs = document.getElementById('galleryDictThumbs');
+  if (!thumbs) return;
+  thumbs.hidden = true;
+  thumbs.innerHTML = '';
+}
+
+function setGalleryBaseControls(isDict) {
+  const btnPrev = document.getElementById('galleryBtnPrev');
+  const btnNext = document.getElementById('galleryBtnNext');
+  const btnZoomIn = document.getElementById('galleryBtnZoomIn');
+  const btnZoomOut = document.getElementById('galleryBtnZoomOut');
+  if (btnPrev) {
+    btnPrev.textContent = isDict ? '前へ' : '◀︎';
+    btnPrev.style.opacity = '0.3';
+    btnPrev.style.pointerEvents = 'none';
+    btnPrev.onclick = (e) => e.stopPropagation();
+  }
+  if (btnNext) {
+    btnNext.textContent = isDict ? '次へ' : '▶︎';
+    btnNext.style.opacity = '0.3';
+    btnNext.style.pointerEvents = 'none';
+    btnNext.onclick = (e) => e.stopPropagation();
+  }
+  if (btnZoomIn) {
+    btnZoomIn.textContent = isDict ? '拡大' : '＋';
+    btnZoomIn.onclick = (e) => { e.stopPropagation(); setGalleryZoom(true); };
+  }
+  if (btnZoomOut) {
+    btnZoomOut.textContent = isDict ? '戻す' : '－';
+    btnZoomOut.onclick = (e) => { e.stopPropagation(); resetGalleryZoom(); };
+  }
+}
+
 function setGalleryLockState(locked, hint = '') {
   const visual = document.getElementById('galleryModalVisual');
   const lockVisual = document.getElementById('galleryLockVisual');
@@ -1910,6 +1977,7 @@ function showGalleryImage(imageSrc, title, caption, alt) {
   const captionEl = document.getElementById('galleryModalCaption');
   if (!modal || !image || !titleEl || !captionEl) return;
   setGalleryLockState(false);
+  setGalleryModalMode(imageSrc);
   image.src = imageSrc;
   image.alt = alt || title || '配信で届いた作品';
   titleEl.textContent = title || '配信で届いた作品';
@@ -1925,6 +1993,9 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
 
   const needsUnlock = Boolean(lockAnswer);
   const isUnlocked = needsUnlock && isGalleryUnlocked(imageSrc);
+  const isDict = isDictionaryGalleryItem(getCurrentGalleryItem() || getGalleryItemByImage(imageSrc));
+  setGalleryModalMode(imageSrc);
+  setGalleryBaseControls(isDict);
   titleEl.textContent = title || '配信で届いた作品';
   captionEl.textContent = caption || '';
 
@@ -1933,6 +2004,7 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
     image.src = '';
     image.alt = '';
     setGalleryLockState(true, lockHint || '合言葉を入力してください。');
+    hideDictionaryThumbs();
     window.setTimeout(() => document.getElementById('galleryLockInput')?.focus(), 60);
   } else {
     pendingGalleryUnlock = null;
@@ -1941,14 +2013,10 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
 
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
-  // ズーム状態とフォーカスモードをリセット
-  image.classList.remove('is-zoomed');
-  const modalBox = document.querySelector('.gallery-modal-box');
-  if (modalBox) modalBox.classList.remove('is-focus-mode');
-  image.style.transform = ''; // 移動位置もリセット
+  resetGalleryZoom();
 
   // 操作ガイドを表示
-  showGalleryHint('画像をタップで拡大・ドラッグで移動');
+  showGalleryHint(isDict ? 'ダブルタップ・ピンチで拡大、下のボタンでページ移動できます' : '画像をタップで拡大・ドラッグで移動');
 }
 
 function showGalleryHint(text) {
@@ -1967,6 +2035,60 @@ function showGalleryHint(text) {
 // ズーム・パン（移動）のロジック
 let isDragging = false;
 let startX, startY, translateX = 0, translateY = 0;
+let galleryZoomScale = 1;
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+let lastGalleryTapTime = 0;
+
+function getTouchDistance(touches) {
+  if (!touches || touches.length < 2) return 0;
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.hypot(dx, dy);
+}
+
+function clampGalleryScale(scale) {
+  return Math.max(1, Math.min(scale, isCurrentGalleryDictionary() ? 3.4 : 3));
+}
+
+function applyGalleryTransform() {
+  const image = document.getElementById('galleryModalImage');
+  if (!image) return;
+  if (galleryZoomScale <= 1) {
+    image.style.transform = '';
+    return;
+  }
+  image.style.transform = `scale(${galleryZoomScale}) translate(${translateX / galleryZoomScale}px, ${translateY / galleryZoomScale}px)`;
+}
+
+function setGalleryZoom(zoomed, scale = null) {
+  const image = document.getElementById('galleryModalImage');
+  const modalBox = document.querySelector('.gallery-modal-box');
+  if (!image) return;
+  const isDict = isCurrentGalleryDictionary();
+  if (zoomed) {
+    galleryZoomScale = clampGalleryScale(scale || (isDict ? 2.15 : (window.innerWidth > 1024 ? 3 : 2.5)));
+    image.classList.add('is-zoomed');
+    if (modalBox) {
+      modalBox.classList.toggle('is-focus-mode', !isDict);
+      modalBox.classList.toggle('is-dictionary-zoomed', isDict);
+    }
+  } else {
+    galleryZoomScale = 1;
+    translateX = 0;
+    translateY = 0;
+    image.classList.remove('is-zoomed');
+    if (modalBox) modalBox.classList.remove('is-focus-mode', 'is-dictionary-zoomed');
+  }
+  applyGalleryTransform();
+}
+
+function resetGalleryZoom() {
+  isDragging = false;
+  pinchStartDistance = 0;
+  pinchStartScale = 1;
+  setGalleryZoom(false);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const modalImg = document.getElementById('galleryModalImage');
@@ -1974,15 +2096,12 @@ document.addEventListener('DOMContentLoaded', () => {
     modalImg.addEventListener('click', (e) => {
       if (modalImg.src && !document.getElementById('galleryLockVisual')?.offsetParent) {
         if (!isDragging) { // ドラッグ直後のクリック誤動作防止
-          const modalBox = document.querySelector('.gallery-modal-box');
-          const wasZoomed = modalImg.classList.contains('is-zoomed');
-          
-          modalImg.classList.toggle('is-zoomed');
-          if (modalBox) modalBox.classList.toggle('is-focus-mode'); // フォーカスモード切り替え
-
-          if (wasZoomed) {
-            modalImg.style.transform = '';
-            translateX = 0; translateY = 0;
+          const isDict = isCurrentGalleryDictionary();
+          const now = Date.now();
+          const isDoubleTap = now - lastGalleryTapTime < 320;
+          lastGalleryTapTime = now;
+          if (!isDict || isDoubleTap) {
+            setGalleryZoom(!modalImg.classList.contains('is-zoomed'));
           }
         }
       }
@@ -1990,6 +2109,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ドラッグ開始
     const startDrag = (e) => {
+      if (e.type === 'touchstart' && e.touches.length >= 2 && isCurrentGalleryDictionary()) {
+        pinchStartDistance = getTouchDistance(e.touches);
+        pinchStartScale = galleryZoomScale;
+        return;
+      }
       if (!modalImg.classList.contains('is-zoomed')) return;
       isDragging = true;
       modalImg.style.transition = 'none'; // ドラッグ中はアニメーションをオフ
@@ -2000,19 +2124,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ドラッグ中
     const moveDrag = (e) => {
+      if (e.type === 'touchmove' && e.touches.length >= 2 && pinchStartDistance > 0 && isCurrentGalleryDictionary()) {
+        e.preventDefault();
+        galleryZoomScale = clampGalleryScale(pinchStartScale * (getTouchDistance(e.touches) / pinchStartDistance));
+        setGalleryZoom(galleryZoomScale > 1.04, galleryZoomScale);
+        return;
+      }
       if (!isDragging) return;
       e.preventDefault();
       const touch = e.type === 'touchmove' ? e.touches[0] : e;
       translateX = touch.clientX - startX;
       translateY = touch.clientY - startY;
-      
-      // 拡大倍率（さらに読みやすくするために3倍へ向上）
-      const scale = window.innerWidth > 1024 ? 3 : 2.5;
-      modalImg.style.transform = `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`;
+      applyGalleryTransform();
     };
 
     // ドラッグ終了
     const endDrag = () => {
+      pinchStartDistance = 0;
       if (!isDragging) return;
       setTimeout(() => isDragging = false, 50);
       modalImg.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -2071,8 +2199,12 @@ function closeGalleryModal() {
   currentGalleryIndex = -1;
   const visual = document.getElementById('galleryModalVisual');
   const pageNumEl = document.getElementById('galleryModalPageNum');
+  const modalBox = document.querySelector('.gallery-modal-box');
   if (visual) visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
   if (pageNumEl) pageNumEl.hidden = true;
+  if (modalBox) modalBox.classList.remove('is-dictionary-mode', 'is-dictionary-zoomed', 'is-focus-mode');
+  hideDictionaryThumbs();
+  resetGalleryZoom();
   setGalleryLockState(false);
   document.body.style.overflow = '';
 }
@@ -2155,6 +2287,31 @@ function openGalleryItemByIndex(index, direction = '') {
   }
 }
 
+function renderDictionaryThumbs(sameTypeItems, currentTypeIndex, isDict) {
+  const thumbs = document.getElementById('galleryDictThumbs');
+  if (!thumbs) return;
+  if (!isDict || sameTypeItems.length <= 1) {
+    hideDictionaryThumbs();
+    return;
+  }
+  thumbs.hidden = false;
+  thumbs.innerHTML = sameTypeItems.map((entry, index) => `
+    <button class="gallery-dict-thumb ${index === currentTypeIndex ? 'is-active' : ''}" type="button" data-gallery-index="${entry.idx}" aria-label="用語辞典 ${index + 1}ページ目を開く">
+      <img src="${entry.item.image}" alt="" loading="lazy">
+      <span>${index + 1}</span>
+    </button>
+  `).join('');
+  thumbs.querySelectorAll('.gallery-dict-thumb').forEach(button => {
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const nextIndex = Number(button.dataset.galleryIndex);
+      if (Number.isFinite(nextIndex) && nextIndex !== currentGalleryIndex) {
+        openGalleryItemByIndex(nextIndex, nextIndex > currentGalleryIndex ? 'next' : 'prev');
+      }
+    });
+  });
+}
+
 function injectGalleryNavButtons() {
   const visual = document.getElementById('galleryModalVisual');
   const pageNumEl = document.getElementById('galleryModalPageNum');
@@ -2165,27 +2322,27 @@ function injectGalleryNavButtons() {
   if (pageNumEl) pageNumEl.hidden = true;
   
   // ページ切り替え時にズームを解除
-  const modalImg = document.getElementById('galleryModalImage');
-  if (modalImg) modalImg.classList.remove('is-zoomed');
+  resetGalleryZoom();
 
   if (currentGalleryIndex < 0) return;
   
   const currentItem = GALLERY_ITEMS[currentGalleryIndex];
   // Only inject nav if it's unlocked or doesn't have a lock
   const locked = currentItem.lockAnswer && !isGalleryUnlocked(currentItem.image);
-  if (locked) return;
+  if (locked) {
+    hideDictionaryThumbs();
+    return;
+  }
 
-  const isDict = currentItem.type === 'dict' || currentItem.type === 'dict_page';
-  const sameTypeItems = GALLERY_ITEMS.map((item, idx) => ({item, idx})).filter(x => {
-    if (isDict) return x.item.type === 'dict' || x.item.type === 'dict_page';
-    return x.item.type === currentItem.type;
-  });
+  const isDict = isDictionaryGalleryItem(currentItem);
+  const sameTypeItems = getSameGalleryTypeItems(currentItem);
   
   const currentTypeIndex = sameTypeItems.findIndex(x => x.idx === currentGalleryIndex);
+  renderDictionaryThumbs(sameTypeItems, currentTypeIndex, isDict);
 
   // Update page number
   if (pageNumEl && sameTypeItems.length > 1) {
-    pageNumEl.textContent = `${currentTypeIndex + 1} / ${sameTypeItems.length}`;
+    pageNumEl.textContent = isDict ? `用語辞典 ${currentTypeIndex + 1} / ${sameTypeItems.length}` : `${currentTypeIndex + 1} / ${sameTypeItems.length}`;
     pageNumEl.hidden = false;
   }
   
@@ -2194,6 +2351,11 @@ function injectGalleryNavButtons() {
   const btnNext = document.getElementById('galleryBtnNext');
   const btnZoomIn = document.getElementById('galleryBtnZoomIn');
   const btnZoomOut = document.getElementById('galleryBtnZoomOut');
+
+  if (btnPrev) btnPrev.textContent = isDict ? '前へ' : '◀︎';
+  if (btnNext) btnNext.textContent = isDict ? '次へ' : '▶︎';
+  if (btnZoomIn) btnZoomIn.textContent = isDict ? '拡大' : '＋';
+  if (btnZoomOut) btnZoomOut.textContent = isDict ? '戻す' : '－';
 
   if (btnPrev) {
     btnPrev.style.opacity = currentTypeIndex > 0 ? '1' : '0.3';
@@ -2205,24 +2367,11 @@ function injectGalleryNavButtons() {
     btnNext.style.pointerEvents = currentTypeIndex < sameTypeItems.length - 1 ? 'auto' : 'none';
     btnNext.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(sameTypeItems[currentTypeIndex + 1].idx, 'next'); };
   }
-  
-  const toggleZoom = (zoom) => {
-    const img = document.getElementById('galleryModalImage');
-    const modalBox = document.querySelector('.gallery-modal-box');
-    if (!img) return;
-    if (zoom) {
-      img.classList.add('is-zoomed');
-      if (modalBox) modalBox.classList.add('is-focus-mode');
-    } else {
-      img.classList.remove('is-zoomed');
-      if (modalBox) modalBox.classList.remove('is-focus-mode');
-      img.style.transform = '';
-      translateX = 0; translateY = 0;
-    }
-  };
 
-  if (btnZoomIn) btnZoomIn.onclick = (e) => { e.stopPropagation(); toggleZoom(true); };
-  if (btnZoomOut) btnZoomOut.onclick = (e) => { e.stopPropagation(); toggleZoom(false); };
+  if (btnZoomIn) btnZoomIn.onclick = (e) => { e.stopPropagation(); setGalleryZoom(true); };
+  if (btnZoomOut) btnZoomOut.onclick = (e) => { e.stopPropagation(); resetGalleryZoom(); };
+
+  if (isDict) return;
   
   if (currentTypeIndex > 0) {
     const prevIdx = sameTypeItems[currentTypeIndex - 1].idx;
@@ -2243,6 +2392,16 @@ function injectGalleryNavButtons() {
   }
 }
 
+function moveGalleryFromCurrent(direction) {
+  const currentItem = getCurrentGalleryItem();
+  if (!currentItem || (currentItem.lockAnswer && !isGalleryUnlocked(currentItem.image))) return;
+  const sameTypeItems = getSameGalleryTypeItems(currentItem);
+  const currentTypeIndex = sameTypeItems.findIndex(x => x.idx === currentGalleryIndex);
+  const nextTypeIndex = direction === 'next' ? currentTypeIndex + 1 : currentTypeIndex - 1;
+  if (nextTypeIndex < 0 || nextTypeIndex >= sameTypeItems.length) return;
+  openGalleryItemByIndex(sameTypeItems[nextTypeIndex].idx, direction);
+}
+
 // スワイプ操作の検知
 let touchStartX = 0;
 document.addEventListener('DOMContentLoaded', () => {
@@ -2253,15 +2412,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
     
     visual.addEventListener('touchend', (e) => {
+      if (document.getElementById('galleryModalImage')?.classList.contains('is-zoomed')) return;
       const touchEndX = e.changedTouches[0].screenX;
       const diff = touchEndX - touchStartX;
       if (Math.abs(diff) > 40) { // 40px以上のスワイプで反応
         if (diff < 0) {
           // 次へ（左スワイプ）
-          document.querySelector('.modal-img-nav.next')?.click();
+          moveGalleryFromCurrent('next');
         } else {
           // 前へ（右スワイプ）
-          document.querySelector('.modal-img-nav.prev')?.click();
+          moveGalleryFromCurrent('prev');
         }
       }
     }, { passive: true });

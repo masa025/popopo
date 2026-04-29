@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>POPOPO お出かけマップ | みんなで作る休日案内</title>
-  <meta name="description" content="POPOPO お出かけマップで、リスナーおすすめスポット、みんなの感想、フリートークを共有。検索やAIではなく、誰かの言葉から次の休日を見つけるコミュニティです。">
+  <title>POPOPO お出かけマップ | みんなで作るお出かけマップ</title>
+  <meta name="description" content="POPOPO お出かけマップで、リスナーおすすめスポット、みんなの感想、フリートークを共有。検索やAIではなく、誰かの言葉から次のお出かけを見つけるコミュニティです。">
   <meta name="google-site-verification" content="QZMkVUNM2MBvgmuVahQX4sgTYkAAfBdRGzGwmafOM1A" />
   <meta name="author" content="masa0a">
   <link rel="canonical" href="https://popopo-comm.netlify.app/">
   <meta property="og:locale" content="ja_JP">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="POPOPO お出かけマップ">
-  <meta property="og:title" content="POPOPO お出かけマップ | みんなで作る休日案内">
-  <meta property="og:description" content="検索やAIではなく、誰かの言葉から次の休日を見つける。POPOPO お出かけマップは、みんなでおすすめスポットや感想を持ち寄るコミュニティです。">
+  <meta property="og:title" content="POPOPO お出かけマップ | みんなで作るお出かけマップ">
+  <meta property="og:description" content="検索やAIではなく、誰かの言葉から次のお出かけを見つける。POPOPO お出かけマップは、みんなでおすすめスポットや感想を持ち寄るコミュニティです。">
   <meta property="og:url" content="https://popopo-comm.netlify.app/">
   <meta property="og:image" content="https://popopo-comm.netlify.app/assets/social-card.png">
   <meta property="og:image:width" content="1200">
@@ -36,7 +36,7 @@
   <meta name="twitter:image" content="https://popopo-comm.netlify.app/assets/social-card.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Yomogi&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260427-2">
+  <link rel="stylesheet" href="style.css?v=20260429-4">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -131,8 +131,8 @@
           <button id="viewAllGalleryBtn" class="btn-gallery-all">🖼️ すべての作品・辞典を見る</button>
         </div>
       </div>
-      <h1 class="hero-title">みんなで作る<br><span class="hero-accent">休日お出かけマップ</span></h1>
-      <p class="hero-sub">人から人へ伝わる、ちいさな旅案内。<br>POPOPO コミュニティでおすすめや感想を<br>みんなで集めています。あなたのおすすめもぜひ教えてください！</p>
+      <h1 class="hero-title">みんなで作る<br><span class="hero-accent">お出かけマップ</span></h1>
+      <p class="hero-sub">人から人へ伝わる、ちいさなお出かけ案内。<br>POPOPO コミュニティでおすすめや感想を<br>みんなで集めています。あなたのおすすめもぜひ教えてください！</p>
       <a href="about.html" class="hero-story-link">🌿 この場所を作った理由</a>
       <div class="hero-stats">
         <a href="#spots" class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></a>
@@ -317,6 +317,7 @@
             <div class="gallery-ctrl-divider"></div>
             <button id="galleryBtnNext" class="gallery-ctrl-btn" title="次へ">▶︎</button>
           </div>
+          <div id="galleryDictThumbs" class="gallery-dict-thumbs" aria-label="用語辞典のページ" hidden></div>
         </div>
         <div class="gallery-modal-copy">
           <div id="galleryLockPanel" class="gallery-lock-panel" hidden>
@@ -342,6 +343,7 @@
         <button class="modal-close" id="modalClose" aria-label="閉じる">✕</button>
       </div>
       <form id="postForm" class="modal-form" novalidate>
+        <p class="form-assurance">同じ端末のブラウザでは、投稿後に編集・削除できます。</p>
         <div class="form-group">
           <label class="form-label" for="fNick">ニックネーム（任意）</label>
           <input type="text" id="fNick" class="form-input" placeholder="匿名リスナー" maxlength="20">
@@ -435,6 +437,7 @@
         <button class="modal-close" id="addSpotModalClose" aria-label="閉じる">✕</button>
       </div>
       <form id="addSpotForm" class="modal-form" novalidate>
+        <p class="form-assurance">同じ端末のブラウザでは、追加後に編集・削除できます。</p>
         <div class="form-group">
           <label class="form-label" for="asName">スポット名 <span class="req">必須</span></label>
           <input type="text" id="asName" class="form-input" placeholder="例：○○カフェ、△△公園" maxlength="60" required>
@@ -514,6 +517,7 @@
         <button class="modal-close" id="chatModalClose" aria-label="閉じる">✕</button>
       </div>
       <form id="chatForm" class="modal-form" novalidate>
+        <p class="form-assurance">同じ端末のブラウザでは、投稿後に編集・削除できます。</p>
         <div class="form-group">
           <label class="form-label" for="cNick">ニックネーム（任意）</label>
           <input type="text" id="cNick" class="form-input" placeholder="匿名リスナー" maxlength="20">
@@ -613,25 +617,30 @@
       </div>
       <div style="padding:24px;line-height:1.8;color:var(--text);font-size:0.95rem;max-height:60vh;overflow-y:auto;">
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">1. リスナー作品を楽しむ 🎨</h4>
-          <p>トップの小さな作品アイコンを押すと、配信中に届いた作品を大きく見られます。一部の作品は、ヒントに答えると開ける合言葉つきです。</p>
+          <h4 style="color:var(--blue);margin-bottom:8px;">1. 今日の小さな発見を見る 🌿</h4>
+          <p>ページ上部には、毎日ランダムでひとつのおすすめが表示されます。気になる名前を押すと、そのスポットカードまで移動できます。</p>
         </div>
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">2. スポットを探す 🗺️</h4>
+          <h4 style="color:var(--blue);margin-bottom:8px;">2. リスナー作品を楽しむ 🎨</h4>
+          <p>トップの小さな作品アイコンを押すと、配信中に届いた作品や用語辞典を大きく見られます。</p>
+        </div>
+        <div style="margin-bottom:16px;">
+          <h4 style="color:var(--blue);margin-bottom:8px;">3. スポットを探す 🗺️</h4>
           <p>POPOPOで紹介された場所や、リスナーおすすめの場所をカテゴリ別に見られます。気になる場所は「行きたい」を押すと、同じ端末の「行きたいリスト」に集められます。</p>
         </div>
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">3. みんなの感想を見る・投稿する 📝</h4>
+          <h4 style="color:var(--blue);margin-bottom:8px;">4. みんなの感想を見る・投稿する 📝</h4>
           <p>スポットカードの「みんなの感想」から、その場所に寄せられた感想を確認できます。読んだ感想には「見たよ」でリアクションできます。行ってみた場所があれば「行ってみた！」から投稿できます。</p>
         </div>
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">4. 新しいスポットを提案する ✨</h4>
+          <h4 style="color:var(--blue);margin-bottom:8px;">5. 新しいスポットを提案する ✨</h4>
           <p>「スポットを追加する」から、おすすめの場所を提案できます。参考URL・写真・情報を3件まで種類つきで登録できます。</p>
         </div>
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">5. フリートークで交流する 💬</h4>
+          <h4 style="color:var(--blue);margin-bottom:8px;">6. フリートークで交流する 💬</h4>
           <p>「フリートーク掲示板」では、POPOPOの感想、サイトへのご意見、今後のお出かけ予定など、自由につぶやけます。</p>
         </div>
+        <p class="guide-note" style="margin-top:18px;">スポット・感想・つぶやきは、同じ端末のブラウザでは投稿後に編集・削除できます。公開される内容なので、個人情報の取り扱い等には十分に注意してください。</p>
       </div>
     </div>
   </div>
@@ -662,6 +671,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260427-3"></script>
+  <script src="app.js?v=20260429-1"></script>
 </body>
 </html>
