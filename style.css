@@ -18,6 +18,11 @@
   --cat-museum: #9B5DE5;
   --cat-event: #06D6A0;
   --cat-entertainment: #F72585;
+  --cat-nature: #2A9D8F;
+  --cat-book: #EE9B00;
+  --cat-shop: #BB3E03;
+  --cat-view: #94D2BD;
+  --cat-relax: #005F73;
   --r: 16px; --r-sm: 10px;
   --shadow: 0 4px 24px rgba(91,141,238,0.12);
   --shadow-lg: 0 8px 40px rgba(91,141,238,0.18);
@@ -195,6 +200,11 @@ section{padding:80px 0;}
 .spot-card[data-cat="mohinga"]::before{background:var(--cat-mohinga);}
 .spot-card[data-cat="museum"]::before{background:var(--cat-museum);}
 .spot-card[data-cat="event"]::before{background:var(--cat-event);}
+.spot-card[data-cat="nature"]::before{background:var(--cat-nature);}
+.spot-card[data-cat="book"]::before{background:var(--cat-book);}
+.spot-card[data-cat="shop"]::before{background:var(--cat-shop);}
+.spot-card[data-cat="view"]::before{background:var(--cat-view);}
+.spot-card[data-cat="relax"]::before{background:var(--cat-relax);}
 .spot-card[data-cat="entertainment"]::before{background:var(--cat-entertainment);}
 .spot-card[data-cat="suggest"]::before{background:linear-gradient(90deg,var(--blue),#a78bfa);}
 .spot-card:hover{border-color:var(--blue);background:var(--card-hover);transform:translateY(-4px);box-shadow:var(--shadow-lg);}
