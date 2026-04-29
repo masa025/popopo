@@ -356,13 +356,39 @@ section{padding:80px 0;}
   border-radius:18px;
   background:#fff;
   border:1px solid rgba(91,141,238,0.08);
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* ズーム状態 */
 .gallery-modal-image.is-zoomed {
-  transform: scale(1.5);
-  cursor: zoom-out;
+  cursor: grab;
   z-index: 120;
+}
+.gallery-modal-image.is-zoomed:active {
+  cursor: grabbing;
+}
+
+/* 操作ヒント */
+.gallery-action-hint {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  white-space: nowrap;
+}
+.gallery-action-hint.is-visible {
+  opacity: 1;
 }
 
 @media (min-width: 1024px) {

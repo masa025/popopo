@@ -1943,19 +1943,82 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
   document.body.style.overflow = 'hidden';
   // ズーム状態をリセット
   image.classList.remove('is-zoomed');
+  image.style.transform = ''; // 移動位置もリセット
+
+  // 操作ガイドを表示
+  showGalleryHint('画像をタップで拡大・ドラッグで移動');
 }
 
-// ズーム切り替えのイベントリスナー（ページ読み込み時に一度だけ登録）
+function showGalleryHint(text) {
+  let hint = document.getElementById('galleryActionHint');
+  if (!hint) {
+    hint = document.createElement('div');
+    hint.id = 'galleryActionHint';
+    hint.className = 'gallery-action-hint';
+    document.getElementById('galleryModal')?.appendChild(hint);
+  }
+  hint.textContent = text;
+  hint.classList.add('is-visible');
+  setTimeout(() => hint.classList.remove('is-visible'), 3000);
+}
+
+// ズーム・パン（移動）のロジック
+let isDragging = false;
+let startX, startY, translateX = 0, translateY = 0;
+
 document.addEventListener('DOMContentLoaded', () => {
   const modalImg = document.getElementById('galleryModalImage');
   if (modalImg) {
     modalImg.addEventListener('click', (e) => {
-      // 合言葉ロック中などは反応させない
       if (modalImg.src && !document.getElementById('galleryLockVisual')?.offsetParent) {
-        e.stopPropagation();
-        modalImg.classList.toggle('is-zoomed');
+        if (!isDragging) { // ドラッグ直後のクリック誤動作防止
+          const wasZoomed = modalImg.classList.contains('is-zoomed');
+          modalImg.classList.toggle('is-zoomed');
+          if (wasZoomed) {
+            modalImg.style.transform = '';
+            translateX = 0; translateY = 0;
+          }
+        }
       }
     });
+
+    // ドラッグ開始
+    const startDrag = (e) => {
+      if (!modalImg.classList.contains('is-zoomed')) return;
+      isDragging = true;
+      modalImg.style.transition = 'none'; // ドラッグ中はアニメーションをオフ
+      const touch = e.type === 'touchstart' ? e.touches[0] : e;
+      startX = touch.clientX - translateX;
+      startY = touch.clientY - translateY;
+    };
+
+    // ドラッグ中
+    const moveDrag = (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const touch = e.type === 'touchmove' ? e.touches[0] : e;
+      translateX = touch.clientX - startX;
+      translateY = touch.clientY - startY;
+      
+      // 拡大倍率（CSSの設定と合わせる）
+      const scale = window.innerWidth > 1024 ? 2 : 1.5;
+      modalImg.style.transform = `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`;
+    };
+
+    // ドラッグ終了
+    const endDrag = () => {
+      if (!isDragging) return;
+      setTimeout(() => isDragging = false, 50);
+      modalImg.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    };
+
+    modalImg.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', endDrag);
+
+    modalImg.addEventListener('touchstart', startDrag, { passive: false });
+    window.addEventListener('touchmove', moveDrag, { passive: false });
+    window.addEventListener('touchend', endDrag);
   }
 });
 
