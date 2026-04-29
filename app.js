@@ -83,15 +83,15 @@ const SPOTS = [
   // --- イベント ---
   { id: 'yoyogi', cat: 'event', emoji: '🌿', name: '代々木公園 イベント', area: '代々木公園', pref: '東京', url: 'https://www.yoyogikoen.info/', memo: 'さまざまなイベントが開催される都心の公園' },
   // --- 自然・よりみち ---
-  { id: 'inokashira', cat: 'nature', emoji: '🌳', name: '井の頭恩賜公園', area: '武蔵野市・三鷹市', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/format/index044.html', memo: '散歩するだけで心が整う、緑豊かな公園' },
+  { id: 'inokashira', cat: 'nature', emoji: '🌳', name: '井の頭恩賜公園', area: '武蔵野市・三鷹市', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/format/index044.html', memo: '【サンプル】散歩するだけで心が整う、緑豊かな公園。' },
   // --- 本・しらべもの ---
-  { id: 'tsutaya', cat: 'book', emoji: '📚', name: '代官山 蔦屋書店', area: '代官山', pref: '東京', url: 'https://store.tsite.jp/daikanyama/', memo: '新しい本との出会いがある、心地よい空間' },
+  { id: 'tsutaya', cat: 'book', emoji: '📚', name: '代官山 蔦屋書店', area: '代官山', pref: '東京', url: 'https://store.tsite.jp/daikanyama/', memo: '【サンプル】新しい本との出会いがある、心地よい空間。' },
   // --- くらし・雑貨 ---
-  { id: 'kakimori', cat: 'shop', emoji: '🛒', name: 'カキモリ', area: '蔵前', pref: '東京', url: 'https://kakimori.com/', memo: '自分だけのノートが作れる、素敵な文房具店' },
+  { id: 'kakimori', cat: 'shop', emoji: '🛒', name: 'カキモリ', area: '蔵前', pref: '東京', url: 'https://kakimori.com/', memo: '【サンプル】自分だけのノートが作れる、素敵な文房具店。' },
   // --- おきにいりの景色 ---
-  { id: 'shibuyasky', cat: 'view', emoji: '✨', name: 'SHIBUYA SKY', area: '渋谷', pref: '東京', url: 'https://www.shibuya-scramble-square.com/sky/', memo: '東京の空を広く感じられる、お気に入りの場所' },
+  { id: 'shibuyasky', cat: 'view', emoji: '✨', name: 'SHIBUYA SKY', area: '渋谷', pref: '東京', url: 'https://www.shibuya-scramble-square.com/sky/', memo: '【サンプル】東京の空を広く感じられる、お気に入りの場所。' },
   // --- 癒やし・ととのう ---
-  { id: 'kogane', cat: 'relax', emoji: '🛁', name: '黄金湯', area: '墨田区', pref: '東京', url: 'https://koganeyu.com/', memo: 'モダンな雰囲気でリラックスできる、素敵な銭湯' },
+  { id: 'kogane', cat: 'relax', emoji: '🛁', name: '黄金湯', area: '墨田区', pref: '東京', url: 'https://koganeyu.com/', memo: '【サンプル】モダンな雰囲気でリラックスできる、素敵な銭湯。' },
   // --- エンタメ ---
   { id: 'hazbin', cat: 'entertainment', emoji: '🎬', name: 'ハズビン・ホテル', area: 'Amazon Prime Video', pref: 'オンライン', url: 'https://www.amazon.co.jp/gp/video/detail/B0CLM8CW52/ref=atv_dp_share_cu_r', memo: 'おすすめアニメ。大人向けミュージカルアニメ。' },
   { id: 'doc72', cat: 'entertainment', emoji: '📺', name: 'ドキュメント72時間', area: 'NHK', pref: 'オンライン', url: 'https://www.nhk.jp/g/ts/W3W8WRN8M3/', memo: 'おすすめドキュメンタリー番組（NHK）' },
