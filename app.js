@@ -1985,7 +1985,9 @@ function closeGalleryModal() {
   pendingGalleryUnlock = null;
   currentGalleryIndex = -1;
   const visual = document.getElementById('galleryModalVisual');
+  const pageNumEl = document.getElementById('galleryModalPageNum');
   if (visual) visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
+  if (pageNumEl) pageNumEl.hidden = true;
   setGalleryLockState(false);
   document.body.style.overflow = '';
 }
@@ -2059,10 +2061,13 @@ function openGalleryItemByIndex(index) {
 
 function injectGalleryNavButtons() {
   const visual = document.getElementById('galleryModalVisual');
+  const pageNumEl = document.getElementById('galleryModalPageNum');
   if (!visual) return;
   
-  // Clean up old buttons
+  // Clean up old buttons and page num
   visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
+  if (pageNumEl) pageNumEl.hidden = true;
+
   if (currentGalleryIndex < 0) return;
   
   const currentItem = GALLERY_ITEMS[currentGalleryIndex];
@@ -2077,6 +2082,12 @@ function injectGalleryNavButtons() {
   });
   
   const currentTypeIndex = sameTypeItems.findIndex(x => x.idx === currentGalleryIndex);
+
+  // Update page number
+  if (pageNumEl && sameTypeItems.length > 1) {
+    pageNumEl.textContent = `${currentTypeIndex + 1} / ${sameTypeItems.length}`;
+    pageNumEl.hidden = false;
+  }
   
   if (currentTypeIndex > 0) {
     const prevIdx = sameTypeItems[currentTypeIndex - 1].idx;
