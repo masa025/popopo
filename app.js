@@ -161,14 +161,14 @@ const POST_RESOURCE_KIND_LABELS = {
   info: '情報'
 };
 const HERO_CARD_SLOTS_DESKTOP = [
-  { top: '16%', left: '4%', width: '212px', rot: '-5deg', scale: '0.98', delay: '-1s' },
-  { top: '20%', right: '5%', width: '208px', rot: '4deg', scale: '0.96', delay: '-3s' },
-  { top: '60%', left: '6%', width: '202px', rot: '3deg', scale: '0.92', delay: '-5s' },
-  { top: '68%', right: '6%', width: '218px', rot: '-4deg', scale: '0.95', delay: '-2s' }
+  { top: '35%', left: '4%', width: '212px', rot: '-5deg', scale: '0.98', delay: '-1s' },
+  { top: '38%', right: '5%', width: '208px', rot: '4deg', scale: '0.96', delay: '-3s' },
+  { top: '75%', left: '6%', width: '202px', rot: '3deg', scale: '0.92', delay: '-5s' },
+  { top: '78%', right: '6%', width: '218px', rot: '-4deg', scale: '0.95', delay: '-2s' }
 ];
 const HERO_CARD_SLOTS_MOBILE = [
-  { top: '12%', left: '4%', width: '118px', rot: '-5deg', scale: '0.88', delay: '-1s' },
-  { top: '58%', right: '12%', width: '116px', rot: '4deg', scale: '0.86', delay: '-3s' }
+  { top: '48%', left: '4%', width: '118px', rot: '-5deg', scale: '0.88', delay: '-1s' },
+  { top: '75%', right: '8%', width: '116px', rot: '4deg', scale: '0.86', delay: '-3s' }
 ];
 const HERO_BACKDROP_ROTATE_MS = 12000;
 const KIRIBAN_ROUND_INTERVAL = 100;
