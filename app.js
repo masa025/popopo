@@ -3157,7 +3157,7 @@ async function renderWeather() {
     return;
   }
 
-  container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">取得中...</span>';
+  container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">天気を取得中...</span>';
 
   try {
     const results = await Promise.all(cities.map(fetchCityWeather));

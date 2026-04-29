@@ -157,21 +157,6 @@
     </a>
   </section>
 
-  <!-- 今日の天気（お出かけ指数） -->
-  <div class="weather-bar-wrap">
-    <div class="container">
-      <div class="weather-bar" id="weatherBar">
-        <div class="weather-bar-label">🌤️ 今日の天気</div>
-        <div class="weather-marquee">
-          <div class="weather-items" id="weatherItems">
-            <span style="color:var(--text-muted); font-size:0.85rem;">取得中...</span>
-          </div>
-        </div>
-        <button class="weather-settings-btn" id="weatherSettingsBtn" aria-label="表示する都市を設定">⚙️</button>
-      </div>
-    </div>
-  </div>
-
   <!-- 天気 都市選択モーダル -->
   <div class="weather-city-modal" id="weatherCityModal" role="dialog" aria-modal="true" aria-labelledby="weatherCityTitle">
     <div class="weather-city-box">
@@ -179,7 +164,7 @@
         <h3 id="weatherCityTitle" class="weather-city-title">🌤️ 表示する都市を選択</h3>
         <button class="modal-close" id="weatherCityClose" aria-label="閉じる">✕</button>
       </div>
-      <p class="weather-city-hint">選んだ都市の天気が上のバーに表示されます（次回も記憶します）</p>
+      <p class="weather-city-hint">選んだ都市の天気が「今日のお出かけヒント」に表示されます（次回も記憶します）</p>
       <div class="weather-city-grid" id="weatherCityGrid"><!-- JSで生成 --></div>
       <div class="weather-city-actions">
         <button type="button" class="btn-ghost" id="weatherCityCancelBtn">キャンセル</button>
@@ -199,6 +184,17 @@
         <div class="add-spot-container">
           <button class="btn-add-spot" id="addSpotBtn"><span class="btn-icon">✨</span> スポットを追加する</button>
           <p class="add-spot-hint">「ここ気になる」「行ってみたい」そんな一言からで大丈夫！</p>
+        </div>
+      </div>
+      <div class="weather-bar-wrap" aria-label="今日のお出かけヒント">
+        <div class="weather-bar" id="weatherBar">
+          <div class="weather-bar-label">🌤️ 今日のお出かけヒント</div>
+          <div class="weather-marquee">
+            <div class="weather-items" id="weatherItems">
+              <span style="color:var(--text-muted); font-size:0.85rem;">天気を取得中...</span>
+            </div>
+          </div>
+          <button class="weather-settings-btn" id="weatherSettingsBtn" aria-label="表示する都市を設定">⚙️</button>
         </div>
       </div>
       <div class="tabs" id="tabs">
