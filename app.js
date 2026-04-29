@@ -2420,7 +2420,7 @@ function bindEvents() {
   window.addEventListener('scroll', () => {
     document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
     const scrollHint = document.querySelector('.scroll-hint');
-    if (scrollHint) scrollHint.classList.toggle('is-hidden', window.scrollY > 90);
+    if (scrollHint) scrollHint.classList.toggle('is-hidden', window.scrollY > 120);
     updateBottomNavActive();
   }, { passive: true });
   updateBottomNavActive(); // 初期表示でスポットをアクティブに

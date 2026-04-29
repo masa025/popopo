@@ -157,7 +157,8 @@ a.stat:hover{transform:translateY(-2px);opacity:0.8;}
 .hero-btns .btn-primary:hover{background:#f0f4ff;}
 .hero-btns .btn-outline{border-color:rgba(255,255,255,0.7);color:#fff;background:rgba(255,255,255,0.15);}
 .hero-btns .btn-outline:hover{background:rgba(255,255,255,0.25);}
-.scroll-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.95);font-size:0.75rem;font-weight:700;letter-spacing:2px;animation:bounce 2s ease-in-out infinite;background:rgba(0,0,0,0.3);padding:10px 24px;border-radius:50px;backdrop-filter:blur(12px);z-index:900;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s, transform 0.3s, visibility 0.3s;}
+.scroll-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.95);font-size:0.75rem;font-weight:700;letter-spacing:2px;animation:bounce 2s ease-in-out infinite;background:rgba(0,0,0,0.3);padding:10px 24px;border-radius:50px;backdrop-filter:blur(12px);z-index:900;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;}
+.scroll-hint.is-hidden{opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-50%) translateY(20px);}
 .scroll-line{width:2px;height:16px;background:linear-gradient(to bottom,rgba(255,255,255,0.9),transparent);border-radius:2px;}
 @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
 
