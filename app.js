@@ -49,7 +49,8 @@ const GALLERY_ITEMS = [
   { image: "assets/listener-gallery/listener-art-25.jpg", title: "太陽みたいなトートバッグ", caption: "お日様のような明るいキャラクターがプリントされた、キャンバス地のトートバッグです。", alt: "キャラクターが描かれたトートバッグ", type: "art" },
   { image: "assets/listener-gallery/listener-art-26.jpg", title: "ライオンのスケッチ", caption: "たてがみと笑顔がかわいらしい、ライオンのキャラクターのスケッチ。", alt: "ライオンのキャラクターの手描きスケッチ", type: "art" },
   { image: "assets/listener-gallery/listener-art-27.jpg", title: "立ち上がるリス", caption: "独特のフォルムが愛らしい、すっと立ち上がったようなリスのスケッチ。", alt: "立ち上がったリスの手描きイラスト", type: "art" },
-  { image: "assets/listener-gallery/listener-art-28.jpg", title: "キャラクターのタンブラー", caption: "手描きの愛らしいキャラクターがプリントされた、日常使いしたくなるタンブラー作品。", alt: "キャラクターが描かれた白いタンブラー", type: "art" }
+  { image: "assets/listener-gallery/listener-art-28.jpg", title: "キャラクターのタンブラー", caption: "手描きの愛らしいキャラクターがプリントされた、日常使いしたくなるタンブラー作品。", alt: "キャラクターが描かれた白いタンブラー", type: "art" },
+  { image: "assets/listener-gallery/listener-art-29.jpg", title: "手描きイラストのエプロン", caption: "「My Little Artist's Kitchen」の文字と共に、手描きの愛らしいキャラクターが刺繍された素敵なエプロンです。", alt: "キャラクターのイラストが刺繍されたエプロン", type: "art" }
 ];
 
 // ============================================================
