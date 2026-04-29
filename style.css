@@ -1128,6 +1128,66 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   transition: opacity 0.3s ease;
 }
 
+/* ギャラリー操作パネル */
+.gallery-modal-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  padding: 6px 12px;
+  border-radius: 50px;
+  z-index: 200;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.3s ease;
+}
+
+.gallery-ctrl-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.1rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+  cursor: pointer !important;
+}
+
+.gallery-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
+
+.gallery-ctrl-btn:active {
+  transform: scale(0.95);
+}
+
+.gallery-ctrl-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+}
+
+@media (max-width: 768px) {
+  .gallery-modal-controls {
+    bottom: 20px;
+    padding: 4px 8px;
+    scale: 0.9;
+  }
+  .gallery-modal-pagenum {
+    bottom: 80px !important; /* パネルと被らないように上にずらす */
+  }
+  .modal-img-nav { display: none !important; }
+}
+
 @media (max-width: 768px) {
   .gallery-grid-container {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));

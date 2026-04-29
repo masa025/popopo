@@ -2183,6 +2183,38 @@ function injectGalleryNavButtons() {
     pageNumEl.hidden = false;
   }
   
+  // 新しいコントロールパネルの制御
+  const btnPrev = document.getElementById('galleryBtnPrev');
+  const btnNext = document.getElementById('galleryBtnNext');
+  const btnZoomIn = document.getElementById('galleryBtnZoomIn');
+  const btnZoomOut = document.getElementById('galleryBtnZoomOut');
+
+  if (btnPrev) {
+    btnPrev.style.opacity = currentTypeIndex > 0 ? '1' : '0.3';
+    btnPrev.style.pointerEvents = currentTypeIndex > 0 ? 'auto' : 'none';
+    btnPrev.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(sameTypeItems[currentTypeIndex - 1].idx, 'prev'); };
+  }
+  if (btnNext) {
+    btnNext.style.opacity = currentTypeIndex < sameTypeItems.length - 1 ? '1' : '0.3';
+    btnNext.style.pointerEvents = currentTypeIndex < sameTypeItems.length - 1 ? 'auto' : 'none';
+    btnNext.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(sameTypeItems[currentTypeIndex + 1].idx, 'next'); };
+  }
+  
+  const toggleZoom = (zoom) => {
+    const img = document.getElementById('galleryModalImage');
+    if (!img) return;
+    if (zoom) {
+      img.classList.add('is-zoomed');
+    } else {
+      img.classList.remove('is-zoomed');
+      img.style.transform = '';
+      translateX = 0; translateY = 0;
+    }
+  };
+
+  if (btnZoomIn) btnZoomIn.onclick = (e) => { e.stopPropagation(); toggleZoom(true); };
+  if (btnZoomOut) btnZoomOut.onclick = (e) => { e.stopPropagation(); toggleZoom(false); };
+  
   if (currentTypeIndex > 0) {
     const prevIdx = sameTypeItems[currentTypeIndex - 1].idx;
     const btn = document.createElement('button');
