@@ -20,7 +20,40 @@ const FIREBASE_CONFIG = {
 const USE_FIREBASE = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 
 // ============================================================
-// 2. スポットデータ
+// 2. ギャラリー・用語辞典データ
+// ============================================================
+const GALLERY_ITEMS = [
+  { image: "assets/listener-gallery/listener-art-01.jpg", title: "小さな鹿たち", caption: "やわらかな鉛筆線で、4頭の小さな鹿がのびのび並ぶ一枚。", alt: "4頭の鹿が描かれた鉛筆スケッチ", type: "art" },
+  { image: "assets/listener-gallery/listener-art-02.jpg", title: "オレンジの鹿", caption: "オレンジの線で元気よく描かれた、印象の残る一枚。", alt: "オレンジ色の線で描かれた鹿のイラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-03.jpg", title: "帽子のキャラクター", caption: "配信中に届いた、ユーモラスな表情のキャラクタースケッチ。", alt: "帽子をかぶったキャラクターのイラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-04.jpg", title: "すっとした横顔", caption: "線の流れがきれいな、鹿の横顔のスケッチ。", alt: "鹿の横顔を描いた線画", type: "art" },
+  { image: "assets/listener-gallery/listener-art-05.jpg", title: "森で会えたら", caption: "言葉や風景まで含めて、やさしい世界観を広げてくれた一枚。", alt: "風景と吹き出し付きで加工された鹿の作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-06.jpg", title: "鉛筆のポートレート", caption: "やわらかな陰影で描かれた、静かな雰囲気のポートレート。", alt: "鉛筆で描かれた鹿のポートレート", type: "art" },
+  { image: "assets/listener-gallery/listener-art-08.jpg", title: "森の奥の小さな鹿", caption: "木々の間に小さな鹿がそっと立つ、物語の一場面のようなスケッチ。手描きの線に、静かな空気が残る一枚です。", alt: "森の中に小さな鹿が描かれたリスナー作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-09.jpg", title: "POPOPO用語辞典", caption: "見開きいっぱいにPOPOPOの言葉が並ぶ、辞典風作品。ページをめくるように眺めたくなる一枚です。", alt: "POPOPO内で生まれた言葉を辞典風にまとめた見開き作品", type: "dict", lockAnswer: "TimTam", lockHint: "ある配信者が牛乳の中に落としたお菓子は何でしょうか？" },
+  { image: "assets/listener-gallery/listener-art-10.jpg", title: "POPOPO用語辞典 2", caption: "「masaリティショー」や「涙が止まりません」など、POPOPOならではの表現が収録された辞典ページです。", alt: "POPOPO用語辞典の追加ページ（masaリティショーなど）", type: "dict_page", lockAnswer: "TimTam", lockHint: "ある配信者が牛乳の中に落としたお菓子は何でしょうか？" },
+  { image: "assets/listener-gallery/listener-art-11.jpg", title: "小さな鹿のピアス", caption: "手描きの小さな鹿が、銀色のアクセサリーになったような作品。静かな紙の質感もきれいです。", alt: "小さな鹿をモチーフにしたピアス作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-12.jpg", title: "ポップな小さな鹿のピアス", caption: "黄色い背景とカラフルなビーズで、小さな鹿がぱっと明るく見える一枚です。", alt: "黄色い背景に置かれた小さな鹿のピアス作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-13.jpg", title: "かわいい雑貨風", caption: "小さな鹿がタオルやポーチにそっと入った、雑貨カタログのようなやさしい作品です。", alt: "小さな鹿をあしらった雑貨風のコラージュ作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-14.jpg", title: "布の上の小さな鹿たち", caption: "布の上に小さな鹿と葉の模様が広がる、手仕事のぬくもりを感じる作品です。", alt: "布の上に小さな鹿と葉の模様が描かれた作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-15.jpg", title: "にんじん和紙テープ", caption: "小さな鹿が和紙テープになった、思わず使ってみたくなる文具風の作品です。", alt: "小さな鹿の絵が並ぶ和紙テープ作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-16.jpg", title: "根元の生命スニーカー", caption: "白いスニーカーに小さな鹿が描かれた、歩くたびに物語が始まりそうな作品です。", alt: "白いスニーカーに小さな鹿が描かれた作品", type: "art" },
+  { image: "assets/listener-gallery/listener-art-17.jpg", title: "にっこり笑顔のキャラクター", caption: "独特の愛嬌ある表情がたまらない、手描きのキャラクタースケッチ。", alt: "笑顔のキャラクターの手描きスケッチ", type: "art" },
+  { image: "assets/listener-gallery/listener-art-18.jpg", title: "ふさふさしっぽのリス", caption: "ふさふさのしっぽが特徴的な、かわいらしい小動物の線画です。", alt: "小動物の線画イラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-19.jpg", title: "イラスト入りソックス", caption: "手描きのキャラクターがワンポイントで刺繍された、温かみのある靴下作品。", alt: "キャラクターが刺繍された白い靴下", type: "art" },
+  { image: "assets/listener-gallery/listener-art-20.jpg", title: "黄色いキツネ", caption: "黄色の線でシンプルに描かれた、愛らしい動物のイラスト。", alt: "黄色い線で描かれた動物のイラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-21.jpg", title: "キャラクター刺繍のニット帽", caption: "ダークグレーのニット帽にキャラクターが同系色で刺繍された、さりげないお洒落な作品。", alt: "キャラクターが刺繍されたニット帽", type: "art" },
+  { image: "assets/listener-gallery/listener-art-22.jpg", title: "まんまるキャラクター", caption: "丸いフォルムと大きな瞳が可愛らしい、手描きのキャラクタースケッチ。", alt: "丸い顔のキャラクターのスケッチ", type: "art" },
+  { image: "assets/listener-gallery/listener-art-23.jpg", title: "キャラクターのパーカー", caption: "手描きのキャラクターが背中に大きくプリントされた、かわいらしいパーカー作品。", alt: "背中にキャラクターが描かれたパーカー", type: "art" },
+  { image: "assets/listener-gallery/listener-art-24.jpg", title: "のっぽなキャラクター", caption: "すっと伸びた体と穏やかな表情が魅力的な、手描きのキャラクター。", alt: "縦長のキャラクターの手描きイラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-25.jpg", title: "太陽みたいなトートバッグ", caption: "お日様のような明るいキャラクターがプリントされた、キャンバス地のトートバッグです。", alt: "キャラクターが描かれたトートバッグ", type: "art" },
+  { image: "assets/listener-gallery/listener-art-26.jpg", title: "ライオンのスケッチ", caption: "たてがみと笑顔がかわいらしい、ライオンのキャラクターのスケッチ。", alt: "ライオンのキャラクターの手描きスケッチ", type: "art" },
+  { image: "assets/listener-gallery/listener-art-27.jpg", title: "立ち上がるリス", caption: "独特のフォルムが愛らしい、すっと立ち上がったようなリスのスケッチ。", alt: "立ち上がったリスの手描きイラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-28.jpg", title: "キャラクターのタンブラー", caption: "手描きの愛らしいキャラクターがプリントされた、日常使いしたくなるタンブラー作品。", alt: "キャラクターが描かれた白いタンブラー", type: "art" }
+];
+
+// ============================================================
+// 3. スポットデータ
 // ============================================================
 const SPOTS = [
   // --- 飲食店 ---
@@ -283,10 +316,21 @@ function bindHeroGalleryDrag(marquee, track) {
 
 function setupHeroGallery() {
   const marquee = document.getElementById('heroGalleryMarquee');
-  const track = marquee?.querySelector('.hero-gallery-track');
-  if (!marquee || !track) return;
+  const track = document.getElementById('heroGalleryTrack');
+  if (!marquee || !track || typeof GALLERY_ITEMS === 'undefined') return;
 
-  const baseItems = Array.from(track.querySelectorAll('.hero-gallery-item:not([aria-hidden="true"])'));
+  track.innerHTML = GALLERY_ITEMS.map((item, index) => {
+    if (item.type === 'dict_page') return '';
+    const isDoc = item.type === 'dict' ? ' is-document-thumb' : '';
+    const lockAttrs = item.lockAnswer ? ` data-lock-answer="${item.lockAnswer}" data-lock-hint="${item.lockHint}"` : '';
+    return `
+      <button type="button" class="hero-gallery-item" data-gallery-index="${index}" data-gallery-item data-image="${item.image}" data-title="${item.title}" data-caption="${item.caption}" data-alt="${item.alt}"${lockAttrs}>
+        <img class="hero-gallery-thumb${isDoc}" src="${item.image}" alt="${item.alt}" loading="lazy">
+      </button>
+    `;
+  }).join('');
+
+  const baseItems = Array.from(track.querySelectorAll('.hero-gallery-item'));
   if (!baseItems.length) return;
 
   const trackStyle = window.getComputedStyle(track);
@@ -1798,7 +1842,9 @@ function getGalleryUnlockKey(imageSrc) {
 
 function isGalleryUnlocked(imageSrc) {
   try {
-    return sessionStorage.getItem(getGalleryUnlockKey(imageSrc)) === 'true';
+    const isDict = typeof GALLERY_ITEMS !== 'undefined' && GALLERY_ITEMS.some(item => (item.type === 'dict' || item.type === 'dict_page') && item.image === imageSrc);
+    const key = isDict ? 'popopo_gallery_unlocked_dictionary' : getGalleryUnlockKey(imageSrc);
+    return sessionStorage.getItem(key) === 'true';
   } catch (e) {
     return false;
   }
@@ -1806,7 +1852,9 @@ function isGalleryUnlocked(imageSrc) {
 
 function rememberGalleryUnlock(imageSrc) {
   try {
-    sessionStorage.setItem(getGalleryUnlockKey(imageSrc), 'true');
+    const isDict = typeof GALLERY_ITEMS !== 'undefined' && GALLERY_ITEMS.some(item => (item.type === 'dict' || item.type === 'dict_page') && item.image === imageSrc);
+    const key = isDict ? 'popopo_gallery_unlocked_dictionary' : getGalleryUnlockKey(imageSrc);
+    sessionStorage.setItem(key, 'true');
   } catch (e) {
     // Safariのプライベート環境などでは保存できないことがあるため、その場で開ければ十分。
   }
@@ -1895,6 +1943,11 @@ function submitGalleryUnlock() {
   window.setTimeout(() => {
     showGalleryImage(imageSrc, title, caption, alt);
     pendingGalleryUnlock = null;
+    injectGalleryNavButtons();
+    if (document.getElementById('fullGalleryModal')?.classList.contains('is-open')) {
+      renderFullGalleryGrid();
+    }
+    setupHeroGallery();
   }, 240);
 }
 
@@ -1906,11 +1959,123 @@ function closeGalleryModal() {
   image.src = '';
   image.alt = '';
   pendingGalleryUnlock = null;
+  currentGalleryIndex = -1;
+  const visual = document.getElementById('galleryModalVisual');
+  if (visual) visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
   setGalleryLockState(false);
   document.body.style.overflow = '';
 }
 
-// スポット別感想モーダル
+// ============================================================
+// フルギャラリー＆用語辞典の処理
+// ============================================================
+function openFullGalleryModal() {
+  const modal = document.getElementById('fullGalleryModal');
+  if (!modal) return;
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  renderFullGalleryGrid();
+}
+
+function closeFullGalleryModal() {
+  const modal = document.getElementById('fullGalleryModal');
+  if (modal) {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+}
+
+function switchFullGalleryTab(targetId) {
+  document.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.gallery-tab[data-target="${targetId}"]`)?.classList.add('active');
+  document.getElementById('galleryGridArt').style.display = targetId === 'galleryGridArt' ? 'grid' : 'none';
+  document.getElementById('galleryGridDict').style.display = targetId === 'galleryGridDict' ? 'grid' : 'none';
+}
+
+function renderFullGalleryGrid() {
+  if (typeof GALLERY_ITEMS === 'undefined') return;
+  const artGrid = document.getElementById('galleryGridArt');
+  const dictGrid = document.getElementById('galleryGridDict');
+  if (!artGrid || !dictGrid) return;
+  
+  const arts = GALLERY_ITEMS.filter(item => item.type !== 'dict' && item.type !== 'dict_page');
+  const dicts = GALLERY_ITEMS.filter(item => item.type === 'dict');
+  
+  artGrid.innerHTML = arts.map(item => {
+    const globalIdx = GALLERY_ITEMS.indexOf(item);
+    return `
+      <div class="gallery-grid-item" onclick="openGalleryItemByIndex(${globalIdx})">
+        <img src="${item.image}" alt="${item.alt}" loading="lazy">
+      </div>
+    `;
+  }).join('');
+  
+  dictGrid.innerHTML = dicts.map(item => {
+    const globalIdx = GALLERY_ITEMS.indexOf(item);
+    const locked = item.lockAnswer && !isGalleryUnlocked(item.image);
+    const lockAttr = locked ? ` data-lock-answer="${item.lockAnswer}"` : '';
+    return `
+      <div class="gallery-grid-item"${lockAttr} onclick="openGalleryItemByIndex(${globalIdx})">
+        <img class="${locked ? '' : 'is-document-thumb'}" src="${item.image}" alt="${item.alt}" loading="lazy">
+      </div>
+    `;
+  }).join('');
+}
+
+let currentGalleryIndex = -1;
+
+function openGalleryItemByIndex(index) {
+  currentGalleryIndex = index;
+  const item = GALLERY_ITEMS[index];
+  if (!item) return;
+  
+  openGalleryModal(item.image, item.title, item.caption, item.alt, item.lockAnswer, item.lockHint);
+  injectGalleryNavButtons();
+}
+
+function injectGalleryNavButtons() {
+  const visual = document.getElementById('galleryModalVisual');
+  if (!visual) return;
+  
+  // Clean up old buttons
+  visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
+  if (currentGalleryIndex < 0) return;
+  
+  const currentItem = GALLERY_ITEMS[currentGalleryIndex];
+  // Only inject nav if it's unlocked or doesn't have a lock
+  const locked = currentItem.lockAnswer && !isGalleryUnlocked(currentItem.image);
+  if (locked) return;
+
+  const isDict = currentItem.type === 'dict' || currentItem.type === 'dict_page';
+  const sameTypeItems = GALLERY_ITEMS.map((item, idx) => ({item, idx})).filter(x => {
+    if (isDict) return x.item.type === 'dict' || x.item.type === 'dict_page';
+    return x.item.type === currentItem.type;
+  });
+  
+  const currentTypeIndex = sameTypeItems.findIndex(x => x.idx === currentGalleryIndex);
+  
+  if (currentTypeIndex > 0) {
+    const prevIdx = sameTypeItems[currentTypeIndex - 1].idx;
+    const btn = document.createElement('button');
+    btn.className = 'modal-img-nav prev';
+    btn.innerHTML = '◀︎';
+    btn.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(prevIdx); };
+    visual.appendChild(btn);
+  }
+  
+  if (currentTypeIndex < sameTypeItems.length - 1) {
+    const nextIdx = sameTypeItems[currentTypeIndex + 1].idx;
+    const btn = document.createElement('button');
+    btn.className = 'modal-img-nav next';
+    btn.innerHTML = '▶︎';
+    btn.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(nextIdx); };
+    visual.appendChild(btn);
+  }
+}
+
+// ============================================================
+// 10. その他のUI / モーダル処理
+// ============================================================
 function openSpotReviews(spotName) {
   currentReviewSpotName = spotName;
   const title = document.getElementById('spotReviewsTitle');
@@ -2323,6 +2488,17 @@ function bindEvents() {
   if (galleryModal) galleryModal.addEventListener('click', (e) => {
     if (e.target === galleryModal) closeGalleryModal();
   });
+  const fullGalleryClose = document.getElementById('fullGalleryClose');
+  if (fullGalleryClose) fullGalleryClose.addEventListener('click', closeFullGalleryModal);
+  const fullGalleryModal = document.getElementById('fullGalleryModal');
+  if (fullGalleryModal) fullGalleryModal.addEventListener('click', (e) => {
+    if (e.target === fullGalleryModal) closeFullGalleryModal();
+  });
+  document.querySelectorAll('.gallery-tab').forEach(t => {
+    t.addEventListener('click', () => switchFullGalleryTab(t.dataset.target));
+  });
+  const viewAllGalleryBtn = document.getElementById('viewAllGalleryBtn');
+  if (viewAllGalleryBtn) viewAllGalleryBtn.addEventListener('click', openFullGalleryModal);
   const kiribanModal = document.getElementById('kiribanModal');
   if (kiribanModal) kiribanModal.addEventListener('click', (e) => {
     if (e.target === kiribanModal) closeKiribanModal();
