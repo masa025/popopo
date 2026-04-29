@@ -2036,6 +2036,8 @@ function renderFullGalleryGrid() {
     `;
   }).join('');
   
+  const dictItemsCount = GALLERY_ITEMS.filter(item => item.type === 'dict' || item.type === 'dict_page').length;
+
   dictGrid.innerHTML = dicts.map(item => {
     const globalIdx = GALLERY_ITEMS.indexOf(item);
     const locked = item.lockAnswer && !isGalleryUnlocked(item.image);
@@ -2043,6 +2045,7 @@ function renderFullGalleryGrid() {
     return `
       <div class="gallery-grid-item"${lockAttr} onclick="openGalleryItemByIndex(${globalIdx})">
         <img class="${locked ? '' : 'is-document-thumb'}" src="${item.image}" alt="${item.alt}" loading="lazy">
+        ${!locked && dictItemsCount > 1 ? `<div class="gallery-item-badge">全${dictItemsCount}枚</div>` : ''}
       </div>
     `;
   }).join('');
