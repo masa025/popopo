@@ -45,10 +45,10 @@ const GALLERY_ITEMS = [
   { image: "assets/listener-gallery/listener-art-21.jpg", title: "キャラクター刺繍のニット帽", caption: "ダークグレーのニット帽にキャラクターが同系色で刺繍された、さりげないお洒落な作品。", alt: "キャラクターが刺繍されたニット帽", type: "art" },
   { image: "assets/listener-gallery/listener-art-22.jpg", title: "まんまるキャラクター", caption: "丸いフォルムと大きな瞳が可愛らしい、手描きのキャラクタースケッチ。", alt: "丸い顔のキャラクターのスケッチ", type: "art" },
   { image: "assets/listener-gallery/listener-art-23.jpg", title: "キャラクターのパーカー", caption: "手描きのキャラクターが背中に大きくプリントされた、かわいらしいパーカー作品。", alt: "背中にキャラクターが描かれたパーカー", type: "art" },
-  { image: "assets/listener-gallery/listener-art-24.jpg", title: "のっぽなキャラクター", caption: "すっと伸びた体と穏やかな表情が魅力的な、手描きのキャラクター。", alt: "縦長のキャラクターの手描きイラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-24.jpg", title: "立ち上がるリス", caption: "独特のフォルムが愛らしい、すっと立ち上がったようなリスのスケッチ。", alt: "立ち上がったリスの手描きイラスト", type: "art" },
   { image: "assets/listener-gallery/listener-art-25.jpg", title: "太陽みたいなトートバッグ", caption: "お日様のような明るいキャラクターがプリントされた、キャンバス地のトートバッグです。", alt: "キャラクターが描かれたトートバッグ", type: "art" },
   { image: "assets/listener-gallery/listener-art-26.jpg", title: "ライオンのスケッチ", caption: "たてがみと笑顔がかわいらしい、ライオンのキャラクターのスケッチ。", alt: "ライオンのキャラクターの手描きスケッチ", type: "art" },
-  { image: "assets/listener-gallery/listener-art-27.jpg", title: "立ち上がるリス", caption: "独特のフォルムが愛らしい、すっと立ち上がったようなリスのスケッチ。", alt: "立ち上がったリスの手描きイラスト", type: "art" },
+  { image: "assets/listener-gallery/listener-art-27.jpg", title: "のっぽなキャラクター", caption: "すっと伸びた体と穏やかな表情が魅力的な、手描きのキャラクター。", alt: "縦長のキャラクターの手描きイラスト", type: "art" },
   { image: "assets/listener-gallery/listener-art-28.jpg", title: "キャラクターのタンブラー", caption: "手描きの愛らしいキャラクターがプリントされた、日常使いしたくなるタンブラー作品。", alt: "キャラクターが描かれた白いタンブラー", type: "art" },
   { image: "assets/listener-gallery/listener-art-29.jpg", title: "手描きイラストのエプロン", caption: "「My Little Artist's Kitchen」の文字と共に、手描きの愛らしいキャラクターが刺繍された素敵なエプロンです。", alt: "キャラクターのイラストが刺繍されたエプロン", type: "art" }
 ];
