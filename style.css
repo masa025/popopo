@@ -1111,11 +1111,60 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   .gallery-tabs {
     padding: 0 20px;
   }
-  .modal-img-nav {
-    width: 44px;
-    height: 44px;
-    font-size: 1.2rem;
+  .gallery-modal-box {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
   }
-  .modal-img-nav.prev { left: 12px; }
-  .modal-img-nav.next { right: 12px; }
+  .gallery-modal-layout {
+    grid-template-columns: 1fr;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .gallery-modal-visual {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    background: #000; /* モバイル全画面時は黒背景で没入感を */
+  }
+  .gallery-modal-image {
+    max-height: 100%;
+    border-radius: 0;
+    border: none;
+  }
+  .gallery-modal-copy {
+    background: #fff;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .gallery-modal-pagenum {
+    bottom: 20px;
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .modal-img-nav {
+    display: none; /* スワイプがメインになるためボタンは隠すか控えめに */
+  }
+}
+
+/* スライド切り替えアニメーション */
+.gallery-modal-image.slide-left {
+  animation: slideLeft 0.3s ease-out;
+}
+.gallery-modal-image.slide-right {
+  animation: slideRight 0.3s ease-out;
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideRight {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }

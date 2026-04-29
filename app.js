@@ -2069,13 +2069,21 @@ function renderFullGalleryGrid() {
 
 let currentGalleryIndex = -1;
 
-function openGalleryItemByIndex(index) {
+function openGalleryItemByIndex(index, direction = '') {
   currentGalleryIndex = index;
   const item = GALLERY_ITEMS[index];
   if (!item) return;
   
   openGalleryModal(item.image, item.title, item.caption, item.alt, item.lockAnswer, item.lockHint);
   injectGalleryNavButtons();
+
+  // アニメーション適用
+  const img = document.getElementById('galleryModalImage');
+  if (img && direction) {
+    img.classList.remove('slide-left', 'slide-right');
+    void img.offsetWidth; // リフロー
+    img.classList.add(direction === 'next' ? 'slide-left' : 'slide-right');
+  }
 }
 
 function injectGalleryNavButtons() {
@@ -2117,7 +2125,7 @@ function injectGalleryNavButtons() {
     const btn = document.createElement('button');
     btn.className = 'modal-img-nav prev';
     btn.innerHTML = '◀︎';
-    btn.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(prevIdx); };
+    btn.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(prevIdx, 'prev'); };
     visual.appendChild(btn);
   }
   
@@ -2126,10 +2134,35 @@ function injectGalleryNavButtons() {
     const btn = document.createElement('button');
     btn.className = 'modal-img-nav next';
     btn.innerHTML = '▶︎';
-    btn.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(nextIdx); };
+    btn.onclick = (e) => { e.stopPropagation(); openGalleryItemByIndex(nextIdx, 'next'); };
     visual.appendChild(btn);
   }
 }
+
+// スワイプ操作の検知
+let touchStartX = 0;
+document.addEventListener('DOMContentLoaded', () => {
+  const visual = document.getElementById('galleryModalVisual');
+  if (visual) {
+    visual.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    visual.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const diff = touchEndX - touchStartX;
+      if (Math.abs(diff) > 40) { // 40px以上のスワイプで反応
+        if (diff < 0) {
+          // 次へ（左スワイプ）
+          document.querySelector('.modal-img-nav.next')?.click();
+        } else {
+          // 前へ（右スワイプ）
+          document.querySelector('.modal-img-nav.prev')?.click();
+        }
+      }
+    }, { passive: true });
+  }
+});
 
 // ============================================================
 // 10. その他のUI / モーダル処理
