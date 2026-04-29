@@ -1612,7 +1612,18 @@ function renderSpotCards(cat = 'all') {
 }
 
 function getCatLabel(cat) {
-  return { food: '🍴 飲食店', mohinga: '🍜 食べたいもの', museum: '🎨 美術館・博物館', event: '🌿 イベント', entertainment: '🎬 エンタメ' }[cat] || '📍 スポット';
+  return { 
+    food: '🍴 飲食店', 
+    mohinga: '🍜 食べたいもの', 
+    museum: '🎨 美術館・博物館', 
+    event: '🌿 イベント', 
+    nature: '🌳 自然・よりみち',
+    book: '📚 本・しらべもの',
+    shop: '🛒 くらし・雑貨',
+    view: '✨ おきにいりの景色',
+    relax: '🛁 癒やし・ととのう',
+    entertainment: '🎬 エンタメ' 
+  }[cat] || '📍 スポット';
 }
 
 function formatMemo(memo) {
