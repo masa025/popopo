@@ -1941,8 +1941,10 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
 
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
-  // ズーム状態をリセット
+  // ズーム状態とフォーカスモードをリセット
   image.classList.remove('is-zoomed');
+  const modalBox = document.querySelector('.gallery-modal-box');
+  if (modalBox) modalBox.classList.remove('is-focus-mode');
   image.style.transform = ''; // 移動位置もリセット
 
   // 操作ガイドを表示
@@ -1972,8 +1974,12 @@ document.addEventListener('DOMContentLoaded', () => {
     modalImg.addEventListener('click', (e) => {
       if (modalImg.src && !document.getElementById('galleryLockVisual')?.offsetParent) {
         if (!isDragging) { // ドラッグ直後のクリック誤動作防止
+          const modalBox = document.querySelector('.gallery-modal-box');
           const wasZoomed = modalImg.classList.contains('is-zoomed');
+          
           modalImg.classList.toggle('is-zoomed');
+          if (modalBox) modalBox.classList.toggle('is-focus-mode'); // フォーカスモード切り替え
+
           if (wasZoomed) {
             modalImg.style.transform = '';
             translateX = 0; translateY = 0;
@@ -2000,8 +2006,8 @@ document.addEventListener('DOMContentLoaded', () => {
       translateX = touch.clientX - startX;
       translateY = touch.clientY - startY;
       
-      // 拡大倍率（CSSの設定と合わせる）
-      const scale = window.innerWidth > 1024 ? 2 : 1.5;
+      // 拡大倍率（さらに読みやすくするために3倍へ向上）
+      const scale = window.innerWidth > 1024 ? 3 : 2.5;
       modalImg.style.transform = `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`;
     };
 
@@ -2202,11 +2208,14 @@ function injectGalleryNavButtons() {
   
   const toggleZoom = (zoom) => {
     const img = document.getElementById('galleryModalImage');
+    const modalBox = document.querySelector('.gallery-modal-box');
     if (!img) return;
     if (zoom) {
       img.classList.add('is-zoomed');
+      if (modalBox) modalBox.classList.add('is-focus-mode');
     } else {
       img.classList.remove('is-zoomed');
+      if (modalBox) modalBox.classList.remove('is-focus-mode');
       img.style.transform = '';
       translateX = 0; translateY = 0;
     }

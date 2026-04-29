@@ -1238,6 +1238,35 @@ footer{background:var(--text);padding:60px 24px;border-top:none;text-align:cente
   }
 }
 
+/* 全画面フォーカスモード（文字を隠して画像を最大化） */
+.gallery-modal-box.is-focus-mode .modal-head,
+.gallery-modal-box.is-focus-mode .gallery-modal-copy {
+  display: none !important;
+}
+
+.gallery-modal-box.is-focus-mode .gallery-modal-visual {
+  height: 100vh;
+  width: 100vw;
+  padding: 0;
+  background: #000;
+}
+
+.gallery-modal-box.is-focus-mode .gallery-modal-image {
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+.gallery-modal-box.is-focus-mode .gallery-modal-pagenum {
+  top: 20px;
+  bottom: auto;
+}
+
+.gallery-modal-box.is-focus-mode .gallery-modal-controls {
+  bottom: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* スライド切り替えアニメーション */
 .gallery-modal-image.slide-left {
   animation: slideLeft 0.3s ease-out;
