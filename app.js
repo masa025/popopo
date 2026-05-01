@@ -1089,7 +1089,8 @@ function renderWeeklyDiscovery() {
     }
     title.textContent = item.title;
     title.title = `名前：${item.title}`;
-    text.textContent = item.action || 'クリックして開く';
+    text.textContent = item.text.length > 92 ? `${item.text.slice(0, 92)}...` : item.text;
+    text.title = item.text;
     link.href = item.href;
     link.dataset.discoveryKind = item.kind;
     link.dataset.discoveryId = item.id || '';
