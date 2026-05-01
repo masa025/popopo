@@ -175,6 +175,18 @@ const KIRIBAN_ROUND_INTERVAL = 100;
 const KIRIBAN_MIN_COUNT = 100;
 const INTRO_STORY_STORAGE_KEY = 'popopo_intro_story_seen_v1';
 const INTRO_STORY_SLIDE_MS = 5200;
+const DISCOVERY_CATEGORY_ROTATION = [
+  'museum',
+  'nature',
+  'shop',
+  'view',
+  'food',
+  'book',
+  'relax',
+  'event',
+  'entertainment',
+  'mohinga'
+];
 const DAILY_PROMPTS = [
   '最近、気になっている場所はありますか？',
   '誰かにそっとすすめたいお店はありますか？',
@@ -998,9 +1010,12 @@ function renderDailyPrompt() {
 }
 
 function getDiscoveryItems() {
-  const suggestionItems = localSuggestions.map(s => ({
+  const suggestions = Array.isArray(localSuggestions) ? localSuggestions : [];
+  const posts = Array.isArray(allPosts) ? allPosts : [];
+  const suggestionItems = suggestions.map(s => ({
     kind: 'spot',
     id: s.id || s.clientId || '',
+    cat: s.cat || 'spot',
     spotName: s.name,
     title: s.name,
     text: s.reason || `${s.area || 'どこか'}で気になっているスポットです。`,
@@ -1010,41 +1025,80 @@ function getDiscoveryItems() {
   const spotItems = SPOTS.map(s => ({
     kind: 'spot',
     id: s.id,
+    cat: s.cat,
     spotName: s.name,
     title: s.name,
     text: s.memo || `${s.area}のおすすめスポットです。`,
     href: '#spots',
     action: 'スポットを見る'
   }));
-  const reviewItems = sortNewest(dedupePosts(allPosts)).slice(0, 12).map(p => ({
-    kind: 'review',
-    id: p.id || p.clientId || '',
-    spotName: p.spotName,
-    title: p.spotName,
-    text: p.comment,
-    href: '#visited',
-    action: '感想を見る'
-  }));
+  const allSpots = [...suggestionItems, ...spotItems];
+  const reviewItems = sortNewest(dedupePosts(posts)).slice(0, 12).map(p => {
+    const relatedSpot = allSpots.find(spot => (spot.spotName || spot.name) === p.spotName);
+    return {
+      kind: 'review',
+      id: p.id || p.clientId || '',
+      cat: p.cat || relatedSpot?.cat || 'review',
+      spotName: p.spotName,
+      title: p.spotName,
+      text: p.comment,
+      href: '#visited',
+      action: '感想を見る'
+    };
+  });
   return [...reviewItems, ...suggestionItems, ...spotItems].filter(item => item.title && item.text);
+}
+
+function getDiscoveryCategoryForDay(items) {
+  const availableCats = [...new Set(items.map(item => item.cat).filter(Boolean))];
+  if (!availableCats.length) return '';
+  const dayIndex = getDayIndex();
+  for (let i = 0; i < DISCOVERY_CATEGORY_ROTATION.length; i += 1) {
+    const cat = DISCOVERY_CATEGORY_ROTATION[(dayIndex + i) % DISCOVERY_CATEGORY_ROTATION.length];
+    if (availableCats.includes(cat)) return cat;
+  }
+  return availableCats[dayIndex % availableCats.length];
+}
+
+function getDailyDiscoveryItem(items, cat) {
+  const scopedItems = cat ? items.filter(item => item.cat === cat) : items;
+  const candidates = scopedItems.length ? scopedItems : items;
+  if (!candidates.length) return null;
+  const seed = `${getDayIndex()}-${cat || 'all'}-${candidates.map(item => item.id || item.title).join('|')}`;
+  return candidates[Math.abs(hashString(seed)) % candidates.length];
 }
 
 function renderWeeklyDiscovery() {
   const card = document.getElementById('weeklyDiscoveryCard');
+  const category = document.getElementById('weeklyDiscoveryCategory');
   const title = document.getElementById('weeklyDiscoveryTitle');
   const text = document.getElementById('weeklyDiscoveryText');
   const link = document.getElementById('weeklyDiscoveryLink');
   if (!card || !title || !text || !link) return;
-  const items = getDiscoveryItems();
-  if (!items.length) return;
-  const item = items[(getDayIndex() * 17) % items.length];
-  currentDiscoveryItem = item;
-  title.textContent = item.title;
-  text.textContent = item.text.length > 92 ? `${item.text.slice(0, 92)}...` : item.text;
-  link.href = item.href;
-  link.dataset.discoveryKind = item.kind;
-  link.dataset.discoveryId = item.id || '';
-  link.dataset.discoverySpot = item.spotName || item.title;
-  link.setAttribute('aria-label', `${item.title}を開く`);
+  try {
+    const items = getDiscoveryItems();
+    if (!items.length) return;
+    const selectedCat = getDiscoveryCategoryForDay(items);
+    const item = getDailyDiscoveryItem(items, selectedCat);
+    if (!item) return;
+    currentDiscoveryItem = item;
+    const categoryLabel = getCatLabel(item.cat || selectedCat);
+    if (category) {
+      category.textContent = categoryLabel;
+      category.title = `カテゴリー：${categoryLabel}`;
+    }
+    title.textContent = item.title;
+    title.title = `名前：${item.title}`;
+    text.textContent = item.action || 'クリックして開く';
+    link.href = item.href;
+    link.dataset.discoveryKind = item.kind;
+    link.dataset.discoveryId = item.id || '';
+    link.dataset.discoveryCategory = item.cat || selectedCat || '';
+    link.dataset.discoverySpot = item.spotName || item.title;
+    link.setAttribute('aria-label', `${categoryLabel}、${item.title}を開く`);
+  } catch (e) {
+    console.warn('Discovery render failed:', e);
+  }
 }
 
 function setActiveSpotCategory(cat = 'all') {
@@ -2932,6 +2986,7 @@ function bindEvents() {
     openDiscoveryItem({
       kind: weeklyDiscoveryLink.dataset.discoveryKind,
       id: weeklyDiscoveryLink.dataset.discoveryId || '',
+      cat: weeklyDiscoveryLink.dataset.discoveryCategory || '',
       spotName: weeklyDiscoveryLink.dataset.discoverySpot || '',
       title: document.getElementById('weeklyDiscoveryTitle')?.textContent || ''
     });
