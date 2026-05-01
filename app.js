@@ -493,6 +493,17 @@ function getChatReactionId(chat = {}, type = 'thanks') {
   return `chat_${type}_${hashString(key)}`;
 }
 
+function getChatKey(chat = {}) {
+  return chat.clientId || chat.id || '';
+}
+
+function findChatByKey(chatId) {
+  return allChats.find(chat => getChatKey(chat) === chatId) ||
+    localChats.find(chat => getChatKey(chat) === chatId) ||
+    latestRemoteChats.find(chat => getChatKey(chat) === chatId) ||
+    null;
+}
+
 function getChatReactionCount(reactionId) {
   return globalLikes[reactionId] || (localChatReactions[reactionId] ? 1 : 0);
 }
@@ -544,12 +555,15 @@ function listenLikes() {
 
 async function saveChat(chatData) {
   const clientId = 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const parentId = replyingTo ? getChatKey(replyingTo) : null;
+  const parentNick = replyingTo ? (replyingTo.nickname || '匿名リスナー') : null;
   const chat = { 
     ...chatData, 
     id: clientId, 
     clientId, 
     timestamp: Date.now(),
-    parentId: replyingTo ? (replyingTo.clientId || replyingTo.id) : null
+    parentId,
+    parentNick
   };
   localChats.unshift(chat);
   localStorage.setItem('popopo_chats', JSON.stringify(localChats));
@@ -558,6 +572,8 @@ async function saveChat(chatData) {
     db.collection('chats').add({
       ...chatData,
       clientId,
+      parentId,
+      parentNick,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(e => console.warn('Chat sync failed:', e));
   }
@@ -567,8 +583,21 @@ async function saveChat(chatData) {
 
 function mergeChats(remoteChats = latestRemoteChats) {
   const byKey = new Map();
-  localChats.forEach(chat => byKey.set(chat.clientId || chat.id, chat));
-  remoteChats.forEach(chat => byKey.set(chat.clientId || chat.id, chat));
+  localChats.forEach(chat => {
+    const key = getChatKey(chat);
+    if (key) byKey.set(key, chat);
+  });
+  remoteChats.forEach(chat => {
+    const key = getChatKey(chat);
+    if (!key) return;
+    const existing = byKey.get(key);
+    byKey.set(key, {
+      ...existing,
+      ...chat,
+      parentId: chat.parentId || existing?.parentId || null,
+      parentNick: chat.parentNick || existing?.parentNick || null
+    });
+  });
   return Array.from(byKey.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
@@ -1735,41 +1764,53 @@ function renderChats(chats) {
   }
   empty.style.display = 'none';
 
-  // 親メッセージと返信を分ける
-  const topLevel = chats.filter(c => !c.parentId);
-  const replies = chats.filter(c => c.parentId);
-  
-  // 返信を親IDでグループ化
-  const replyMap = new Map();
-  replies.forEach(r => {
-    const pid = r.parentId;
-    if (!replyMap.has(pid)) replyMap.set(pid, []);
-    replyMap.get(pid).push(r);
+  const chatMap = new Map();
+  chats.forEach(chat => {
+    const key = getChatKey(chat);
+    if (key) chatMap.set(key, chat);
   });
 
+  const childMap = new Map();
+  chats.forEach(chat => {
+    if (!chat.parentId || !chatMap.has(chat.parentId)) return;
+    if (!childMap.has(chat.parentId)) childMap.set(chat.parentId, []);
+    childMap.get(chat.parentId).push(chat);
+  });
+
+  childMap.forEach(children => {
+    children.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  });
+
+  const topLevel = chats.filter(chat => !chat.parentId || !chatMap.has(chat.parentId));
   const visibleTopLevel = topLevel.slice(0, visibleChatCount);
 
-  function createChatCardHtml(chat, isReply = false) {
+  function createChatCardHtml(chat, depth = 0) {
     const dateStr = new Date(chat.timestamp).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     const nick = chat.nickname || '匿名リスナー';
     const initial = Array.from(nick)[0].toUpperCase();
     const thanksId = getChatReactionId(chat, 'thanks');
     const curiousId = getChatReactionId(chat, 'curious');
-    const cid = chat.clientId || chat.id;
+    const cid = getChatKey(chat);
+    const parent = chat.parentId ? chatMap.get(chat.parentId) : null;
+    const parentNick = parent?.nickname || chat.parentNick || '元の投稿';
+    const replyContext = chat.parentId
+      ? `<div class="chat-reply-context">↳ ${escHtml(parentNick)} への返信</div>`
+      : '';
 
     return `
-      <div class="chat-card ${isReply ? 'is-reply' : ''}" data-chat-id="${cid}">
+      <div class="chat-card ${depth > 0 ? 'is-reply' : ''}" data-chat-id="${escHtml(cid)}" data-depth="${Math.min(depth, 3)}">
         <div class="chat-avatar">${escHtml(initial)}</div>
         <div class="chat-content">
           <div class="chat-head">
             <span class="chat-nick">${escHtml(nick)}</span>
             <span class="chat-date">${dateStr}</span>
           </div>
+          ${replyContext}
           <div class="chat-msg">${escHtml(chat.message)}</div>
           <div class="chat-reactions">
             ${renderChatReactionButton(thanksId, '💐', 'ありがとう', 'ありがとう済み')}
             ${renderChatReactionButton(curiousId, '👀', '気になる', '気になる済み')}
-            <button class="btn-reply" onclick="initiateReply('${cid}')">💬 返信</button>
+            <button class="btn-reply" onclick="initiateReply('${escHtml(cid)}')">💬 返信</button>
           </div>
           ${renderPostActions(chat, 'chat')}
         </div>
@@ -1777,29 +1818,31 @@ function renderChats(chats) {
     `;
   }
 
-  grid.innerHTML = visibleTopLevel.map(chat => {
-    const pid = chat.clientId || chat.id;
-    const chatReplies = replyMap.get(pid) || [];
-    const repliesHtml = chatReplies.length > 0 
-      ? `<div class="chat-replies">${chatReplies.map(r => createChatCardHtml(r, true)).join('')}</div>`
+  function renderChatBranch(chat, depth = 0) {
+    const key = getChatKey(chat);
+    const children = childMap.get(key) || [];
+    const repliesHtml = children.length > 0
+      ? `<div class="chat-replies" data-depth="${Math.min(depth + 1, 3)}">
+          <div class="chat-replies-label">返信 ${children.length}件</div>
+          ${children.map(child => renderChatBranch(child, depth + 1)).join('')}
+        </div>`
       : '';
-    
+
     return `
-      <div class="chat-thread">
-        ${createChatCardHtml(chat)}
+      <div class="${depth === 0 ? 'chat-thread' : 'chat-branch'}" data-depth="${Math.min(depth, 3)}">
+        ${createChatCardHtml(chat, depth)}
         ${repliesHtml}
       </div>
     `;
-  }).join('');
+  }
+
+  grid.innerHTML = visibleTopLevel.map(chat => renderChatBranch(chat, 0)).join('');
 
   updateMoreButton('chatsMoreBtn', topLevel.length, Math.min(visibleChatCount, topLevel.length), INITIAL_CHAT_COUNT);
 }
 
 window.initiateReply = function(chatId) {
-  const chat = allPosts.find(p => (p.clientId || p.id) === chatId) || 
-               VISITED.find(v => (v.clientId || v.id) === chatId) ||
-               localChats.find(c => (c.clientId || c.id) === chatId) ||
-               latestRemoteChats.find(c => (c.clientId || c.id) === chatId);
+  const chat = findChatByKey(chatId);
   
   if (!chat) return;
   
@@ -1878,18 +1921,24 @@ function openChatModal(prefill = '', id = null, clientId = null) {
   const btn = document.getElementById('chatSubmitBtn');
   
   if (editingClientId) {
+    replyingTo = null;
+    const info = document.getElementById('chatReplyInfo');
+    if (info) info.style.display = 'none';
     if (title) title.textContent = '💬 つぶやきを編集';
     if (btn) btn.textContent = '更新する 🚀';
     
-    const chat = allChats.find(c => (c.clientId || c.id) === editingClientId);
+    const chat = allChats.find(c => getChatKey(c) === editingClientId);
     if (chat) {
       const nickInput = document.getElementById('cNick');
       if (nickInput) nickInput.value = chat.nickname === '匿名リスナー' ? '' : (chat.nickname || '');
     }
   } else {
-    if (title) title.textContent = '💬 つぶやく';
-    if (btn) btn.textContent = '投稿する 🚀';
-    if (!replyingTo) {
+    if (replyingTo) {
+      if (title) title.textContent = '💬 返信する';
+      if (btn) btn.textContent = '返信する 🚀';
+    } else {
+      if (title) title.textContent = '💬 つぶやく';
+      if (btn) btn.textContent = '投稿する 🚀';
       const info = document.getElementById('chatReplyInfo');
       if (info) info.style.display = 'none';
     }
@@ -2673,8 +2722,9 @@ document.getElementById('chatForm').addEventListener('submit', async (e) => {
       await updateChatRecord(editingId, editingClientId, { nickname, message });
       showToast('つぶやきを更新しました！');
     } else {
+      const isReply = Boolean(replyingTo);
       await saveChat({ nickname, message });
-      showToast('投稿しました！あなたの一言が、会話のきっかけになります。');
+      showToast(isReply ? '返信しました！会話がつながりました。' : '投稿しました！あなたの一言が、会話のきっかけになります。');
     }
     updateChatsView();
     closeChatModal();
