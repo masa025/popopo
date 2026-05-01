@@ -200,6 +200,7 @@ const DAILY_PROMPTS = [
 let visibleSpotCount = INITIAL_SPOT_COUNT;
 let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
+let replyingTo = null;
 let showingWantList = false;
 let heroBackdropTimer = null;
 let heroBackdropVisibilityBound = false;
@@ -543,7 +544,13 @@ function listenLikes() {
 
 async function saveChat(chatData) {
   const clientId = 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-  const chat = { ...chatData, id: clientId, clientId, timestamp: Date.now() };
+  const chat = { 
+    ...chatData, 
+    id: clientId, 
+    clientId, 
+    timestamp: Date.now(),
+    parentId: replyingTo ? (replyingTo.clientId || replyingTo.id) : null
+  };
   localChats.unshift(chat);
   localStorage.setItem('popopo_chats', JSON.stringify(localChats));
 
@@ -1728,15 +1735,30 @@ function renderChats(chats) {
   }
   empty.style.display = 'none';
 
-  const visibleChats = chats.slice(0, visibleChatCount);
-  grid.innerHTML = visibleChats.map(chat => {
+  // 親メッセージと返信を分ける
+  const topLevel = chats.filter(c => !c.parentId);
+  const replies = chats.filter(c => c.parentId);
+  
+  // 返信を親IDでグループ化
+  const replyMap = new Map();
+  replies.forEach(r => {
+    const pid = r.parentId;
+    if (!replyMap.has(pid)) replyMap.set(pid, []);
+    replyMap.get(pid).push(r);
+  });
+
+  const visibleTopLevel = topLevel.slice(0, visibleChatCount);
+
+  function createChatCardHtml(chat, isReply = false) {
     const dateStr = new Date(chat.timestamp).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     const nick = chat.nickname || '匿名リスナー';
     const initial = Array.from(nick)[0].toUpperCase();
     const thanksId = getChatReactionId(chat, 'thanks');
     const curiousId = getChatReactionId(chat, 'curious');
+    const cid = chat.clientId || chat.id;
+
     return `
-      <div class="chat-card">
+      <div class="chat-card ${isReply ? 'is-reply' : ''}" data-chat-id="${cid}">
         <div class="chat-avatar">${escHtml(initial)}</div>
         <div class="chat-content">
           <div class="chat-head">
@@ -1747,14 +1769,52 @@ function renderChats(chats) {
           <div class="chat-reactions">
             ${renderChatReactionButton(thanksId, '💐', 'ありがとう', 'ありがとう済み')}
             ${renderChatReactionButton(curiousId, '👀', '気になる', '気になる済み')}
+            <button class="btn-reply" onclick="initiateReply('${cid}')">💬 返信</button>
           </div>
           ${renderPostActions(chat, 'chat')}
         </div>
       </div>
     `;
+  }
+
+  grid.innerHTML = visibleTopLevel.map(chat => {
+    const pid = chat.clientId || chat.id;
+    const chatReplies = replyMap.get(pid) || [];
+    const repliesHtml = chatReplies.length > 0 
+      ? `<div class="chat-replies">${chatReplies.map(r => createChatCardHtml(r, true)).join('')}</div>`
+      : '';
+    
+    return `
+      <div class="chat-thread">
+        ${createChatCardHtml(chat)}
+        ${repliesHtml}
+      </div>
+    `;
   }).join('');
-  updateMoreButton('chatsMoreBtn', chats.length, Math.min(visibleChatCount, chats.length), INITIAL_CHAT_COUNT);
+
+  updateMoreButton('chatsMoreBtn', topLevel.length, Math.min(visibleChatCount, topLevel.length), INITIAL_CHAT_COUNT);
 }
+
+window.initiateReply = function(chatId) {
+  const chat = allPosts.find(p => (p.clientId || p.id) === chatId) || 
+               VISITED.find(v => (v.clientId || v.id) === chatId) ||
+               localChats.find(c => (c.clientId || c.id) === chatId) ||
+               latestRemoteChats.find(c => (c.clientId || c.id) === chatId);
+  
+  if (!chat) return;
+  
+  replyingTo = chat;
+  const modal = document.getElementById('chatModal');
+  const info = document.getElementById('chatReplyInfo');
+  const nick = document.getElementById('chatReplyNick');
+  
+  if (info && nick) {
+    nick.textContent = chat.nickname || '匿名リスナー';
+    info.style.display = 'flex';
+  }
+  
+  openChatModal();
+};
 
 function populateModalSpotSelect(preselect = '') {
   const sel = document.getElementById('fSpot');
@@ -1829,6 +1889,10 @@ function openChatModal(prefill = '', id = null, clientId = null) {
   } else {
     if (title) title.textContent = '💬 つぶやく';
     if (btn) btn.textContent = '投稿する 🚀';
+    if (!replyingTo) {
+      const info = document.getElementById('chatReplyInfo');
+      if (info) info.style.display = 'none';
+    }
   }
 
   modal.classList.add('is-open');
@@ -1843,7 +1907,16 @@ function openChatModal(prefill = '', id = null, clientId = null) {
 function closeChatModal() {
   document.getElementById('chatModal').classList.remove('is-open');
   document.body.style.overflow = '';
+  replyingTo = null;
+  const info = document.getElementById('chatReplyInfo');
+  if (info) info.style.display = 'none';
 }
+
+document.getElementById('chatReplyClearBtn')?.addEventListener('click', () => {
+  replyingTo = null;
+  const info = document.getElementById('chatReplyInfo');
+  if (info) info.style.display = 'none';
+});
 
 function normalizeGalleryAnswer(value) {
   return String(value || '')

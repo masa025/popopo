@@ -513,6 +513,10 @@
         <button class="modal-close" id="chatModalClose" aria-label="閉じる">✕</button>
       </div>
       <form id="chatForm" class="modal-form" novalidate>
+        <div id="chatReplyInfo" class="chat-reply-info" style="display:none;">
+          <span>返信先: <strong id="chatReplyNick"></strong></span>
+          <button type="button" class="chat-reply-clear" id="chatReplyClearBtn" aria-label="返信をキャンセル">✕</button>
+        </div>
         <p class="form-assurance">同じ端末のブラウザでは、投稿後に編集できます。</p>
         <div class="form-group">
           <label class="form-label" for="cNick">ニックネーム（任意）</label>
