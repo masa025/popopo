@@ -138,6 +138,7 @@ let localSeenReviews = JSON.parse(localStorage.getItem('popopo_seen_reviews') ||
 let localChatReactions = JSON.parse(localStorage.getItem('popopo_chat_reactions') || '{}');
 let localSuggestions = JSON.parse(localStorage.getItem('popopo_suggestions') || '[]');
 let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
+const NICKNAME_STORAGE_KEY = 'popopo_last_nickname';
 let selectedRating = 0;
 let allPosts = [];
 let allChats = [];
@@ -764,6 +765,30 @@ function renderPostActions(entity, type) {
       <button class="btn-post-action is-edit" onclick="startEditEntity('${id}', '${clientId}', '${type}')" title="編集">✏️ 編集</button>
     </div>
   `;
+}
+
+function getSavedNickname() {
+  try {
+    return localStorage.getItem(NICKNAME_STORAGE_KEY) || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function saveNickname(nickname) {
+  const value = String(nickname || '').trim();
+  if (!value || value === '匿名リスナー') return;
+  try {
+    localStorage.setItem(NICKNAME_STORAGE_KEY, value.slice(0, 20));
+  } catch (e) {
+    console.warn('Nickname save failed:', e);
+  }
+}
+
+function fillSavedNickname(inputId) {
+  const input = document.getElementById(inputId);
+  const nickname = getSavedNickname();
+  if (input && nickname && !input.value.trim()) input.value = nickname;
 }
 
 
@@ -1959,6 +1984,7 @@ function openAddSpotModal(id = null, clientId = null) {
   } else {
     if (title) title.textContent = '✨ スポットを提案する';
     if (btn) btn.textContent = '提案を送る 🚀';
+    fillSavedNickname('asNick');
   }
 }
 function closeAddSpotModal() {
@@ -1997,6 +2023,7 @@ function openChatModal(prefill = '', id = null, clientId = null) {
       const info = document.getElementById('chatReplyInfo');
       if (info) info.style.display = 'none';
     }
+    fillSavedNickname('cNick');
   }
 
   modal.classList.add('is-open');
@@ -2672,6 +2699,7 @@ function openModal(preselect = '', id = null, clientId = null) {
   } else {
     if (title) title.textContent = '🗺️ 行った場所を共有';
     if (btn) btn.textContent = '投稿する 🚀';
+    fillSavedNickname('fNick');
   }
 }
 
@@ -2732,6 +2760,7 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
       await saveSpotSuggestion(data);
       showToast('スポットを提案しました！誰かの次の休日のヒントになります。');
     }
+    saveNickname(data.nickname);
     closeAddSpotModal();
     const activeTab = document.querySelector('.tab.active');
     renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
@@ -2781,6 +2810,7 @@ document.getElementById('chatForm').addEventListener('submit', async (e) => {
       await saveChat({ nickname, message });
       showToast(isReply ? '返信しました！会話がつながりました。' : '投稿しました！あなたの一言が、会話のきっかけになります。');
     }
+    saveNickname(nickname);
     updateChatsView();
     closeChatModal();
     document.getElementById('chatForm').reset();
@@ -2877,6 +2907,7 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
       await savePost(postData);
       showToast('感想を投稿しました！あなたの体験が、誰かの背中を押します。');
     }
+    saveNickname(nickname);
     allPosts = mergePosts(latestRemotePosts);
     renderVisited(allPosts);
     const activeTab = document.querySelector('.tab.active');
