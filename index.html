@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260429-4">
+  <link rel="stylesheet" href="style.css?v=20260502-1">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -98,11 +98,10 @@
       <a href="about.html" class="nav-mobile-link">🌿 この場所を作った理由</a>
       <a href="how-to.html" class="nav-mobile-link" id="mobileHowToBtn">💡 使い方を見る</a>
     </div>
-    <div class="nav-discovery" id="weeklyDiscoveryCard" aria-label="今日の小さな発見">
+    <div class="nav-discovery" id="weeklyDiscoveryCard" aria-label="おすすめと感想のピックアップ">
       <a id="weeklyDiscoveryLink" class="nav-discovery-link" href="#spots">
-        <span class="nav-discovery-kicker">今日の小さな発見</span>
-        <span id="weeklyDiscoveryCategory" class="nav-discovery-category">🍴 飲食店</span>
-        <span id="weeklyDiscoveryTitle" class="nav-discovery-title">名曲喫茶ライオン</span>
+        <span id="weeklyDiscoveryCategory" class="nav-discovery-category">📍 おすすめスポット</span>
+        <span id="weeklyDiscoveryTitle" class="nav-discovery-title">🍴 飲食店・名曲喫茶ライオン</span>
         <span id="weeklyDiscoveryText" class="nav-discovery-text">名曲を聴きながら楽しめる喫茶店</span>
       </a>
     </div>
@@ -135,6 +134,10 @@
       <h1 class="hero-title">みんなで作る<br><span class="hero-accent">お出かけマップ</span></h1>
       <p class="hero-sub">人から人へ伝わる、ちいさなお出かけ案内。<br>POPOPO コミュニティでおすすめや感想を<br>みんなで集めています。あなたのおすすめもぜひ教えてください！</p>
       <a href="about.html" class="hero-story-link">🌿 この場所を作った理由</a>
+      <div class="hero-quick-links" aria-label="主要コンテンツを見る">
+        <a href="#spots" class="hero-quick-link">📍 おすすめスポットを見る</a>
+        <a href="#visited" class="hero-quick-link">💬 みんなの感想を見る</a>
+      </div>
       <div class="hero-stats">
         <a href="#spots" class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></a>
         <div class="stat-divider"></div>
@@ -618,8 +621,8 @@
       </div>
       <div style="padding:24px;line-height:1.8;color:var(--text);font-size:0.95rem;max-height:60vh;overflow-y:auto;">
         <div style="margin-bottom:16px;">
-          <h4 style="color:var(--blue);margin-bottom:8px;">1. 今日の小さな発見を見る 🌿</h4>
-          <p>ページ上部には、毎日ランダムでひとつのおすすめが表示されます。気になる名前を押すと、そのスポットカードまで移動できます。</p>
+          <h4 style="color:var(--blue);margin-bottom:8px;">1. 今日の発見を見る 🌿</h4>
+          <p>ページ上部には、おすすめスポットやみんなの感想がゆっくり入れ替わって表示されます。気になる名前を押すと、該当のスポットや感想を開けます。</p>
         </div>
         <div style="margin-bottom:16px;">
           <h4 style="color:var(--blue);margin-bottom:8px;">2. リスナー作品を楽しむ 🎨</h4>
@@ -672,6 +675,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260501-1"></script>
+  <script src="app.js?v=20260502-1"></script>
 </body>
 </html>

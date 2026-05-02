@@ -176,18 +176,9 @@ const KIRIBAN_ROUND_INTERVAL = 100;
 const KIRIBAN_MIN_COUNT = 100;
 const INTRO_STORY_STORAGE_KEY = 'popopo_intro_story_seen_v1';
 const INTRO_STORY_SLIDE_MS = 5200;
-const DISCOVERY_CATEGORY_ROTATION = [
-  'museum',
-  'nature',
-  'shop',
-  'view',
-  'food',
-  'book',
-  'relax',
-  'event',
-  'entertainment',
-  'mohinga'
-];
+const DISCOVERY_ROTATE_MS = 45000;
+const DISCOVERY_PAUSE_MS = 12000;
+const DISCOVERY_TEXT_LIMIT = 92;
 const DAILY_PROMPTS = [
   '最近、気になっている場所はありますか？',
   '誰かにそっとすすめたいお店はありますか？',
@@ -230,6 +221,10 @@ let heroGallerySuppressClick = false;
 let introStoryTimer = null;
 let introStoryIndex = 0;
 let currentDiscoveryItem = null;
+let discoveryItems = [];
+let discoveryIndex = 0;
+let discoveryTimer = null;
+let discoveryPausedUntil = 0;
 let pendingGalleryUnlock = null;
 
 function isMobileHeroLayout() {
@@ -1041,6 +1036,7 @@ function getDiscoveryItems() {
     kind: 'spot',
     id: s.id || s.clientId || '',
     cat: s.cat || 'spot',
+    sourceLabel: '📍 おすすめスポット',
     spotName: s.name,
     title: s.name,
     text: s.reason || `${s.area || 'どこか'}で気になっているスポットです。`,
@@ -1051,6 +1047,7 @@ function getDiscoveryItems() {
     kind: 'spot',
     id: s.id,
     cat: s.cat,
+    sourceLabel: '📍 おすすめスポット',
     spotName: s.name,
     title: s.name,
     text: s.memo || `${s.area}のおすすめスポットです。`,
@@ -1064,6 +1061,7 @@ function getDiscoveryItems() {
       kind: 'review',
       id: p.id || p.clientId || '',
       cat: p.cat || relatedSpot?.cat || 'review',
+      sourceLabel: '💬 みんなの感想',
       spotName: p.spotName,
       title: p.spotName,
       text: p.comment,
@@ -1074,57 +1072,129 @@ function getDiscoveryItems() {
   return [...reviewItems, ...suggestionItems, ...spotItems].filter(item => item.title && item.text);
 }
 
-function getDiscoveryCategoryForDay(items) {
-  const availableCats = [...new Set(items.map(item => item.cat).filter(Boolean))];
-  if (!availableCats.length) return '';
-  const dayIndex = getDayIndex();
-  for (let i = 0; i < DISCOVERY_CATEGORY_ROTATION.length; i += 1) {
-    const cat = DISCOVERY_CATEGORY_ROTATION[(dayIndex + i) % DISCOVERY_CATEGORY_ROTATION.length];
-    if (availableCats.includes(cat)) return cat;
+function getDiscoveryItemKey(item) {
+  if (!item) return '';
+  return [
+    item.kind,
+    item.id || '',
+    item.spotName || item.title || '',
+    normalizeDedupeValue(item.text || '').slice(0, 48)
+  ].join('|');
+}
+
+function rotateDiscoveryList(items, salt) {
+  if (!items.length) return [];
+  const offset = Math.abs(hashString(`${getDayIndex()}-${salt}`)) % items.length;
+  return [...items.slice(offset), ...items.slice(0, offset)];
+}
+
+function buildDiscoveryQueue(items) {
+  const spots = rotateDiscoveryList(items.filter(item => item.kind === 'spot'), 'spot');
+  const reviews = rotateDiscoveryList(items.filter(item => item.kind === 'review'), 'review');
+  const queue = [];
+  const max = Math.max(spots.length, reviews.length);
+  const startWithReview = Math.floor(Date.now() / DISCOVERY_ROTATE_MS) % 2 === 1;
+
+  for (let i = 0; i < max; i += 1) {
+    if (startWithReview) {
+      if (reviews[i]) queue.push(reviews[i]);
+      if (spots[i]) queue.push(spots[i]);
+    } else {
+      if (spots[i]) queue.push(spots[i]);
+      if (reviews[i]) queue.push(reviews[i]);
+    }
   }
-  return availableCats[dayIndex % availableCats.length];
+
+  return queue.length ? queue : items;
 }
 
-function getDailyDiscoveryItem(items, cat) {
-  const scopedItems = cat ? items.filter(item => item.cat === cat) : items;
-  const candidates = scopedItems.length ? scopedItems : items;
-  if (!candidates.length) return null;
-  const seed = `${getDayIndex()}-${cat || 'all'}-${candidates.map(item => item.id || item.title).join('|')}`;
-  return candidates[Math.abs(hashString(seed)) % candidates.length];
+function prefersReducedDiscoveryMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function renderWeeklyDiscovery() {
-  const card = document.getElementById('weeklyDiscoveryCard');
+function getDiscoveryTitle(item, categoryLabel) {
+  return item.cat ? `${categoryLabel}・${item.title}` : item.title;
+}
+
+function updateDiscoveryDom(item) {
   const category = document.getElementById('weeklyDiscoveryCategory');
   const title = document.getElementById('weeklyDiscoveryTitle');
   const text = document.getElementById('weeklyDiscoveryText');
   const link = document.getElementById('weeklyDiscoveryLink');
-  if (!card || !title || !text || !link) return;
+  if (!item || !category || !title || !text || !link) return;
+
+  const sourceLabel = item.sourceLabel || (item.kind === 'review' ? '💬 みんなの感想' : '📍 おすすめスポット');
+  const categoryLabel = getCatLabel(item.cat);
+  const titleLabel = getDiscoveryTitle(item, categoryLabel);
+  const previewText = item.text.length > DISCOVERY_TEXT_LIMIT ? `${item.text.slice(0, DISCOVERY_TEXT_LIMIT)}...` : item.text;
+
+  currentDiscoveryItem = item;
+  category.textContent = sourceLabel;
+  category.title = `表示元：${sourceLabel}`;
+  title.textContent = titleLabel;
+  title.title = `カテゴリー：${categoryLabel} / 名前：${item.title}`;
+  text.textContent = previewText;
+  text.title = item.text;
+  link.href = item.href;
+  link.dataset.discoveryKind = item.kind;
+  link.dataset.discoveryId = item.id || '';
+  link.dataset.discoveryCategory = item.cat || '';
+  link.dataset.discoverySpot = item.spotName || item.title;
+  link.setAttribute('aria-label', `${sourceLabel}、${titleLabel}を開く`);
+}
+
+function showDiscoveryItem(item, animate = false) {
+  const link = document.getElementById('weeklyDiscoveryLink');
+  if (!link || !animate || prefersReducedDiscoveryMotion()) {
+    updateDiscoveryDom(item);
+    return;
+  }
+  link.classList.add('is-switching');
+  window.setTimeout(() => {
+    updateDiscoveryDom(item);
+    link.classList.remove('is-switching');
+  }, 180);
+}
+
+function renderWeeklyDiscovery() {
+  const card = document.getElementById('weeklyDiscoveryCard');
+  if (!card) return;
   try {
     const items = getDiscoveryItems();
     if (!items.length) return;
-    const selectedCat = getDiscoveryCategoryForDay(items);
-    const item = getDailyDiscoveryItem(items, selectedCat);
+    const currentKey = getDiscoveryItemKey(currentDiscoveryItem);
+    discoveryItems = buildDiscoveryQueue(items);
+    const preservedIndex = discoveryItems.findIndex(item => getDiscoveryItemKey(item) === currentKey);
+    discoveryIndex = preservedIndex >= 0 ? preservedIndex : discoveryIndex % discoveryItems.length;
+    const item = discoveryItems[discoveryIndex];
     if (!item) return;
-    currentDiscoveryItem = item;
-    const categoryLabel = getCatLabel(item.cat || selectedCat);
-    if (category) {
-      category.textContent = categoryLabel;
-      category.title = `カテゴリー：${categoryLabel}`;
-    }
-    title.textContent = item.title;
-    title.title = `名前：${item.title}`;
-    text.textContent = item.text.length > 92 ? `${item.text.slice(0, 92)}...` : item.text;
-    text.title = item.text;
-    link.href = item.href;
-    link.dataset.discoveryKind = item.kind;
-    link.dataset.discoveryId = item.id || '';
-    link.dataset.discoveryCategory = item.cat || selectedCat || '';
-    link.dataset.discoverySpot = item.spotName || item.title;
-    link.setAttribute('aria-label', `${categoryLabel}、${item.title}を開く`);
+    showDiscoveryItem(item, false);
   } catch (e) {
     console.warn('Discovery render failed:', e);
   }
+}
+
+function shouldRotateDiscovery() {
+  if (prefersReducedDiscoveryMotion()) return false;
+  if (document.hidden) return false;
+  if (Date.now() < discoveryPausedUntil) return false;
+  if (document.querySelector('.modal-bg.is-open')) return false;
+  return discoveryItems.length > 1;
+}
+
+function rotateDiscoveryItem() {
+  if (!shouldRotateDiscovery()) return;
+  discoveryIndex = (discoveryIndex + 1) % discoveryItems.length;
+  showDiscoveryItem(discoveryItems[discoveryIndex], true);
+}
+
+function startDiscoveryRotation() {
+  if (discoveryTimer || prefersReducedDiscoveryMotion()) return;
+  discoveryTimer = window.setInterval(rotateDiscoveryItem, DISCOVERY_ROTATE_MS);
+}
+
+function pauseDiscoveryRotation(ms = DISCOVERY_PAUSE_MS) {
+  discoveryPausedUntil = Math.max(discoveryPausedUntil, Date.now() + ms);
 }
 
 function setActiveSpotCategory(cat = 'all') {
@@ -1671,7 +1741,9 @@ function renderSpotCards(cat = 'all') {
     return;
   }
   grid.innerHTML = visibleSpots.map(s => {
-    const reviewCount = getSpotReviews(s.name).length;
+    const reviews = getSpotReviews(s.name);
+    const reviewCount = reviews.length;
+    const latestReviewText = reviews[0]?.comment ? truncateText(reviews[0].comment, 46) : '';
     const resources = getSuggestionResources(s);
     const previewImage = getResourcePreviewImage(resources);
     return `
@@ -1693,6 +1765,12 @@ function renderSpotCards(cat = 'all') {
       ${s.memo || s.reason ? `<div class="spot-memo">${escHtml(s.memo || s.reason)}</div>` : ''}
       ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">提案者：${escHtml(s.suggestedBy)}</div>` : ''}
       ${resources.length ? `<div class="spot-resources">${renderResourceLinks(resources, 'spot', 'spot-link')}</div>` : ''}
+      ${latestReviewText ? `
+        <button type="button" class="spot-latest-review" data-spotname="${escHtml(s.name)}" aria-label="${escHtml(s.name)}のみんなの感想を見る">
+          <span>最近の感想</span>
+          <strong>${escHtml(latestReviewText)}</strong>
+        </button>
+      ` : ''}
       <div class="spot-footer">
         <button class="spot-reviews-btn" data-spotname="${escHtml(s.name)}">💬 みんなの感想（${reviewCount}件）</button>
         <button class="spot-post-btn" data-spotname="${escHtml(s.name)}">📝 行ってみた！</button>
@@ -1719,6 +1797,9 @@ function renderSpotCards(cat = 'all') {
     btn.addEventListener('click', () => openModal(btn.dataset.spotname));
   });
   grid.querySelectorAll('.spot-reviews-btn').forEach(btn => {
+    btn.addEventListener('click', () => openSpotReviews(btn.dataset.spotname));
+  });
+  grid.querySelectorAll('.spot-latest-review').forEach(btn => {
     btn.addEventListener('click', () => openSpotReviews(btn.dataset.spotname));
   });
 
@@ -3015,6 +3096,7 @@ function bindEvents() {
   const weeklyDiscoveryLink = document.getElementById('weeklyDiscoveryLink');
   if (weeklyDiscoveryLink) weeklyDiscoveryLink.addEventListener('click', (e) => {
     e.preventDefault();
+    pauseDiscoveryRotation();
     openDiscoveryItem({
       kind: weeklyDiscoveryLink.dataset.discoveryKind,
       id: weeklyDiscoveryLink.dataset.discoveryId || '',
@@ -3023,6 +3105,11 @@ function bindEvents() {
       title: document.getElementById('weeklyDiscoveryTitle')?.textContent || ''
     });
   });
+  if (weeklyDiscoveryLink) {
+    ['mouseenter', 'focusin', 'touchstart'].forEach(eventName => {
+      weeklyDiscoveryLink.addEventListener(eventName, () => pauseDiscoveryRotation(), { passive: true });
+    });
+  }
   const chatClose = document.getElementById('chatModalClose');
   if (chatClose) chatClose.addEventListener('click', closeChatModal);
   const chatCancel = document.getElementById('chatCancelBtn');
@@ -3469,6 +3556,7 @@ function init() {
   trackPageView();
   renderDailyPrompt();
   renderWeeklyDiscovery();
+  startDiscoveryRotation();
   renderWeather();
   setupHeroGallery();
   renderHeroBackdrop();
