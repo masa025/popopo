@@ -171,7 +171,7 @@ const HERO_CARD_SLOTS_MOBILE = [
   { top: '12%', left: '4%', width: '118px', rot: '-5deg', scale: '0.88', delay: '-1s' },
   { top: '58%', right: '12%', width: '116px', rot: '4deg', scale: '0.86', delay: '-3s' }
 ];
-const HERO_BACKDROP_ROTATE_MS = 12000;
+const HERO_BACKDROP_ROTATE_MS = 5000;
 const KIRIBAN_ROUND_INTERVAL = 100;
 const KIRIBAN_MIN_COUNT = 100;
 const INTRO_STORY_STORAGE_KEY = 'popopo_intro_story_seen_v1';
@@ -1554,8 +1554,11 @@ function validateResourceEntries(context = 'spot') {
 
 function buildHeroCards() {
   const slots = getHeroCardSlots();
-  const spotCards = shuffleItems([
-    ...sortNewest(localSuggestions).map(spot => ({
+  
+  // すべての候補を一つのプールにまとめる
+  const pool = [
+    // スポット系
+    ...localSuggestions.map(spot => ({
       kind: 'spot',
       kindLabel: 'おすすめスポット',
       title: spot.name,
@@ -1570,11 +1573,17 @@ function buildHeroCards() {
       text: truncateText(spot.memo || spot.area, 42),
       meta: [spot.area ? `📍 ${spot.area}` : '', getCatLabel(spot.cat)].filter(Boolean).join(' ・ '),
       accent: spot.cat
-    }))
-  ]);
-  const heroPosts = sortNewest(dedupePosts([...allPosts, ...localPosts]));
-  const reviews = shuffleItems([
-    ...heroPosts.map(post => ({
+    })),
+    // 感想系
+    ...allPosts.map(post => ({
+      kind: 'review',
+      kindLabel: 'みんなの感想',
+      title: post.spotName || 'スポット',
+      text: truncateText(post.comment || '', 42),
+      meta: [post.rating ? renderStars(post.rating) : '', formatVisitDate(post.visitDate), post.nickname ? `👤 ${post.nickname}` : ''].filter(Boolean).join(' ・ '),
+      accent: post.cat
+    })),
+    ...localPosts.map(post => ({
       kind: 'review',
       kindLabel: 'みんなの感想',
       title: post.spotName || 'スポット',
@@ -1590,24 +1599,10 @@ function buildHeroCards() {
       meta: [renderStars(visit.rating), visit.area ? `📍 ${visit.area}` : ''].filter(Boolean).join(' ・ '),
       accent: visit.cat
     }))
-  ]);
+  ];
 
-  const reviewCards = shuffleItems(reviews);
-  if (slots.length === 2) {
-    return [
-      spotCards[0] || reviewCards[0],
-      reviewCards[0] || spotCards[0]
-    ].filter(Boolean);
-  }
-
-  const cards = [
-    spotCards[0] || reviewCards[0],
-    reviewCards[0] || spotCards[0],
-    reviewCards[1] || spotCards[1] || reviewCards[0],
-    spotCards[1] || reviewCards[1] || spotCards[0]
-  ].filter(Boolean);
-
-  return cards.slice(0, slots.length);
+  // 全体をシャッフルして必要な数だけ抽出
+  return shuffleItems(pool).slice(0, slots.length);
 }
 
 function renderHeroBackdrop() {
@@ -1616,8 +1611,20 @@ function renderHeroBackdrop() {
   const cards = buildHeroCards();
   const slots = getHeroCardSlots();
   const isMobile = slots.length === 2;
-  host.innerHTML = cards.map((card, index) => {
+  
+  // 既存のコンテンツを一旦クリアして確実に再描画させる
+  host.innerHTML = ''; 
+  
+  const fragment = document.createDocumentFragment();
+  cards.forEach((card, index) => {
     const slot = slots[index % slots.length];
+    const cardEl = document.createElement('div');
+    cardEl.className = 'hero-float-card';
+    
+    // 不透明度を大幅にアップ (0.6 ~ 0.85 程度)
+    const baseOpacity = isMobile ? 0.7 : 0.6;
+    const opacity = baseOpacity + (index * 0.05);
+    
     const style = [
       slot.top ? `top:${slot.top}` : '',
       slot.bottom ? `bottom:${slot.bottom}` : '',
@@ -1626,27 +1633,32 @@ function renderHeroBackdrop() {
       `width:${slot.width}`,
       `--card-rot:${slot.rot}`,
       `--card-scale:${slot.scale || 1}`,
-      `--card-opacity:${(isMobile ? 0.48 : 0.2) + (index * (isMobile ? 0.08 : 0.03))}`,
+      `--card-opacity:${opacity}`,
       `--float-delay:${slot.delay}`,
-      `--hero-accent:${getCatAccent(card.accent)}`
+      `--hero-accent:${getCatAccent(card.accent)}`,
+      `animation-delay:${index * 0.2}s` // 順繰りに表示されるように
     ].filter(Boolean).join(';');
-    return `
-      <div class="hero-float-card" style="${style}">
-        <div class="hero-float-card-inner">
-          <span class="hero-float-kind">${escHtml(card.kindLabel)}</span>
-          <div class="hero-float-title">${escHtml(card.title)}</div>
-          <div class="hero-float-text">${escHtml(card.text)}</div>
-          ${card.meta ? `<div class="hero-float-meta">${escHtml(card.meta)}</div>` : ''}
-        </div>
+    
+    cardEl.setAttribute('style', style);
+    cardEl.innerHTML = `
+      <div class="hero-float-card-inner">
+        <span class="hero-float-kind">${escHtml(card.kindLabel)}</span>
+        <div class="hero-float-title">${escHtml(card.title)}</div>
+        <div class="hero-float-text">${escHtml(card.text)}</div>
+        ${card.meta ? `<div class="hero-float-meta">${escHtml(card.meta)}</div>` : ''}
       </div>
     `;
-  }).join('');
+    fragment.appendChild(cardEl);
+  });
+  
+  host.appendChild(fragment);
 }
 
 function startHeroBackdropRotation() {
   if (heroBackdropTimer || !document.getElementById('heroShowcase')) return;
+  
   heroBackdropTimer = window.setInterval(() => {
-    if (!document.hidden) renderHeroBackdrop();
+    renderHeroBackdrop();
   }, HERO_BACKDROP_ROTATE_MS);
 
   if (!heroBackdropVisibilityBound) {
