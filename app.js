@@ -139,6 +139,8 @@ let localChatReactions = JSON.parse(localStorage.getItem('popopo_chat_reactions'
 let localSuggestions = JSON.parse(localStorage.getItem('popopo_suggestions') || '[]');
 let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 const NICKNAME_STORAGE_KEY = 'popopo_last_nickname';
+const ADD_SPOT_FORM_DRAFT_KEY = 'popopo_add_spot_draft_session_v1';
+let addSpotDraftTimer = null;
 let selectedRating = 0;
 let allPosts = [];
 let allChats = [];
@@ -1264,6 +1266,284 @@ function openDiscoveryItem(item = currentDiscoveryItem) {
   }, 80);
 }
 
+/** 多め表示は稀に。基本は「ひとつ」で落ち着いて選べる体験に寄せる */
+const GACHA_JACKPOT_CHANCE = 0.11;
+const GACHA_FULL_REVEAL_CAP = 14;
+let gachaSpinTimer = null;
+let gachaSpinTickTimer = null;
+let gachaIsSpinning = false;
+let gachaReturnFocusEl = null;
+
+function getGachaPool() {
+  try {
+    return getDiscoveryItems().filter(item => item && item.title && item.text);
+  } catch (e) {
+    return [];
+  }
+}
+
+function shuffleForGacha(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function rollGachaOutcome(pool) {
+  if (!pool.length) return { mode: 'empty', items: [], headline: '', foot: '' };
+  const pickOne = () => pool[Math.floor(Math.random() * pool.length)];
+  const footSingle = 'カードをタップすると、スポットや感想の詳細が開きます。';
+  const footMulti = '気になるものから、ひとつずつタップしてみてください。';
+  if (pool.length < 2) {
+    return { mode: 'normal', items: [pickOne()], headline: 'ひとつ、届きました', sub: '今日のおすすめをひとつお届けします', foot: footSingle };
+  }
+  if (Math.random() > GACHA_JACKPOT_CHANCE) {
+    return { mode: 'normal', items: [pickOne()], headline: 'ひとつ、届きました', sub: '今日のおすすめをひとつお届けします', foot: footSingle };
+  }
+  const tierRoll = Math.random();
+  let count;
+  let headline;
+  let sub;
+  if (tierRoll < 0.52) {
+    count = Math.min(3, pool.length);
+    headline = 'いくつか、そろいました';
+    sub = '今日はゆっくり比べてみても大丈夫です';
+  } else if (tierRoll < 0.88) {
+    count = Math.min(5, pool.length);
+    headline = 'いくつか、そろいました';
+    sub = 'のんびり眺めて、しっくりくるものを選んでください';
+  } else {
+    count = Math.min(pool.length, GACHA_FULL_REVEAL_CAP);
+    headline = 'じっくり眺める回';
+    sub = count >= pool.length
+      ? 'いま見える候補をまとめて並べました'
+      : 'いま見える候補から、いくつかを並べました';
+  }
+  const items = shuffleForGacha(pool).slice(0, Math.max(count, 2));
+  return { mode: 'jackpot', items, headline, sub, foot: footMulti };
+}
+
+function gachaResultCardHtml(item, index = 0) {
+  const categoryLabel = getCatLabel(item.cat);
+  const titleLabel = getDiscoveryTitle(item, categoryLabel);
+  const preview = item.text.length > 96 ? `${item.text.slice(0, 96)}…` : item.text;
+  const kind = item.kind || 'spot';
+  const src = item.sourceLabel || (kind === 'review' ? '💬 みんなの感想' : '📍 おすすめスポット');
+  const staggerMs = prefersReducedDiscoveryMotion() ? 0 : Math.min(index, 14) * 42;
+  const staggerStyle = staggerMs ? ` style="animation-delay:${staggerMs}ms"` : '';
+  return `
+    <button type="button" class="gacha-result-card"${staggerStyle} data-kind="${escHtml(kind)}" data-id="${escHtml(item.id || '')}" data-cat="${escHtml(item.cat || '')}" data-spot="${escHtml(item.spotName || item.title || '')}" data-title="${escHtml(item.title || '')}">
+      <span class="gacha-result-src">${escHtml(src)}</span>
+      <span class="gacha-result-title">${escHtml(titleLabel)}</span>
+      <span class="gacha-result-text">${escHtml(preview)}</span>
+    </button>
+  `;
+}
+
+function resetGachaModalUi() {
+  gachaIsSpinning = false;
+  const box = document.querySelector('.gacha-modal-box');
+  if (box) box.classList.remove('is-jackpot');
+  if (gachaSpinTimer) {
+    window.clearTimeout(gachaSpinTimer);
+    gachaSpinTimer = null;
+  }
+  if (gachaSpinTickTimer) {
+    window.clearTimeout(gachaSpinTickTimer);
+    gachaSpinTickTimer = null;
+  }
+  const spinBtn = document.getElementById('gachaSpinBtn');
+  if (spinBtn) {
+    spinBtn.disabled = false;
+    spinBtn.removeAttribute('aria-busy');
+  }
+  const spinPh = document.getElementById('gachaPhaseSpin');
+  if (spinPh) spinPh.removeAttribute('aria-busy');
+  const foot = document.getElementById('gachaResultFoot');
+  if (foot) {
+    foot.textContent = '';
+    foot.hidden = true;
+  }
+  const idle = document.getElementById('gachaPhaseIdle');
+  const spin = document.getElementById('gachaPhaseSpin');
+  const res = document.getElementById('gachaPhaseResult');
+  if (idle) idle.hidden = false;
+  if (spin) spin.hidden = true;
+  if (res) res.hidden = true;
+}
+
+function openGachaModal() {
+  const modal = document.getElementById('gachaModal');
+  if (!modal) return;
+  pauseDiscoveryRotation(120000);
+  try {
+    gachaReturnFocusEl = document.activeElement;
+  } catch (e) {
+    gachaReturnFocusEl = null;
+  }
+  resetGachaModalUi();
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  window.requestAnimationFrame(() => {
+    const spinBtn = document.getElementById('gachaSpinBtn');
+    if (spinBtn && typeof spinBtn.focus === 'function') spinBtn.focus();
+  });
+}
+
+function closeGachaModal() {
+  const modal = document.getElementById('gachaModal');
+  if (!modal) return;
+  resetGachaModalUi();
+  modal.classList.remove('is-open');
+  document.body.style.overflow = '';
+  const back = gachaReturnFocusEl;
+  gachaReturnFocusEl = null;
+  if (back && typeof back.focus === 'function') {
+    window.requestAnimationFrame(() => {
+      try {
+        back.focus();
+      } catch (e) {
+        // フォーカスを戻せない要素の場合は無視
+      }
+    });
+  }
+}
+
+function showGachaResult(outcome) {
+  const box = document.querySelector('.gacha-modal-box');
+  const badge = document.getElementById('gachaResultBadge');
+  const grid = document.getElementById('gachaResultGrid');
+  const idle = document.getElementById('gachaPhaseIdle');
+  const spin = document.getElementById('gachaPhaseSpin');
+  if (!badge || !grid || !idle || !spin) return;
+  idle.hidden = true;
+  spin.hidden = true;
+  const res = document.getElementById('gachaPhaseResult');
+  if (res) res.hidden = false;
+
+  const foot = document.getElementById('gachaResultFoot');
+
+  if (outcome.mode === 'empty') {
+    if (box) box.classList.remove('is-jackpot');
+    badge.innerHTML = '<span class="gacha-badge-title">いまは候補がありません</span><span class="gacha-badge-sub">スポットや感想が増えたら、またのんびり試してみてください</span>';
+    grid.innerHTML = '';
+    if (foot) foot.hidden = true;
+    return;
+  }
+
+  if (outcome.mode === 'jackpot' && box) box.classList.add('is-jackpot');
+  else if (box) box.classList.remove('is-jackpot');
+
+  badge.innerHTML = `
+    <span class="gacha-badge-title">${escHtml(outcome.headline)}</span>
+    ${outcome.sub ? `<span class="gacha-badge-sub">${escHtml(outcome.sub)}</span>` : ''}
+  `;
+  grid.innerHTML = outcome.items.map((item, i) => gachaResultCardHtml(item, i)).join('');
+  if (foot) {
+    foot.textContent = outcome.foot || '';
+    foot.hidden = !outcome.foot;
+  }
+  window.requestAnimationFrame(() => {
+    const firstCard = grid.querySelector('.gacha-result-card');
+    if (firstCard && typeof firstCard.focus === 'function') {
+      try {
+        firstCard.focus({ preventScroll: true });
+      } catch (e) {
+        firstCard.focus();
+      }
+    }
+  });
+}
+
+function runGachaSpin() {
+  if (gachaIsSpinning) return;
+  const pool = getGachaPool();
+  const reduced = prefersReducedDiscoveryMotion();
+  const idle = document.getElementById('gachaPhaseIdle');
+  const spin = document.getElementById('gachaPhaseSpin');
+  const spinText = document.getElementById('gachaSpinnerText');
+  if (!pool.length) {
+    showToast('いま候補が足りません。のんびりあとで試してみてください。');
+    return;
+  }
+  if (!idle || !spin || !spinText) return;
+
+  const spinBtn = document.getElementById('gachaSpinBtn');
+  if (spinBtn) {
+    spinBtn.disabled = true;
+    spinBtn.setAttribute('aria-busy', 'true');
+  }
+  spin.setAttribute('aria-busy', 'true');
+
+  gachaIsSpinning = true;
+  const outcome = rollGachaOutcome(pool);
+  idle.hidden = true;
+  spin.hidden = false;
+  const resPh = document.getElementById('gachaPhaseResult');
+  if (resPh) resPh.hidden = true;
+
+  if (reduced) {
+    showGachaResult(outcome);
+    gachaIsSpinning = false;
+    if (spinBtn) {
+      spinBtn.disabled = false;
+      spinBtn.removeAttribute('aria-busy');
+    }
+    spin.removeAttribute('aria-busy');
+    return;
+  }
+
+  let tickCount = 0;
+  const maxTicks = 12;
+  let nextDelay = 68;
+  const runFlickerTick = () => {
+    if (tickCount >= maxTicks) {
+      gachaSpinTickTimer = null;
+      return;
+    }
+    const sample = pool[Math.floor(Math.random() * pool.length)];
+    const categoryLabel = getCatLabel(sample.cat);
+    spinText.textContent = getDiscoveryTitle(sample, categoryLabel);
+    tickCount += 1;
+    nextDelay = Math.min(nextDelay + 12, 148);
+    gachaSpinTickTimer = window.setTimeout(runFlickerTick, nextDelay);
+  };
+  gachaSpinTickTimer = window.setTimeout(runFlickerTick, 55);
+
+  const settleMs = 1580;
+  gachaSpinTimer = window.setTimeout(() => {
+    if (gachaSpinTickTimer) {
+      window.clearTimeout(gachaSpinTickTimer);
+      gachaSpinTickTimer = null;
+    }
+    showGachaResult(outcome);
+    gachaSpinTimer = null;
+    gachaIsSpinning = false;
+    if (spinBtn) {
+      spinBtn.disabled = false;
+      spinBtn.removeAttribute('aria-busy');
+    }
+    spin.removeAttribute('aria-busy');
+  }, settleMs);
+}
+
+function onGachaResultClick(e) {
+  const btn = e.target.closest('.gacha-result-card');
+  if (!btn) return;
+  const kind = btn.dataset.kind;
+  const item = {
+    kind: kind === 'review' ? 'review' : 'spot',
+    id: btn.dataset.id || '',
+    cat: btn.dataset.cat || '',
+    spotName: btn.dataset.spot || '',
+    title: btn.dataset.title || ''
+  };
+  closeGachaModal();
+  openDiscoveryItem(item);
+}
+
 function normalizeDedupeValue(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
@@ -1954,7 +2234,24 @@ function renderChats(chats) {
     children.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
   });
 
-  const topLevel = chats.filter(chat => !chat.parentId || !chatMap.has(chat.parentId));
+  function getThreadLatestActivityTs(rootChat) {
+    let maxTs = rootChat.timestamp || 0;
+    const walk = parentKey => {
+      const kids = childMap.get(parentKey) || [];
+      kids.forEach(ch => {
+        maxTs = Math.max(maxTs, ch.timestamp || 0);
+        const k = getChatKey(ch);
+        if (k) walk(k);
+      });
+    };
+    const rootKey = getChatKey(rootChat);
+    if (rootKey) walk(rootKey);
+    return maxTs;
+  }
+
+  const topLevel = chats
+    .filter(chat => !chat.parentId || !chatMap.has(chat.parentId))
+    .sort((a, b) => getThreadLatestActivityTs(b) - getThreadLatestActivityTs(a));
   const visibleTopLevel = topLevel.slice(0, visibleChatCount);
 
   function createChatCardHtml(chat, depth = 0) {
@@ -2045,12 +2342,109 @@ function populateModalSpotSelect(preselect = '') {
 // ============================================================
 // 6. モーダル制御
 // ============================================================
+function captureAddSpotFormDraftState() {
+  return {
+    name: document.getElementById('asName')?.value || '',
+    area: document.getElementById('asArea')?.value || '',
+    cat: document.getElementById('asCat')?.value || '',
+    reason: document.getElementById('asReason')?.value || '',
+    nick: document.getElementById('asNick')?.value || '',
+    kinds: [1, 2, 3].map(i => document.getElementById(`asKind${i}`)?.value || ''),
+    urls: [1, 2, 3].map(i => document.getElementById(`asUrl${i}`)?.value || '')
+  };
+}
+
+function addSpotDraftStateHasText(state) {
+  if (!state) return false;
+  const parts = [state.name, state.area, state.reason, state.nick, ...(state.urls || [])];
+  return parts.some(p => String(p || '').trim().length > 0);
+}
+
+function scheduleSaveAddSpotFormDraft() {
+  window.clearTimeout(addSpotDraftTimer);
+  addSpotDraftTimer = window.setTimeout(() => {
+    addSpotDraftTimer = null;
+    const modal = document.getElementById('addSpotModal');
+    if (!modal?.classList.contains('is-open')) return;
+    if (editingClientId) return;
+    const state = captureAddSpotFormDraftState();
+    if (!addSpotDraftStateHasText(state)) {
+      try {
+        sessionStorage.removeItem(ADD_SPOT_FORM_DRAFT_KEY);
+      } catch (e) {
+        // ignore
+      }
+      return;
+    }
+    try {
+      sessionStorage.setItem(ADD_SPOT_FORM_DRAFT_KEY, JSON.stringify(state));
+    } catch (e) {
+      // プライベートモード等では保存できない場合がある
+    }
+  }, 450);
+}
+
+function clearAddSpotFormDraft() {
+  try {
+    sessionStorage.removeItem(ADD_SPOT_FORM_DRAFT_KEY);
+  } catch (e) {
+    // ignore
+  }
+}
+
+function restoreAddSpotFormDraftIfAny() {
+  if (editingClientId) return;
+  let state = null;
+  try {
+    state = JSON.parse(sessionStorage.getItem(ADD_SPOT_FORM_DRAFT_KEY) || 'null');
+  } catch (e) {
+    return;
+  }
+  if (!state || typeof state !== 'object' || !addSpotDraftStateHasText(state)) return;
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el && v != null) el.value = String(v);
+  };
+  setVal('asName', state.name);
+  setVal('asArea', state.area);
+  if (state.cat) setVal('asCat', state.cat);
+  setVal('asReason', state.reason);
+  setVal('asNick', state.nick);
+  for (let i = 0; i < 3; i += 1) {
+    const k = state.kinds && state.kinds[i];
+    const u = state.urls && state.urls[i];
+    if (k) setVal(`asKind${i + 1}`, k);
+    if (u != null) setVal(`asUrl${i + 1}`, u);
+  }
+  const reasonEl = document.getElementById('asReason');
+  const charNum = document.getElementById('asCharNum');
+  if (charNum && reasonEl) charNum.textContent = String((reasonEl.value || '').length);
+}
+
+function applySuggestionResourcesToAddSpotRows(s) {
+  const resources = getSuggestionResources(s);
+  for (let i = 0; i < 3; i += 1) {
+    const urlEl = document.getElementById(`asUrl${i + 1}`);
+    const kindEl = document.getElementById(`asKind${i + 1}`);
+    const entry = resources[i];
+    if (urlEl) urlEl.value = entry?.url || '';
+    if (kindEl) kindEl.value = entry?.kind || 'reference';
+  }
+}
+
 // スポット追加モーダル
 function openAddSpotModal(id = null, clientId = null) {
+  const modal = document.getElementById('addSpotModal');
+  const wasOpen = modal.classList.contains('is-open');
+  const prevEditingClientId = editingClientId;
+  const openingBlankNew = !id && !clientId;
+  if (wasOpen && openingBlankNew && !prevEditingClientId) {
+    return;
+  }
+
   editingId = id;
   editingClientId = clientId;
 
-  const modal = document.getElementById('addSpotModal');
   const title = modal.querySelector('.modal-title') || modal.querySelector('h3');
   const btn = document.getElementById('addSpotSubmitBtn');
 
@@ -2063,7 +2457,7 @@ function openAddSpotModal(id = null, clientId = null) {
   if (editingClientId) {
     if (title) title.textContent = '✨ スポット情報を編集';
     if (btn) btn.textContent = '更新する 🚀';
-    
+
     const suggs = getAllSpotItemsForDisplay().filter(s => s.suggested);
     const s = suggs.find(item => (item.clientId || item.id) === editingClientId);
     if (s) {
@@ -2071,18 +2465,24 @@ function openAddSpotModal(id = null, clientId = null) {
       document.getElementById('asArea').value = s.area || '';
       document.getElementById('asCat').value = s.cat || 'food';
       document.getElementById('asReason').value = s.reason || '';
-      document.getElementById('asUrl').value = s.url || '';
       document.getElementById('asNick').value = s.nickname || '';
+      applySuggestionResourcesToAddSpotRows(s);
+      const reasonEl = document.getElementById('asReason');
+      const charNum = document.getElementById('asCharNum');
+      if (charNum && reasonEl) charNum.textContent = String((reasonEl.value || '').length);
     }
   } else {
     if (title) title.textContent = '✨ スポットを提案する';
     if (btn) btn.textContent = '提案を送る 🚀';
     fillSavedNickname('asNick');
+    restoreAddSpotFormDraftIfAny();
   }
 }
 function closeAddSpotModal() {
   document.getElementById('addSpotModal').classList.remove('is-open');
   document.body.style.overflow = '';
+  editingId = null;
+  editingClientId = null;
 }
 
 // 掲示板投稿モーダル
@@ -2852,6 +3252,7 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     } else {
       await saveSpotSuggestion(data);
       showToast('スポットを提案しました！誰かの次の休日のヒントになります。');
+      clearAddSpotFormDraft();
     }
     saveNickname(data.nickname);
     closeAddSpotModal();
@@ -3122,6 +3523,34 @@ function bindEvents() {
       weeklyDiscoveryLink.addEventListener(eventName, () => pauseDiscoveryRotation(), { passive: true });
     });
   }
+  const navGachaOpenBtn = document.getElementById('navGachaOpenBtn');
+  if (navGachaOpenBtn) navGachaOpenBtn.addEventListener('click', () => openGachaModal());
+  const heroGachaBtn = document.getElementById('heroGachaBtn');
+  if (heroGachaBtn) heroGachaBtn.addEventListener('click', () => openGachaModal());
+  const gachaModalClose = document.getElementById('gachaModalClose');
+  if (gachaModalClose) gachaModalClose.addEventListener('click', closeGachaModal);
+  const gachaModal = document.getElementById('gachaModal');
+  if (gachaModal) {
+    gachaModal.addEventListener('click', e => {
+      if (e.target === gachaModal) closeGachaModal();
+    });
+  }
+  const gachaSpinBtn = document.getElementById('gachaSpinBtn');
+  if (gachaSpinBtn) gachaSpinBtn.addEventListener('click', runGachaSpin);
+  const gachaAgainBtn = document.getElementById('gachaAgainBtn');
+  if (gachaAgainBtn) gachaAgainBtn.addEventListener('click', () => {
+    resetGachaModalUi();
+  });
+  const gachaResultGrid = document.getElementById('gachaResultGrid');
+  if (gachaResultGrid) gachaResultGrid.addEventListener('click', onGachaResultClick);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const gm = document.getElementById('gachaModal');
+    if (!gm || !gm.classList.contains('is-open')) return;
+    e.preventDefault();
+    closeGachaModal();
+  });
+
   const chatClose = document.getElementById('chatModalClose');
   if (chatClose) chatClose.addEventListener('click', closeChatModal);
   const chatCancel = document.getElementById('chatCancelBtn');
@@ -3224,6 +3653,11 @@ function bindEvents() {
   document.getElementById('addSpotBtn').addEventListener('click', openAddSpotModal);
   document.getElementById('addSpotModalClose').addEventListener('click', closeAddSpotModal);
   document.getElementById('addSpotCancelBtn').addEventListener('click', closeAddSpotModal);
+  const addSpotFormEl = document.getElementById('addSpotForm');
+  if (addSpotFormEl) {
+    addSpotFormEl.addEventListener('input', scheduleSaveAddSpotFormDraft);
+    addSpotFormEl.addEventListener('change', scheduleSaveAddSpotFormDraft);
+  }
   document.getElementById('addSpotModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('addSpotModal')) closeAddSpotModal();
   });

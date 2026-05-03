@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260502-2">
+  <link rel="stylesheet" href="style.css?v=20260504-3">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -99,11 +99,17 @@
       <a href="how-to.html" class="nav-mobile-link" id="mobileHowToBtn">💡 使い方を見る</a>
     </div>
     <div class="nav-discovery" id="weeklyDiscoveryCard" aria-label="おすすめと感想のピックアップ">
-      <a id="weeklyDiscoveryLink" class="nav-discovery-link" href="#spots">
-        <span id="weeklyDiscoveryCategory" class="nav-discovery-category">📍 おすすめスポット</span>
-        <span id="weeklyDiscoveryTitle" class="nav-discovery-title">🍴 飲食店・名曲喫茶ライオン</span>
-        <span id="weeklyDiscoveryText" class="nav-discovery-text">名曲を聴きながら楽しめる喫茶店</span>
-      </a>
+      <div class="nav-discovery-row">
+        <a id="weeklyDiscoveryLink" class="nav-discovery-link" href="#spots">
+          <span id="weeklyDiscoveryCategory" class="nav-discovery-category">📍 おすすめスポット</span>
+          <span id="weeklyDiscoveryTitle" class="nav-discovery-title">🍴 飲食店・名曲喫茶ライオン</span>
+          <span id="weeklyDiscoveryText" class="nav-discovery-text">名曲を聴きながら楽しめる喫茶店</span>
+        </a>
+        <button type="button" class="nav-gacha-btn" id="navGachaOpenBtn" aria-label="おすすめや感想から、きょうの一手を選びます" title="きょうの一手を選ぶ">
+          <span class="nav-gacha-btn-label nav-gacha-btn-label--full">🧭 きょうの一手</span>
+          <span class="nav-gacha-btn-label nav-gacha-btn-label--compact" aria-hidden="true">🧭</span>
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -137,6 +143,10 @@
       <div class="hero-quick-links" aria-label="主要コンテンツを見る">
         <a href="#spots" class="hero-quick-link">📍 おすすめスポットを見る</a>
         <a href="#visited" class="hero-quick-link">💬 みんなの感想を見る</a>
+        <button type="button" class="hero-quick-link hero-quick-link--gacha" id="heroGachaBtn" aria-label="おすすめや感想から、きょうの一手を選びます" title="きょうの一手を選ぶ">
+          <span class="hero-gacha-label hero-gacha-label--full">🧭 きょうの一手を選ぶ</span>
+          <span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">🧭 一手を選ぶ</span>
+        </button>
       </div>
       <div class="hero-stats">
         <a href="#spots" class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></a>
@@ -534,6 +544,32 @@
           <button type="submit" class="btn-primary" id="chatSubmitBtn">投稿する 🚀</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="gachaModal" class="modal-bg gacha-modal" role="dialog" aria-modal="true" aria-labelledby="gachaModalTitle" aria-describedby="gachaModalLead">
+    <div class="modal-box gacha-modal-box">
+      <div class="modal-head">
+        <h3 id="gachaModalTitle" class="modal-title">🧭 きょうの一手</h3>
+        <button type="button" class="modal-close" id="gachaModalClose" aria-label="閉じる">✕</button>
+      </div>
+      <p id="gachaModalLead" class="gacha-modal-lead">おすすめスポットとみんなの感想から、ひとつ（ときどきいくつか）をお届けします。迷ったときの、ささやかなきっかけとしてどうぞ。何度でも、お好きなだけ。</p>
+      <div class="gacha-body">
+        <div id="gachaPhaseIdle" class="gacha-phase">
+          <div class="gacha-orbit" aria-hidden="true">🗺️</div>
+          <button type="button" class="btn-primary gacha-spin-main" id="gachaSpinBtn">えらんでみる</button>
+        </div>
+        <div id="gachaPhaseSpin" class="gacha-phase" hidden>
+          <div class="gacha-spinner-display" id="gachaSpinnerText">…</div>
+          <p class="gacha-spin-hint">すこしだけ待ってください…</p>
+        </div>
+        <div id="gachaPhaseResult" class="gacha-phase" hidden aria-live="polite">
+          <div id="gachaResultBadge" class="gacha-result-badge"></div>
+          <div id="gachaResultGrid" class="gacha-result-grid"></div>
+          <p class="gacha-result-foot" id="gachaResultFoot" hidden></p>
+          <button type="button" class="btn-outline gacha-again-btn" id="gachaAgainBtn">もう一度、えらぶ</button>
+        </div>
+      </div>
     </div>
   </div>
 
