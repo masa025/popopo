@@ -1297,10 +1297,10 @@ function rollGachaOutcome(pool) {
   const footSingle = 'カードをタップすると、スポットや感想の詳細が開きます。';
   const footMulti = '気になるものから、ひとつずつタップしてみてください。';
   if (pool.length < 2) {
-    return { mode: 'normal', items: [pickOne()], headline: 'ひとつ、届きました', sub: '今日のおすすめをひとつお届けします', foot: footSingle };
+    return { mode: 'normal', items: [pickOne()], headline: 'ひとつ、届きました', sub: 'ポポッと届いたおすすめです', foot: footSingle };
   }
   if (Math.random() > GACHA_JACKPOT_CHANCE) {
-    return { mode: 'normal', items: [pickOne()], headline: 'ひとつ、届きました', sub: '今日のおすすめをひとつお届けします', foot: footSingle };
+    return { mode: 'normal', items: [pickOne()], headline: 'ひとつ、届きました', sub: 'ポポッと届いたおすすめです', foot: footSingle };
   }
   const tierRoll = Math.random();
   let count;

@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260504-3">
+  <link rel="stylesheet" href="style.css?v=20260504-5">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -105,9 +105,9 @@
           <span id="weeklyDiscoveryTitle" class="nav-discovery-title">🍴 飲食店・名曲喫茶ライオン</span>
           <span id="weeklyDiscoveryText" class="nav-discovery-text">名曲を聴きながら楽しめる喫茶店</span>
         </a>
-        <button type="button" class="nav-gacha-btn" id="navGachaOpenBtn" aria-label="おすすめや感想から、きょうの一手を選びます" title="きょうの一手を選ぶ">
-          <span class="nav-gacha-btn-label nav-gacha-btn-label--full">🧭 きょうの一手</span>
-          <span class="nav-gacha-btn-label nav-gacha-btn-label--compact" aria-hidden="true">🧭</span>
+        <button type="button" class="nav-gacha-btn" id="navGachaOpenBtn" aria-label="おすすめや感想から、ポポッと選びます" title="ポポッと選ぶ">
+          <span class="nav-gacha-btn-label nav-gacha-btn-label--full">✨ ポポッと選ぶ</span>
+          <span class="nav-gacha-btn-label nav-gacha-btn-label--compact" aria-hidden="true">✨</span>
         </button>
       </div>
     </div>
@@ -143,9 +143,9 @@
       <div class="hero-quick-links" aria-label="主要コンテンツを見る">
         <a href="#spots" class="hero-quick-link">📍 おすすめスポットを見る</a>
         <a href="#visited" class="hero-quick-link">💬 みんなの感想を見る</a>
-        <button type="button" class="hero-quick-link hero-quick-link--gacha" id="heroGachaBtn" aria-label="おすすめや感想から、きょうの一手を選びます" title="きょうの一手を選ぶ">
-          <span class="hero-gacha-label hero-gacha-label--full">🧭 きょうの一手を選ぶ</span>
-          <span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">🧭 一手を選ぶ</span>
+        <button type="button" class="hero-quick-link hero-quick-link--gacha" id="heroGachaBtn" aria-label="おすすめや感想から、ポポッと選びます" title="ポポッと選ぶ">
+          <span class="hero-gacha-label hero-gacha-label--full">✨ ポポッと選ぶ</span>
+          <span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">✨ ポポッと</span>
         </button>
       </div>
       <div class="hero-stats">
@@ -550,10 +550,10 @@
   <div id="gachaModal" class="modal-bg gacha-modal" role="dialog" aria-modal="true" aria-labelledby="gachaModalTitle" aria-describedby="gachaModalLead">
     <div class="modal-box gacha-modal-box">
       <div class="modal-head">
-        <h3 id="gachaModalTitle" class="modal-title">🧭 きょうの一手</h3>
+        <h3 id="gachaModalTitle" class="modal-title">✨ ポポッと選ぶ</h3>
         <button type="button" class="modal-close" id="gachaModalClose" aria-label="閉じる">✕</button>
       </div>
-      <p id="gachaModalLead" class="gacha-modal-lead">おすすめスポットとみんなの感想から、ひとつ（ときどきいくつか）をお届けします。迷ったときの、ささやかなきっかけとしてどうぞ。何度でも、お好きなだけ。</p>
+      <p id="gachaModalLead" class="gacha-modal-lead">おすすめスポットとみんなの感想から、ひとつ（ときどきいくつか）をポポッとお届けします。迷ったときの、ささやかなきっかけとしてどうぞ。何度でも、お好きなだけ。</p>
       <div class="gacha-body">
         <div id="gachaPhaseIdle" class="gacha-phase">
           <div class="gacha-orbit" aria-hidden="true">🗺️</div>
@@ -567,7 +567,7 @@
           <div id="gachaResultBadge" class="gacha-result-badge"></div>
           <div id="gachaResultGrid" class="gacha-result-grid"></div>
           <p class="gacha-result-foot" id="gachaResultFoot" hidden></p>
-          <button type="button" class="btn-outline gacha-again-btn" id="gachaAgainBtn">もう一度、えらぶ</button>
+          <button type="button" class="btn-outline gacha-again-btn" id="gachaAgainBtn">もう一度、ポポッと</button>
         </div>
       </div>
     </div>
@@ -710,6 +710,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260502-1"></script>
+  <script src="app.js?v=20260504-6"></script>
 </body>
 </html>
