@@ -485,7 +485,7 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .modal-title{font-family:'Yomogi','Noto Sans JP',sans-serif;font-size:1.35rem;font-weight:400;color:var(--text);}
 .modal-close{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:0.85rem;transition:all .2s;}
 .modal-close:hover{background:var(--bg);color:var(--text);}
-.gallery-modal-box{background:var(--paper);border:1.5px solid var(--border);border-radius:28px 22px 30px 24px;width:100%;max-width:960px;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease;box-shadow:var(--shadow-lg);}
+.gallery-modal-box{background:var(--paper);border:1.5px solid var(--border);border-radius:28px 22px 30px 24px;width:100%;max-width:960px;max-height:90vh;overflow-y:auto;overscroll-behavior:contain;animation:slideUp .3s ease;box-shadow:var(--shadow-lg);}
 .gallery-modal-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,0.85fr);}
 .gallery-modal-visual {
   position: relative;
@@ -495,26 +495,34 @@ section{padding:80px 0;scroll-margin-top:120px;}
   justify-content: center;
   overflow: hidden; /* ズーム時の制御のため */
   padding:18px;
+  touch-action: pan-y;
+}
+.gallery-modal-visual.is-gallery-zoomed{
+  touch-action:none;
 }
 
 .gallery-modal-image {
   max-width: 100%;
   max-height: 75vh;
   object-fit: contain;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: zoom-in;
   border-radius:18px;
   background:#fff;
   border:1px solid rgba(91,141,238,0.08);
   user-select: none;
   -webkit-user-drag: none;
+  touch-action: manipulation;
+  will-change: auto;
 }
 
-/* ズーム状態 */
+/* ズーム状態：JSが transform を毎フレーム更新するため transition は切る（モバイルのカクつき防止） */
 .gallery-modal-image.is-zoomed {
   cursor: grab;
   z-index: 120;
   touch-action: none;
+  transition: none !important;
+  will-change: transform;
 }
 .gallery-modal-image.is-zoomed:active {
   cursor: grabbing;
@@ -537,15 +545,12 @@ section{padding:80px 0;scroll-margin-top:120px;}
   opacity: 0;
   transition: opacity 0.4s ease;
   white-space: nowrap;
+  max-width: calc(100vw - 32px);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .gallery-action-hint.is-visible {
   opacity: 1;
-}
-
-@media (min-width: 1024px) {
-  .gallery-modal-image.is-zoomed {
-    transform: scale(2); /* PCではより大きく */
-  }
 }
 
 .gallery-modal-visual.is-locked .gallery-modal-image{display:none;}
@@ -1360,6 +1365,13 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   transition: all 0.2s;
   cursor: pointer !important;
 }
+.gallery-ctrl-btn:disabled,
+.gallery-ctrl-btn[aria-disabled="true"] {
+  cursor: default !important;
+}
+.gallery-ctrl-close {
+  background: rgba(255, 255, 255, 0.12);
+}
 
 .gallery-ctrl-btn:hover {
   background: rgba(255, 255, 255, 0.15);
@@ -1379,10 +1391,15 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 
 @media (max-width: 768px) {
   .gallery-modal-controls {
-    bottom: 20px;
-    padding: 4px 8px;
-    scale: 0.9;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    width: calc(100% - 24px);
+    justify-content: center;
+    padding: 6px;
+    gap: 2px;
   }
+  .gallery-ctrl-btn{width:40px;height:40px;font-size:1rem;}
+  .gallery-ctrl-divider{margin:0 2px;}
+  .gallery-action-hint{top:64px;font-size:0.76rem;padding:7px 12px;}
   .gallery-modal-pagenum {
     bottom: 80px !important; /* パネルと被らないように上にずらす */
   }

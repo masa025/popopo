@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260504-5">
+  <link rel="stylesheet" href="style.css?v=20260506-1">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -321,12 +321,14 @@
           <img id="galleryModalImage" class="gallery-modal-image" src="" alt="">
           <div id="galleryModalPageNum" class="gallery-modal-pagenum" hidden></div>
           <div class="gallery-modal-controls">
-            <button id="galleryBtnPrev" class="gallery-ctrl-btn" title="前へ">◀︎</button>
+            <button id="galleryBtnPrev" class="gallery-ctrl-btn" title="前へ" aria-label="前の作品へ">◀︎</button>
             <div class="gallery-ctrl-divider"></div>
-            <button id="galleryBtnZoomOut" class="gallery-ctrl-btn" title="縮小">－</button>
-            <button id="galleryBtnZoomIn" class="gallery-ctrl-btn" title="拡大">＋</button>
+            <button id="galleryBtnZoomOut" class="gallery-ctrl-btn" title="縮小" aria-label="拡大を戻す">－</button>
+            <button id="galleryBtnZoomIn" class="gallery-ctrl-btn" title="拡大" aria-label="画像を拡大する">＋</button>
             <div class="gallery-ctrl-divider"></div>
-            <button id="galleryBtnNext" class="gallery-ctrl-btn" title="次へ">▶︎</button>
+            <button id="galleryBtnNext" class="gallery-ctrl-btn" title="次へ" aria-label="次の作品へ">▶︎</button>
+            <div class="gallery-ctrl-divider"></div>
+            <button id="galleryBtnCloseView" class="gallery-ctrl-btn gallery-ctrl-close" title="閉じる" aria-label="ギャラリーを閉じる">✕</button>
           </div>
           <div id="galleryDictThumbs" class="gallery-dict-thumbs" aria-label="用語辞典のページ" hidden></div>
         </div>
@@ -712,6 +714,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260504-6"></script>
+  <script src="app.js?v=20260506-1"></script>
 </body>
 </html>
