@@ -73,6 +73,13 @@ const SPOTS = [
   { id: 'haidilao', cat: 'food', emoji: '🫕', name: 'ハイディーラオ', area: '全国', pref: '全国', url: 'https://www.haidilao.com/jp/', memo: '人気の四川火鍋チェーン' },
   { id: 'dennys', cat: 'food', emoji: '☕', name: 'デニーズ', area: '全国', pref: '全国', url: 'https://www.dennys.jp', memo: 'ジャンバラヤ・麻辣湯がおすすめ' },
   { id: 'manchs', cat: 'food', emoji: '🍔', name: "マンチズバーガー", area: '港区芝', pref: '東京', url: 'https://tabelog.com/tokyo/A1314/A131401/13121856/', memo: 'あのトラちゃんも食べた！' },
+  { id: 'kameju', cat: 'food', emoji: '🍡', name: '亀十', area: '浅草', pref: '東京', url: 'https://tabelog.com/tokyo/A1311/A131102/13003655/', memo: '浅草の老舗和菓子店。どら焼きや和菓子好きの寄り道候補。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'kamado-gohan-matsushima', cat: 'food', emoji: '🍚', name: '竈門ご飯 松しま', area: '人形町', pref: '東京', url: 'https://tabelog.com/tokyo/A1302/A130204/13319779/', memo: '浅草から都営浅草線で乗り換えなし。開店したばかりで、ランチがお得で美味しいとのリスナー推薦。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'yamaya-ikebukuro', cat: 'food', emoji: '🍲', name: '博多もつ鍋 やまや 池袋店', area: '池袋・東池袋', pref: '東京', url: 'https://tabelog.com/tokyo/A1305/A130501/13164146/dtlrvwlst/', memo: '明太子やもつ鍋、ランチ定食の候補。池袋方面のお出かけメモとして。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'kura-global-flagship', cat: 'food', emoji: '🍣', name: 'くら寿司 グローバル旗艦店', area: '銀座・原宿・浅草ROX・押上など', pref: '東京', url: 'https://www.kurasushi.co.jp/global_flagship/', memo: 'いつもの回転寿司に、少しエンタメ感を足したい時の候補。都内に複数のグローバル旗艦店があります。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'saryo-tsujiri-daimaru', cat: 'food', emoji: '🍵', name: '茶寮都路里 大丸東京店', area: '東京駅・大丸東京店', pref: '東京', url: 'https://www.giontsujiri.co.jp/store/tokyo-daimaru/', memo: '東京駅直結で立ち寄りやすい、抹茶や甘味の休憩スポット。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'leonards-japan', cat: 'food', emoji: '🍩', name: "Leonard's Japan", area: '横浜ワールドポーターズ', pref: '神奈川', url: 'https://leonardsjapan.com/about-2/', memo: 'ハワイのマラサダを横浜で。外はサクッと、中はもちもちの甘い寄り道候補。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'shinpachi-shokudo', cat: 'food', emoji: '🐟', name: '炭火焼干物定食 しんぱち食堂', area: '東京ほか', pref: '全国', url: 'https://www.shinpachi-shokudo.com/', memo: '焼き魚とごはん、味噌汁の定食を気軽に食べたい時に。朝・昼・夜の候補にしやすいお店。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- 食べたいもの（モヒンガー） ---
   { id: 'mohinga', cat: 'mohinga', emoji: '🍜', name: 'モヒンガー（ミャンマー料理）', area: '高田馬場など', pref: '東京', url: 'https://otonano-shumatsu.com/articles/488762', memo: 'ミャンマーの国民食！ぜひ食べたい。詳しくはリンク先から。' },
   // --- 美術館・博物館 ---
@@ -82,8 +89,10 @@ const SPOTS = [
   { id: 'hokusai', cat: 'museum', emoji: '🌊', name: 'すみだ北斎美術館', area: '墨田区', pref: '東京', url: 'https://hokusai-museum.jp/', memo: '葛飾北斎の作品を多数展示' },
   // --- イベント ---
   { id: 'yoyogi', cat: 'event', emoji: '🌿', name: '代々木公園 イベント', area: '代々木公園', pref: '東京', url: 'https://www.yoyogikoen.info/', memo: 'さまざまなイベントが開催される都心の公園' },
+  { id: 'kagurazaka-machibutai-2026', cat: 'event', emoji: '🎭', name: '神楽坂まち舞台・大江戸めぐり2026', area: '神楽坂エリア', pref: '東京', url: 'https://kaguramachi.jp/', memo: '2026年5月16日（土）・17日（日）開催予定。神楽坂の街全体で伝統芸能を楽しめるフェスティバル。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- 自然・よりみち ---
   { id: 'inokashira', cat: 'nature', emoji: '🌳', name: '井の頭恩賜公園', area: '武蔵野市・三鷹市', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/format/index044.html', memo: '【サンプル】散歩するだけで心が整う、緑豊かな公園。' },
+  { id: 'koishikawa-korakuen', cat: 'nature', emoji: '🌿', name: '小石川後楽園', area: '文京区後楽', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/koishikawakorakuen/index.html', memo: '都内でアクセスしやすいのに、落ち着いて過ごせる庭園。リスナーさん曰く「人少なくてチル」。東京ドーム方面のライブ音が聞こえてきたこともあるそう。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- 本・しらべもの ---
   { id: 'tsutaya', cat: 'book', emoji: '📚', name: '代官山 蔦屋書店', area: '代官山', pref: '東京', url: 'https://store.tsite.jp/daikanyama/', memo: '【サンプル】新しい本との出会いがある、心地よい空間。' },
   // --- くらし・雑貨 ---
