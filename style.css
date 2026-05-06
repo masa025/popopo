@@ -794,6 +794,148 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 .fab-btn:active {
   transform: translateY(0);
 }
+.carrot-guide {
+  position: fixed;
+  right: 24px;
+  bottom: 104px;
+  z-index: 980;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.carrot-guide-bubble {
+  position: relative;
+  width: min(318px, calc(100vw - 32px));
+  padding: 16px 17px 15px;
+  border-radius: 24px 18px 26px 20px;
+  border: 1.5px dashed rgba(42,157,143,0.35);
+  background: rgba(255,254,250,0.95);
+  box-shadow: 0 14px 34px rgba(43,67,120,0.16);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  pointer-events: auto;
+  transform-origin: right bottom;
+  animation: carrotBubbleIn 0.24s ease both;
+}
+.carrot-guide-bubble[hidden] {
+  display: none !important;
+}
+.carrot-guide-bubble::after {
+  content: '';
+  position: absolute;
+  right: 26px;
+  bottom: -9px;
+  width: 18px;
+  height: 18px;
+  background: rgba(255,254,250,0.95);
+  border-right: 1.5px dashed rgba(42,157,143,0.28);
+  border-bottom: 1.5px dashed rgba(42,157,143,0.28);
+  transform: rotate(45deg);
+}
+.carrot-guide-kicker {
+  margin-bottom: 5px;
+  color: #2a7d74;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.carrot-guide-title {
+  color: var(--text);
+  font-family: 'Yomogi','Noto Sans JP',sans-serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.45;
+  margin-bottom: 7px;
+}
+.carrot-guide-text {
+  color: #52617c;
+  font-size: 0.86rem;
+  line-height: 1.75;
+}
+.carrot-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.carrot-guide-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: linear-gradient(135deg,var(--blue),#2a9d8f);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(79,127,216,0.2);
+}
+.carrot-guide-action:hover {
+  color: #fff;
+  transform: translateY(-1px);
+}
+.carrot-guide-link {
+  min-height: 34px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px dashed rgba(79,127,216,0.28);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: rgba(237,246,255,0.68);
+}
+.carrot-guide-link:hover {
+  color: var(--blue);
+  background: var(--blue-light);
+}
+.carrot-guide-btn {
+  width: 74px;
+  min-height: 86px;
+  padding: 7px 6px 8px;
+  border-radius: 26px 20px 28px 22px;
+  border: 1.5px solid rgba(79,127,216,0.16);
+  background: rgba(255,254,250,0.9);
+  box-shadow: 0 12px 30px rgba(43,67,120,0.16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 700;
+  pointer-events: auto;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  animation: carrotGuideWalk 5.6s ease-in-out infinite;
+}
+.carrot-guide-btn:hover {
+  border-color: rgba(42,157,143,0.42);
+  box-shadow: 0 16px 34px rgba(43,67,120,0.2);
+  transform: translateY(-3px);
+}
+.carrot-guide-btn img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 18px 14px 18px 14px;
+  border: 1px solid rgba(73,128,186,0.16);
+  background: #fff;
+}
+.carrot-guide.is-open .carrot-guide-btn {
+  animation-play-state: paused;
+  border-color: rgba(42,157,143,0.42);
+}
+@keyframes carrotGuideWalk {
+  0%,100% { transform: translate(0,0) rotate(-1deg); }
+  34% { transform: translate(-8px,-3px) rotate(1deg); }
+  68% { transform: translate(5px,-1px) rotate(-0.5deg); }
+}
+@keyframes carrotBubbleIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 @media (max-width: 768px) {
   #chatTicker {
     margin-top: -12px;
@@ -801,6 +943,38 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   }
   .fab-btn {
     display: none !important; /* スマホはbottom navの「つぶやく」で代替 */
+  }
+  .carrot-guide {
+    right: 12px;
+    bottom: 78px;
+    gap: 8px;
+  }
+  .carrot-guide-bubble {
+    width: min(306px, calc(100vw - 24px));
+    padding: 14px 15px 14px;
+  }
+  .carrot-guide-title {
+    font-size: 0.98rem;
+  }
+  .carrot-guide-text {
+    font-size: 0.82rem;
+  }
+  .carrot-guide-btn {
+    width: 64px;
+    min-height: 76px;
+    padding: 6px 5px 7px;
+    font-size: 0.68rem;
+  }
+  .carrot-guide-btn img {
+    width: 48px;
+    height: 48px;
+    border-radius: 15px 12px 15px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carrot-guide-btn,
+  .carrot-guide-bubble {
+    animation: none;
   }
 }
 

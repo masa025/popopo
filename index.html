@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260506-1">
+  <link rel="stylesheet" href="style.css?v=20260506-2">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -694,6 +694,23 @@
     <span class="fab-icon">💬</span>
   </button>
 
+  <div class="carrot-guide" id="carrotGuide" aria-live="polite">
+    <div class="carrot-guide-bubble" id="carrotGuideBubble" role="dialog" aria-labelledby="carrotGuideTitle" hidden>
+      <p class="carrot-guide-kicker">人参鹿さんのヒント</p>
+      <h3 class="carrot-guide-title" id="carrotGuideTitle">迷ったらここから</h3>
+      <p class="carrot-guide-text" id="carrotGuideText">おすすめスポットとみんなの感想から、気になる入口を選んでみてください。</p>
+      <div class="carrot-guide-actions">
+        <a class="carrot-guide-action" id="carrotGuideAction" href="#spots">見てみる</a>
+        <button class="carrot-guide-link" id="carrotGuideNext" type="button">別のヒント</button>
+        <button class="carrot-guide-link" id="carrotGuideClose" type="button">閉じる</button>
+      </div>
+    </div>
+    <button class="carrot-guide-btn" id="carrotGuideBtn" type="button" aria-expanded="false" aria-controls="carrotGuideBubble" aria-label="人参鹿さんのヒントを見る">
+      <img src="assets/admin-profile.jpg" alt="" width="72" height="72" loading="lazy">
+      <span>ヒント</span>
+    </button>
+  </div>
+
   <!-- スマホ用 Bottom Navigation Bar -->
   <nav class="bottom-nav" id="bottomNav" aria-label="メインナビゲーション">
     <a href="#spots" class="bottom-nav-item" data-section="spots">
@@ -714,6 +731,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260506-1"></script>
+  <script src="app.js?v=20260506-2"></script>
 </body>
 </html>

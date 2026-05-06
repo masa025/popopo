@@ -177,10 +177,95 @@ const HERO_BACKDROP_ROTATE_MS = 5000;
 const KIRIBAN_ROUND_INTERVAL = 100;
 const KIRIBAN_MIN_COUNT = 100;
 const INTRO_STORY_STORAGE_KEY = 'popopo_intro_story_seen_v1';
+const CARROT_GUIDE_STORAGE_KEY = 'popopo_carrot_guide_seen_v1';
 const INTRO_STORY_SLIDE_MS = 5200;
 const DISCOVERY_ROTATE_MS = 45000;
 const DISCOVERY_PAUSE_MS = 12000;
 const DISCOVERY_TEXT_LIMIT = 92;
+const CARROT_GUIDE_HINTS = {
+  hero: [
+    {
+      title: 'はじめて迷ったら',
+      text: '上の「おすすめスポットを見る」と「みんなの感想を見る」から入ると、今のサイトの流れがつかみやすいです。',
+      actionLabel: '入口を見る',
+      href: '#hero'
+    },
+    {
+      title: '小さな作品も触れます',
+      text: '上に流れている作品アイコンは、横に動かして選べます。気になる作品を押すと大きく開きます。',
+      actionLabel: '作品を見る',
+      href: '#hero'
+    },
+    {
+      title: 'しっかり知りたい時は',
+      text: '使い方ページには、投稿・行きたいリスト・ギャラリーの見方をまとめています。',
+      actionLabel: '使い方へ',
+      href: 'how-to.html'
+    }
+  ],
+  spots: [
+    {
+      title: '気になる場所は保存できます',
+      text: 'スポットカードの「行きたい」を押すと、同じ端末の行きたいリストに集められます。',
+      actionLabel: 'スポットを見る',
+      href: '#spots'
+    },
+    {
+      title: '最近の感想もヒントに',
+      text: 'スポットカードには最新の感想が1行だけ出ます。誰かの体験から次の行き先を探せます。',
+      actionLabel: '感想を見る',
+      href: '#visited'
+    },
+    {
+      title: 'おすすめも投稿できます',
+      text: '「スポットを追加する」から場所を提案できます。投稿後は同じ端末のブラウザで編集できます。',
+      actionLabel: '追加する',
+      href: '#spots'
+    }
+  ],
+  visited: [
+    {
+      title: '感想は新しい順です',
+      text: 'みんなの感想は新しい投稿が上に並びます。読んだら「見たよ」で気持ちを残せます。',
+      actionLabel: '感想を見る',
+      href: '#visited'
+    },
+    {
+      title: '行ってみたら一言でも',
+      text: '写真や投稿URLは任意です。短い感想でも、次に行く人の背中をそっと押します。',
+      actionLabel: '投稿する',
+      href: '#visited'
+    }
+  ],
+  community: [
+    {
+      title: '話題に迷ったら',
+      text: '今日のお題から投稿できます。POPOPOの感想、サイトへの意見、お出かけ予定も歓迎です。',
+      actionLabel: '掲示板へ',
+      href: '#community'
+    },
+    {
+      title: '会話は返信でつながります',
+      text: '気になるつぶやきには返信できます。ツリーで流れが見えるので、あとから読んでも追いやすいです。',
+      actionLabel: 'つぶやきを見る',
+      href: '#community'
+    }
+  ],
+  gallery: [
+    {
+      title: '作品は左右に送れます',
+      text: '作品を開いたら、左右のボタンやスワイプで次の作品へ移動できます。',
+      actionLabel: '作品へ戻る',
+      href: '#hero'
+    },
+    {
+      title: '合言葉つきの作品もあります',
+      text: '用語辞典など一部の作品は、配信の思い出にまつわる合言葉で開けます。',
+      actionLabel: 'ギャラリーへ',
+      href: '#hero'
+    }
+  ]
+};
 const DAILY_PROMPTS = [
   '最近、気になっている場所はありますか？',
   '誰かにそっとすすめたいお店はありますか？',
@@ -228,6 +313,8 @@ let discoveryIndex = 0;
 let discoveryTimer = null;
 let discoveryPausedUntil = 0;
 let pendingGalleryUnlock = null;
+let carrotGuideContext = 'hero';
+let carrotGuideIndexByContext = {};
 
 function isMobileHeroLayout() {
   return window.matchMedia('(max-width: 768px)').matches;
@@ -3519,6 +3606,112 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function getCarrotGuideElements() {
+  return {
+    guide: document.getElementById('carrotGuide'),
+    bubble: document.getElementById('carrotGuideBubble'),
+    btn: document.getElementById('carrotGuideBtn'),
+    title: document.getElementById('carrotGuideTitle'),
+    text: document.getElementById('carrotGuideText'),
+    action: document.getElementById('carrotGuideAction')
+  };
+}
+
+function getCarrotGuideContext() {
+  if (document.getElementById('galleryModal')?.classList.contains('is-open') ||
+      document.getElementById('fullGalleryModal')?.classList.contains('is-open')) {
+    return 'gallery';
+  }
+
+  const scrollPoint = window.scrollY + Math.min(window.innerHeight * 0.46, 380);
+  let context = 'hero';
+  ['spots', 'visited', 'community'].forEach(id => {
+    const section = document.getElementById(id);
+    if (section && section.offsetTop - 60 <= scrollPoint) context = id;
+  });
+  return CARROT_GUIDE_HINTS[context] ? context : 'hero';
+}
+
+function updateCarrotGuide(context = getCarrotGuideContext(), advance = false) {
+  const { title, text, action } = getCarrotGuideElements();
+  const hints = CARROT_GUIDE_HINTS[context] || CARROT_GUIDE_HINTS.hero;
+  if (!title || !text || !action || !hints.length) return;
+
+  if (advance || carrotGuideIndexByContext[context] === undefined) {
+    const current = carrotGuideIndexByContext[context] || 0;
+    carrotGuideIndexByContext[context] = advance ? (current + 1) % hints.length : current;
+  }
+
+  const hint = hints[carrotGuideIndexByContext[context] || 0];
+  carrotGuideContext = context;
+  title.textContent = hint.title;
+  text.textContent = hint.text;
+  action.textContent = hint.actionLabel || '見てみる';
+  action.setAttribute('href', hint.href || '#hero');
+}
+
+function openCarrotGuide(advance = false) {
+  const { guide, bubble, btn } = getCarrotGuideElements();
+  if (!guide || !bubble || !btn) return;
+  updateCarrotGuide(getCarrotGuideContext(), advance);
+  bubble.hidden = false;
+  guide.classList.add('is-open');
+  btn.setAttribute('aria-expanded', 'true');
+  try {
+    localStorage.setItem(CARROT_GUIDE_STORAGE_KEY, '1');
+  } catch (e) {
+    // localStorage が使えない環境では、その場の表示だけ行います。
+  }
+}
+
+function closeCarrotGuide() {
+  const { guide, bubble, btn } = getCarrotGuideElements();
+  if (!guide || !bubble || !btn) return;
+  bubble.hidden = true;
+  guide.classList.remove('is-open');
+  btn.setAttribute('aria-expanded', 'false');
+}
+
+function refreshCarrotGuideContext() {
+  const { bubble } = getCarrotGuideElements();
+  if (!bubble || bubble.hidden) return;
+  const nextContext = getCarrotGuideContext();
+  if (nextContext !== carrotGuideContext) updateCarrotGuide(nextContext);
+}
+
+function maybeShowCarrotGuideOnce() {
+  const { guide } = getCarrotGuideElements();
+  if (!guide) return;
+  let hasSeenGuide = false;
+  try {
+    hasSeenGuide = localStorage.getItem(CARROT_GUIDE_STORAGE_KEY) === '1';
+  } catch (e) {
+    hasSeenGuide = true;
+  }
+  if (hasSeenGuide) return;
+
+  window.setTimeout(() => {
+    if (document.querySelector('.modal-bg.is-open')) return;
+    openCarrotGuide(false);
+  }, 3200);
+}
+
+function bindCarrotGuideEvents() {
+  const { guide, bubble, btn, action } = getCarrotGuideElements();
+  const nextBtn = document.getElementById('carrotGuideNext');
+  const closeBtn = document.getElementById('carrotGuideClose');
+  if (!guide || !bubble || !btn) return;
+
+  btn.addEventListener('click', () => {
+    if (bubble.hidden) openCarrotGuide(false);
+    else closeCarrotGuide();
+  });
+  if (nextBtn) nextBtn.addEventListener('click', () => openCarrotGuide(true));
+  if (closeBtn) closeBtn.addEventListener('click', closeCarrotGuide);
+  if (action) action.addEventListener('click', closeCarrotGuide);
+  maybeShowCarrotGuideOnce();
+}
+
 function showToast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
@@ -3557,6 +3750,7 @@ function bindEvents() {
     const scrollHint = document.querySelector('.scroll-hint');
     if (scrollHint) scrollHint.classList.toggle('is-hidden', window.scrollY > 120);
     updateBottomNavActive();
+    refreshCarrotGuideContext();
   }, { passive: true });
   updateBottomNavActive(); // 初期表示でスポットをアクティブに
   document.getElementById('hamburger').addEventListener('click', () => {
@@ -3578,6 +3772,7 @@ function bindEvents() {
 
   const bottomNavPost = document.getElementById('bottomNavPost');
   if (bottomNavPost) bottomNavPost.addEventListener('click', () => openChatModal());
+  bindCarrotGuideEvents();
   const dailyPromptBtn = document.getElementById('dailyPromptBtn');
   if (dailyPromptBtn) dailyPromptBtn.addEventListener('click', () => {
     openChatModal(`今日のお題：${getDailyPrompt()}\n`);
@@ -3755,7 +3950,7 @@ function bindEvents() {
   });
   document.addEventListener('keydown', (e) => {
     if (handleGalleryKeyboard(e)) return;
-    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); closeKiribanModal(); closeIntroStoryModal(); }
+    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); closeKiribanModal(); closeIntroStoryModal(); closeCarrotGuide(); }
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
