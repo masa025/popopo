@@ -80,8 +80,14 @@ const SPOTS = [
   { id: 'saryo-tsujiri-daimaru', cat: 'food', emoji: '🍵', name: '茶寮都路里 大丸東京店', area: '東京駅・大丸東京店', pref: '東京', url: 'https://www.giontsujiri.co.jp/store/tokyo-daimaru/', memo: '東京駅直結で立ち寄りやすい、抹茶や甘味の休憩スポット。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'leonards-japan', cat: 'food', emoji: '🍩', name: "Leonard's Japan", area: '横浜ワールドポーターズ', pref: '神奈川', url: 'https://leonardsjapan.com/about-2/', memo: 'ハワイのマラサダを横浜で。外はサクッと、中はもちもちの甘い寄り道候補。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'shinpachi-shokudo', cat: 'food', emoji: '🐟', name: '炭火焼干物定食 しんぱち食堂', area: '東京ほか', pref: '全国', url: 'https://www.shinpachi-shokudo.com/', memo: '焼き魚とごはん、味噌汁の定食を気軽に食べたい時に。朝・昼・夜の候補にしやすいお店。', suggested: true, suggestedBy: '匿名リスナー' },
-  // --- 食べたいもの（モヒンガー） ---
+  // --- 食べたいもの ---
   { id: 'mohinga', cat: 'mohinga', emoji: '🍜', name: 'モヒンガー（ミャンマー料理）', area: '高田馬場など', pref: '東京', url: 'https://otonano-shumatsu.com/articles/488762', memo: 'ミャンマーの国民食！ぜひ食べたい。詳しくはリンク先から。' },
+  { 
+    id: '400do-pizza', cat: 'mohinga', emoji: '🍕', name: '400℃ Pizza', area: '広島・岡山', pref: '広島', 
+    url: 'https://400do-pizza.com/', 
+    memo: 'YouTube「よにのちゃんねる」で紹介された超人気ピザ店。広島にもオープンした話題のスポットです！\n参考：https://youtu.be/2PXvrvf5sL0?si=twirQRWCQy-sGiYW',
+    suggested: true, suggestedBy: 'パンダ🐼' 
+  },
   // --- 美術館・博物館 ---
   { id: 'yamatane', cat: 'museum', emoji: '🎨', name: '山種美術館', area: '渋谷・広尾', pref: '東京', url: 'https://www.yamatane-museum.jp/', memo: '日本画専門の美術館' },
   { id: 'nmwa', cat: 'museum', emoji: '🏛️', name: '国立西洋美術館', area: '上野', pref: '東京', url: 'https://www.nmwa.go.jp/jp/', memo: 'ル・コルビュジエ設計の世界遺産建築' },
