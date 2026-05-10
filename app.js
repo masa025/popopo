@@ -1572,19 +1572,14 @@ function dailyShuffle(items, keyFn) {
   return arr;
 }
 
-const NEW_SUGGESTION_TOP_MS = 3 * 86400000;  // スポット提案の先頭固定枠：3日
-const NEW_REVIEW_TOP_MS = 7 * 86400000;      // 感想の先頭固定枠：7日
-
+// 注：以前カード一覧を日替わりシャッフルにしていましたが、
+// 「新着順の方が見やすい」というご意見により、元の並び（提案＝新着順、SPOTS=配列順）に戻しています。
+// 埋もれの救済は画面上部の #weeklyDiscoveryCard の日替わりローテーションで担保。
 function getAllSpotItemsForDisplay() {
-  const suggested = getSuggestedSpotItems();
-  const now = Date.now();
-  // 直近の提案は先頭固定（投稿者が消えたと感じないため）
-  const fresh = suggested.filter(s => s.timestamp && (now - s.timestamp) < NEW_SUGGESTION_TOP_MS);
-  const olderSuggested = suggested.filter(s => !fresh.includes(s));
-  // 残り全部（古い提案 ＋ 公式 SPOTS）を日替わり順に並び替え
-  const restPool = [...olderSuggested, ...SPOTS];
-  const shuffledRest = dailyShuffle(restPool, item => item.id || item.name || '');
-  return [...fresh, ...shuffledRest];
+  return [
+    ...getSuggestedSpotItems(),
+    ...SPOTS
+  ];
 }
 
 function highlightDiscoveryElement(el) {
@@ -2553,24 +2548,15 @@ function renderVisited(posts = []) {
   const grid = document.getElementById('visitedGrid');
   const sortedPosts = sortNewest(dedupePosts(posts));
   const listenerReviewKeys = new Set(sortedPosts.map(getReviewDisplayFingerprint));
-  const now = Date.now();
 
-  // 直近7日のリスナー感想は先頭固定（時系列順）
-  const freshListener = sortedPosts.filter(p => p.timestamp && (now - p.timestamp) < NEW_REVIEW_TOP_MS);
-  const olderListener = sortedPosts.filter(p => !freshListener.includes(p));
+  // 注：以前は古い感想を日替わりシャッフルにしていましたが、
+  // 「新着順の方が見やすい」とのご意見により元の並びに戻しました。
+  const officialCards = VISITED
+    .filter(v => !listenerReviewKeys.has(getReviewDisplayFingerprint(v)))
+    .map(renderOfficialReviewCard);
+  const listenerCards = sortedPosts.map(renderListenerReviewCard);
 
-  // リスナー感想と重複しない公式感想だけ「古いプール」に入れて、日替わりシャッフル
-  const officialPool = VISITED.filter(v => !listenerReviewKeys.has(getReviewDisplayFingerprint(v)));
-  const olderListenerEntries = olderListener.map(p => ({ kind: 'listener', data: p, key: p.id || p.clientId || `${p.spotName}|${p.timestamp}` }));
-  const officialEntries = officialPool.map(v => ({ kind: 'official', data: v, key: `official|${v.name}|${v.area}` }));
-  const olderPool = [...olderListenerEntries, ...officialEntries];
-  const shuffledOlder = dailyShuffle(olderPool, entry => entry.key);
-
-  const allCards = [
-    ...freshListener.map(renderListenerReviewCard),
-    ...shuffledOlder.map(entry => entry.kind === 'listener' ? renderListenerReviewCard(entry.data) : renderOfficialReviewCard(entry.data))
-  ];
-
+  const allCards = [...listenerCards, ...officialCards];
   grid.innerHTML = allCards.slice(0, visibleReviewCount).join('');
   setStatText('statVisited', allCards.length);
   updateMoreButton('visitedMoreBtn', allCards.length, Math.min(visibleReviewCount, allCards.length), INITIAL_REVIEW_COUNT);
