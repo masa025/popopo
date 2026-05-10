@@ -203,7 +203,7 @@ const KIRIBAN_MIN_COUNT = 100;
 const INTRO_STORY_STORAGE_KEY = 'popopo_intro_story_seen_v1';
 const CARROT_GUIDE_STORAGE_KEY = 'popopo_carrot_guide_seen_v1';
 const INTRO_STORY_SLIDE_MS = 5200;
-const DISCOVERY_ROTATE_MS = 45000;
+const DISCOVERY_ROTATE_MS = 9000; // 旧45秒→9秒。発見カードの切替頻度
 const DISCOVERY_PAUSE_MS = 12000;
 const DISCOVERY_TEXT_LIMIT = 92;
 const CARROT_GUIDE_HINTS = {
@@ -1390,18 +1390,13 @@ function getDiscoveryItemKey(item) {
   ].join('|');
 }
 
-function rotateDiscoveryList(items, salt) {
-  if (!items.length) return [];
-  const offset = Math.abs(hashString(`${getDayIndex()}-${salt}`)) % items.length;
-  return [...items.slice(offset), ...items.slice(0, offset)];
-}
-
-function buildDiscoveryQueue(items) {
-  const spots = rotateDiscoveryList(items.filter(item => item.kind === 'spot'), 'spot');
-  const reviews = rotateDiscoveryList(items.filter(item => item.kind === 'review'), 'review');
+function buildDiscoveryQueue(items, avoidKey = '') {
+  // 訪問ごとに違う並び・違う先頭にするため、セッション毎の真ランダムシャッフルに切り替え。
+  const spots = shuffleItems(items.filter(item => item.kind === 'spot'));
+  const reviews = shuffleItems(items.filter(item => item.kind === 'review'));
   const queue = [];
   const max = Math.max(spots.length, reviews.length);
-  const startWithReview = Math.floor(Date.now() / DISCOVERY_ROTATE_MS) % 2 === 1;
+  const startWithReview = Math.random() < 0.5;
 
   for (let i = 0; i < max; i += 1) {
     if (startWithReview) {
@@ -1410,6 +1405,15 @@ function buildDiscoveryQueue(items) {
     } else {
       if (spots[i]) queue.push(spots[i]);
       if (reviews[i]) queue.push(reviews[i]);
+    }
+  }
+
+  // 直前に表示していたものが先頭に来ると「変わってない」と感じるので、
+  // できる限り先頭を入れ替える（候補が他に1つ以上ある場合のみ）
+  if (avoidKey && queue.length > 1 && getDiscoveryItemKey(queue[0]) === avoidKey) {
+    const swapIdx = queue.findIndex((item, i) => i > 0 && getDiscoveryItemKey(item) !== avoidKey);
+    if (swapIdx > 0) {
+      const tmp = queue[0]; queue[0] = queue[swapIdx]; queue[swapIdx] = tmp;
     }
   }
 
@@ -1471,9 +1475,13 @@ function renderWeeklyDiscovery() {
     const items = getDiscoveryItems();
     if (!items.length) return;
     const currentKey = getDiscoveryItemKey(currentDiscoveryItem);
-    discoveryItems = buildDiscoveryQueue(items);
-    const preservedIndex = discoveryItems.findIndex(item => getDiscoveryItemKey(item) === currentKey);
-    discoveryIndex = preservedIndex >= 0 ? preservedIndex : discoveryIndex % discoveryItems.length;
+    // 直前のアイテムが画面に出ているなら、新キューでもその項目を維持して見せる。
+    // 出ていない（初回・モーダル後など）はランダム先頭を許容。
+    discoveryItems = buildDiscoveryQueue(items, currentKey);
+    const preservedIndex = currentKey
+      ? discoveryItems.findIndex(item => getDiscoveryItemKey(item) === currentKey)
+      : -1;
+    discoveryIndex = preservedIndex >= 0 ? preservedIndex : 0;
     const item = discoveryItems[discoveryIndex];
     if (!item) return;
     showDiscoveryItem(item, false);
@@ -1492,6 +1500,17 @@ function shouldRotateDiscovery() {
 
 function rotateDiscoveryItem() {
   if (!shouldRotateDiscovery()) return;
+  // キューを最後まで巡回したら、直前の項目を避けて新しいシャッフルを作り直す
+  if (discoveryIndex + 1 >= discoveryItems.length) {
+    const items = getDiscoveryItems();
+    if (items.length) {
+      const lastKey = getDiscoveryItemKey(currentDiscoveryItem);
+      discoveryItems = buildDiscoveryQueue(items, lastKey);
+      discoveryIndex = 0;
+      showDiscoveryItem(discoveryItems[0], true);
+      return;
+    }
+  }
   discoveryIndex = (discoveryIndex + 1) % discoveryItems.length;
   showDiscoveryItem(discoveryItems[discoveryIndex], true);
 }
