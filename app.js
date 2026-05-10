@@ -159,6 +159,9 @@ let localSeenReviews = JSON.parse(localStorage.getItem('popopo_seen_reviews') ||
 let localChatReactions = JSON.parse(localStorage.getItem('popopo_chat_reactions') || '{}');
 let localSuggestions = JSON.parse(localStorage.getItem('popopo_suggestions') || '[]');
 let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
+let localPromptSuggestions = JSON.parse(localStorage.getItem('popopo_prompt_suggestions') || '[]');
+let localPromptVotes = JSON.parse(localStorage.getItem('popopo_prompt_votes') || '{}');
+let latestRemotePromptSuggestions = [];
 const NICKNAME_STORAGE_KEY = 'popopo_last_nickname';
 const ADD_SPOT_FORM_DRAFT_KEY = 'popopo_add_spot_draft_session_v1';
 let addSpotDraftTimer = null;
@@ -659,6 +662,7 @@ async function saveChatReaction(reactionId) {
 function listenLikes() {
   if (db) {
     db.collection('likes').onSnapshot(snap => {
+      let touchedPromptVote = false;
       snap.docs.forEach(doc => {
         if (doc.id === 'page_views') return; // 除外
         globalLikes[doc.id] = doc.data().count || 0;
@@ -666,7 +670,9 @@ function listenLikes() {
         if (countSpan) countSpan.textContent = globalLikes[doc.id];
         if (doc.id.startsWith('review_seen_')) updateSeenReviewButton(doc.id);
         if (doc.id.startsWith('chat_')) updateChatReactionButton(doc.id);
+        if (doc.id.startsWith('prompt_vote_')) touchedPromptVote = true;
       });
+      if (touchedPromptVote) renderDailyPrompt();
     });
   }
 }
@@ -1130,13 +1136,205 @@ function getDayIndex() {
   return Math.floor(new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() / 86400000);
 }
 
-function getDailyPrompt() {
+function getFallbackDailyPrompt() {
   return DAILY_PROMPTS[getDayIndex() % DAILY_PROMPTS.length];
+}
+
+// 後方互換：他の箇所からも呼ばれる
+function getDailyPrompt() {
+  const info = getDailyPromptInfo();
+  return info.text;
+}
+
+const PROMPT_SUGGESTION_TTL_DAYS = 14;
+
+function getPromptVoteId(suggestion) {
+  if (!suggestion) return '';
+  const key = suggestion.clientId || suggestion.id || hashString(`${suggestion.text || ''}|${suggestion.timestamp || 0}`);
+  return `prompt_vote_${key}`;
+}
+
+function getPromptVoteCount(suggestion) {
+  const id = getPromptVoteId(suggestion);
+  if (!id) return 0;
+  return globalLikes[id] || (localPromptVotes[id] ? 1 : 0);
+}
+
+function isPromptVoted(suggestion) {
+  return Boolean(localPromptVotes[getPromptVoteId(suggestion)]);
+}
+
+function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
+  const byKey = new Map();
+  localPromptSuggestions.forEach(item => {
+    const key = item.clientId || item.id;
+    if (key) byKey.set(key, item);
+  });
+  (remoteList || []).forEach(item => {
+    const key = item.clientId || item.id;
+    if (!key) return;
+    const existing = byKey.get(key) || {};
+    byKey.set(key, { ...existing, ...item });
+  });
+  const cutoff = Date.now() - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
+  return Array.from(byKey.values())
+    .filter(item => (item.timestamp || 0) >= cutoff)
+    .sort((a, b) => {
+      const va = getPromptVoteCount(a);
+      const vb = getPromptVoteCount(b);
+      if (vb !== va) return vb - va;
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    });
+}
+
+function getDailyPromptInfo() {
+  const merged = mergePromptSuggestions();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  // 今日のお題：今日より前に提案されていて、得票が一番多い候補
+  const eligible = merged.filter(item => (item.timestamp || 0) < todayStart.getTime() && getPromptVoteCount(item) > 0);
+  const top = eligible[0];
+  if (top) {
+    return {
+      text: top.text,
+      source: 'community',
+      nickname: top.nickname || '匿名リスナー',
+      votes: getPromptVoteCount(top),
+      id: top.clientId || top.id,
+    };
+  }
+  return { text: getFallbackDailyPrompt(), source: 'fallback' };
 }
 
 function renderDailyPrompt() {
   const text = document.getElementById('dailyPromptText');
-  if (text) text.textContent = getDailyPrompt();
+  const meta = document.getElementById('dailyPromptMeta');
+  const info = getDailyPromptInfo();
+  if (text) text.textContent = info.text;
+  if (meta) {
+    if (info.source === 'community') {
+      const nick = (info.nickname || '匿名リスナー').replace(/[<>&]/g, '');
+      meta.innerHTML = `<span class="pill">みんなのお題</span>${nick} さんの提案 ・ ♡ ${info.votes}`;
+      meta.hidden = false;
+    } else {
+      meta.innerHTML = '';
+      meta.hidden = true;
+    }
+  }
+  renderDailyPromptCandidates();
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function renderDailyPromptCandidates() {
+  const list = document.getElementById('dailyPromptList');
+  const empty = document.getElementById('dailyPromptEmpty');
+  if (!list) return;
+  const merged = mergePromptSuggestions();
+  if (!merged.length) {
+    list.innerHTML = '';
+    if (empty) empty.hidden = false;
+    return;
+  }
+  if (empty) empty.hidden = true;
+  const todayInfo = getDailyPromptInfo();
+  const leadingId = todayInfo.source === 'community' ? todayInfo.id : (merged[0] && getPromptVoteCount(merged[0]) > 0 ? (merged[0].clientId || merged[0].id) : null);
+  list.innerHTML = merged.slice(0, 10).map((item, idx) => {
+    const id = item.clientId || item.id;
+    const voted = isPromptVoted(item);
+    const count = getPromptVoteCount(item);
+    const isLeading = id === leadingId;
+    const nick = item.nickname || '匿名リスナー';
+    return `
+      <li class="daily-prompt-item${isLeading ? ' is-leading' : ''}" data-prompt-id="${escapeHtml(id)}">
+        <span class="daily-prompt-item-rank" aria-hidden="true">${idx + 1}</span>
+        <div class="daily-prompt-item-body">
+          <p class="daily-prompt-item-text">${escapeHtml(item.text)}</p>
+          <div class="daily-prompt-item-foot">
+            <span class="daily-prompt-item-nick">— ${escapeHtml(nick)}</span>
+            ${isLeading ? '<span class="daily-prompt-item-leading-tag">🌿 今日のお題に表示中</span>' : ''}
+          </div>
+        </div>
+        <button type="button" class="daily-prompt-vote-btn${voted ? ' is-voted' : ''}" data-prompt-vote-id="${escapeHtml(id)}" aria-pressed="${voted ? 'true' : 'false'}" ${voted ? 'disabled' : ''} aria-label="このお題に共感する">
+          <span class="daily-prompt-vote-icon" aria-hidden="true">${voted ? '♥' : '♡'}</span>
+          <span class="daily-prompt-vote-count">${count}</span>
+        </button>
+      </li>
+    `;
+  }).join('');
+}
+
+async function submitPromptSuggestion({ text, nickname }) {
+  const cleanText = String(text || '').trim();
+  if (!cleanText) return null;
+  const cleanNick = String(nickname || '').trim() || '匿名リスナー';
+  const clientId = 'pr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const item = { id: clientId, clientId, text: cleanText, nickname: cleanNick, timestamp: Date.now() };
+  localPromptSuggestions.unshift(item);
+  localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
+  // 提案者は自動で1票
+  const voteId = getPromptVoteId(item);
+  localPromptVotes[voteId] = Date.now();
+  localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+  globalLikes[voteId] = (globalLikes[voteId] || 0) + 1;
+  renderDailyPrompt();
+  if (db) {
+    try {
+      await db.collection('prompt_suggestions').add({
+        clientId,
+        text: cleanText,
+        nickname: cleanNick,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      await db.collection('likes').doc(voteId).set({
+        count: firebase.firestore.FieldValue.increment(1),
+      }, { merge: true });
+    } catch (e) {
+      console.warn('Prompt suggestion sync failed:', e);
+    }
+  }
+  return item;
+}
+
+async function votePromptSuggestion(voteId) {
+  if (!voteId || localPromptVotes[voteId]) return;
+  localPromptVotes[voteId] = Date.now();
+  localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+  globalLikes[voteId] = (globalLikes[voteId] || 0) + 1;
+  renderDailyPrompt();
+  if (db) {
+    try {
+      await db.collection('likes').doc(voteId).set({
+        count: firebase.firestore.FieldValue.increment(1),
+      }, { merge: true });
+    } catch (e) {
+      console.warn('Prompt vote sync failed:', e);
+    }
+  }
+}
+
+function listenPromptSuggestions() {
+  if (!db) return;
+  db.collection('prompt_suggestions').orderBy('timestamp', 'desc').onSnapshot(snap => {
+    latestRemotePromptSuggestions = snap.docs.map(d => {
+      const data = d.data() || {};
+      return {
+        id: d.id,
+        clientId: data.clientId || d.id,
+        text: data.text || '',
+        nickname: data.nickname || '匿名リスナー',
+        timestamp: data.timestamp?.toMillis?.() || data.timestamp || Date.now(),
+      };
+    });
+    renderDailyPrompt();
+  }, e => console.warn('Prompt suggestion listener failed:', e));
 }
 
 function getDiscoveryItems() {
@@ -2650,6 +2848,85 @@ document.getElementById('chatReplyClearBtn')?.addEventListener('click', () => {
   if (info) info.style.display = 'none';
 });
 
+// ============================================================
+// お題提案モーダル
+// ============================================================
+function openPromptSuggestModal() {
+  const modal = document.getElementById('promptSuggestModal');
+  if (!modal) return;
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  const ta = document.getElementById('psText');
+  if (ta) {
+    ta.value = '';
+    document.getElementById('psCharNum').textContent = '0';
+  }
+  fillSavedNickname('psNick');
+  window.setTimeout(() => ta?.focus(), 80);
+}
+
+function closePromptSuggestModal() {
+  const modal = document.getElementById('promptSuggestModal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
+let promptSuggestBound = false;
+function bindPromptSuggestModal() {
+  if (promptSuggestBound) return;
+  const modal = document.getElementById('promptSuggestModal');
+  if (!modal) return;
+  promptSuggestBound = true;
+  document.getElementById('promptSuggestClose')?.addEventListener('click', closePromptSuggestModal);
+  document.getElementById('promptSuggestCancelBtn')?.addEventListener('click', closePromptSuggestModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closePromptSuggestModal();
+  });
+  const ta = document.getElementById('psText');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      const n = ta.value.length;
+      const counter = document.getElementById('psCharNum');
+      if (counter) counter.textContent = n;
+    });
+  }
+  const form = document.getElementById('promptSuggestForm');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = (document.getElementById('psText')?.value || '').trim();
+      const nickname = (document.getElementById('psNick')?.value || '').trim();
+      if (!text) {
+        showToast('お題の文章を入力してください。');
+        return;
+      }
+      const submitBtn = document.getElementById('promptSuggestSubmitBtn');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '送信中...'; }
+      try {
+        await submitPromptSuggestion({ text, nickname });
+        saveNickname(nickname);
+        showToast('お題を提案しました！みんなの ♡ で次のお題が決まります。');
+        closePromptSuggestModal();
+        // 候補を開いて見せる
+        const toggle = document.getElementById('dailyPromptToggleBtn');
+        const candidates = document.getElementById('dailyPromptCandidates');
+        if (toggle && candidates && toggle.getAttribute('aria-expanded') !== 'true') {
+          toggle.setAttribute('aria-expanded', 'true');
+          candidates.hidden = false;
+          const label = toggle.querySelector('.daily-prompt-toggle-text');
+          if (label) label.textContent = '候補を閉じる';
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('送信に失敗しました。時間を置いてもう一度お試しください。');
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'お題を送る 🌿'; }
+      }
+    });
+  }
+}
+
 function normalizeGalleryAnswer(value) {
   return String(value || '')
     .normalize('NFKC')
@@ -2832,7 +3109,7 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
   resetGalleryZoom();
 
   // 操作ガイドを表示
-  showGalleryHint(isDict ? 'ピンチ・ダブルタップで拡大。下のボタンでページ移動できます' : '左右スワイプで作品移動。タップで拡大できます');
+  showGalleryHint(isDict ? 'ピンチ・ダブルタップで拡大。下のボタンでページ移動 ／ 下にスワイプで閉じる' : '左右スワイプで作品移動 ／ タップで拡大 ／ 下にスワイプで閉じる');
 }
 
 function showGalleryHint(text) {
@@ -3259,13 +3536,18 @@ document.addEventListener('DOMContentLoaded', () => {
       touchStartX = e.changedTouches[0].screenX;
       touchStartY = e.changedTouches[0].screenY;
     }, { passive: true });
-    
+
     visual.addEventListener('touchend', (e) => {
       if (document.getElementById('galleryModalImage')?.classList.contains('is-zoomed')) return;
       const touchEndX = e.changedTouches[0].screenX;
       const touchEndY = e.changedTouches[0].screenY;
       const diffX = touchEndX - touchStartX;
       const diffY = touchEndY - touchStartY;
+      // 下方向の大きなスワイプで閉じる（縦の動きが横の1.5倍以上、かつ80px以上）
+      if (diffY > 80 && Math.abs(diffY) > Math.abs(diffX) * 1.5) {
+        closeGalleryModal();
+        return;
+      }
       if (Math.abs(diffX) > 54 && Math.abs(diffX) > Math.abs(diffY) * 1.35) {
         const moved = diffX < 0
           // 次へ（左スワイプ）
@@ -3737,15 +4019,25 @@ function showToast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
   t.style.cssText = `
-    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
-    background:var(--blue);color:#fff;font-weight:700;
+    position:fixed;bottom:32px;left:50%;transform:translate(-50%, 12px);
+    background:linear-gradient(135deg, #5b8dee, #2a9d8f);color:#fff;font-weight:700;
     padding:14px 28px;border-radius:50px;
-    box-shadow:0 8px 32px rgba(91,141,238,0.4);z-index:9999;
-    animation:fadeUp 0.3s ease;font-size:0.92rem;max-width:min(92vw,560px);
-    text-align:center;line-height:1.6;
+    box-shadow:0 12px 36px rgba(91,141,238,0.34);z-index:9999;
+    opacity:0; transition:opacity 0.32s ease, transform 0.32s ease;
+    font-size:0.92rem;max-width:min(92vw,560px);
+    text-align:center;line-height:1.6;letter-spacing:0.01em;
   `;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  // 次フレームでフェード＆スライドイン
+  requestAnimationFrame(() => {
+    t.style.opacity = '1';
+    t.style.transform = 'translate(-50%, 0)';
+  });
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translate(-50%, 12px)';
+    setTimeout(() => t.remove(), 320);
+  }, 2700);
 }
 
 // ============================================================
@@ -3798,6 +4090,38 @@ function bindEvents() {
   if (dailyPromptBtn) dailyPromptBtn.addEventListener('click', () => {
     openChatModal(`今日のお題：${getDailyPrompt()}\n`);
   });
+  const dailyPromptToggleBtn = document.getElementById('dailyPromptToggleBtn');
+  const dailyPromptCandidates = document.getElementById('dailyPromptCandidates');
+  if (dailyPromptToggleBtn && dailyPromptCandidates) {
+    dailyPromptToggleBtn.addEventListener('click', () => {
+      const isOpen = dailyPromptToggleBtn.getAttribute('aria-expanded') === 'true';
+      const next = !isOpen;
+      dailyPromptToggleBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+      dailyPromptCandidates.hidden = !next;
+      const label = dailyPromptToggleBtn.querySelector('.daily-prompt-toggle-text');
+      if (label) label.textContent = next ? '候補を閉じる' : '明日のお題を決めよう';
+      if (next) renderDailyPromptCandidates();
+    });
+  }
+  const dailyPromptSuggestBtn = document.getElementById('dailyPromptSuggestBtn');
+  if (dailyPromptSuggestBtn) dailyPromptSuggestBtn.addEventListener('click', () => openPromptSuggestModal());
+  bindPromptSuggestModal();
+  const promptList = document.getElementById('dailyPromptList');
+  if (promptList) {
+    promptList.addEventListener('click', (e) => {
+      const btn = e.target.closest('.daily-prompt-vote-btn');
+      if (!btn) return;
+      const id = btn.dataset.promptVoteId;
+      if (!id) return;
+      // 楽観的にUIを更新
+      btn.classList.add('is-voted');
+      btn.setAttribute('aria-pressed', 'true');
+      btn.disabled = true;
+      const icon = btn.querySelector('.daily-prompt-vote-icon');
+      if (icon) icon.textContent = '♥';
+      votePromptSuggestion(id);
+    });
+  }
   const wantListPostBtn = document.getElementById('wantListPostBtn');
   if (wantListPostBtn) wantListPostBtn.addEventListener('click', () => openModal());
   const weeklyDiscoveryLink = document.getElementById('weeklyDiscoveryLink');
@@ -3971,7 +4295,7 @@ function bindEvents() {
   });
   document.addEventListener('keydown', (e) => {
     if (handleGalleryKeyboard(e)) return;
-    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); closeKiribanModal(); closeIntroStoryModal(); closeCarrotGuide(); }
+    if (e.key === 'Escape') { closeModal(); closeAddSpotModal(); closeChatModal(); closeSpotReviews(); closeGalleryModal(); closeKiribanModal(); closeIntroStoryModal(); closeCarrotGuide(); closePromptSuggestModal(); }
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
@@ -4293,6 +4617,7 @@ function init() {
   });
 
   listenLikes(); // いいね数をリアルタイム同期
+  listenPromptSuggestions(); // みんなのお題（投票）をリアルタイム同期
 
   trackPageView();
   renderDailyPrompt();

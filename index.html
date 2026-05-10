@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260506-2">
+  <link rel="stylesheet" href="style.css?v=20260510-1">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -264,11 +264,32 @@
         <button class="btn-primary" id="openChatModalBtn" style="margin-bottom:20px;">✏️ つぶやく</button>
       </div>
       <div class="daily-prompt-card" id="dailyPromptCard">
-        <div>
-          <p class="daily-prompt-kicker">今日のお題</p>
-          <p class="daily-prompt-text" id="dailyPromptText">最近気になっている場所はありますか？</p>
+        <div class="daily-prompt-main">
+          <div class="daily-prompt-body">
+            <p class="daily-prompt-kicker">今日のお題</p>
+            <p class="daily-prompt-text" id="dailyPromptText">最近気になっている場所はありますか？</p>
+            <p class="daily-prompt-meta" id="dailyPromptMeta" hidden></p>
+          </div>
+          <div class="daily-prompt-actions">
+            <button type="button" class="btn-outline" id="dailyPromptBtn">このお題でつぶやく</button>
+            <button type="button" class="daily-prompt-toggle" id="dailyPromptToggleBtn" aria-expanded="false" aria-controls="dailyPromptCandidates">
+              <span class="daily-prompt-toggle-text">明日のお題を決めよう</span>
+              <span class="daily-prompt-toggle-caret" aria-hidden="true">▾</span>
+            </button>
+          </div>
         </div>
-        <button type="button" class="btn-outline" id="dailyPromptBtn">このお題でつぶやく</button>
+        <div class="daily-prompt-candidates" id="dailyPromptCandidates" hidden>
+          <p class="daily-prompt-candidates-lead">みんなのお題を読んで、心が動いたものに ♡ を押してみてください。<br>いちばん ♡ を集めたお題が、明日のお題になります。</p>
+          <div class="daily-prompt-suggest">
+            <button type="button" class="btn-outline daily-prompt-suggest-btn" id="dailyPromptSuggestBtn">
+              <span class="btn-icon" aria-hidden="true">✨</span>
+              <span>お題を提案する</span>
+            </button>
+            <p class="daily-prompt-suggest-hint">ふと思いついた問いかけで大丈夫。だれかの一日にそっと届きます。</p>
+          </div>
+          <ul class="daily-prompt-list" id="dailyPromptList" aria-live="polite"></ul>
+          <p class="daily-prompt-empty" id="dailyPromptEmpty" hidden>まだ提案はありません。最初のひとつ目、書いてみませんか？</p>
+        </div>
       </div>
 
       <div class="posts-empty" id="chatsEmpty" style="display:block;">
@@ -292,7 +313,7 @@
         <span class="logo-sub">お出かけマップ</span>
       </div>
       <p class="footer-desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
-      <p class="footer-update">最終更新：2026年5月9日</p>
+      <p class="footer-update">最終更新：2026年5月10日</p>
       <p class="footer-credit">With gratitude to all POPOPO members for their ideas, and to you for visiting.</p>
       <div class="footer-admin">
         <img class="footer-admin-avatar" src="assets/admin-profile.jpg" alt="お手入れ係 masa0a のプロフィール画像" width="96" height="96" loading="lazy">
@@ -320,15 +341,30 @@
           </div>
           <img id="galleryModalImage" class="gallery-modal-image" src="" alt="">
           <div id="galleryModalPageNum" class="gallery-modal-pagenum" hidden></div>
-          <div class="gallery-modal-controls">
-            <button id="galleryBtnPrev" class="gallery-ctrl-btn" title="前へ" aria-label="前の作品へ">◀︎</button>
-            <div class="gallery-ctrl-divider"></div>
-            <button id="galleryBtnZoomOut" class="gallery-ctrl-btn" title="縮小" aria-label="拡大を戻す">－</button>
-            <button id="galleryBtnZoomIn" class="gallery-ctrl-btn" title="拡大" aria-label="画像を拡大する">＋</button>
-            <div class="gallery-ctrl-divider"></div>
-            <button id="galleryBtnNext" class="gallery-ctrl-btn" title="次へ" aria-label="次の作品へ">▶︎</button>
-            <div class="gallery-ctrl-divider"></div>
-            <button id="galleryBtnCloseView" class="gallery-ctrl-btn gallery-ctrl-close" title="閉じる" aria-label="ギャラリーを閉じる">✕</button>
+          <div class="gallery-modal-controls" role="toolbar" aria-label="ギャラリー操作">
+            <button id="galleryBtnPrev" class="gallery-ctrl-btn" title="前の作品へ" aria-label="前の作品へ">
+              <span class="gallery-ctrl-icon" aria-hidden="true">◀︎</span>
+              <span class="gallery-ctrl-label">前へ</span>
+            </button>
+            <div class="gallery-ctrl-divider" aria-hidden="true"></div>
+            <button id="galleryBtnZoomOut" class="gallery-ctrl-btn" title="拡大を戻す" aria-label="拡大を戻す">
+              <span class="gallery-ctrl-icon" aria-hidden="true">－</span>
+              <span class="gallery-ctrl-label">縮小</span>
+            </button>
+            <button id="galleryBtnZoomIn" class="gallery-ctrl-btn" title="画像を拡大する" aria-label="画像を拡大する">
+              <span class="gallery-ctrl-icon" aria-hidden="true">＋</span>
+              <span class="gallery-ctrl-label">拡大</span>
+            </button>
+            <div class="gallery-ctrl-divider" aria-hidden="true"></div>
+            <button id="galleryBtnNext" class="gallery-ctrl-btn" title="次の作品へ" aria-label="次の作品へ">
+              <span class="gallery-ctrl-icon" aria-hidden="true">▶︎</span>
+              <span class="gallery-ctrl-label">次へ</span>
+            </button>
+            <div class="gallery-ctrl-divider" aria-hidden="true"></div>
+            <button id="galleryBtnCloseView" class="gallery-ctrl-btn gallery-ctrl-close" title="ギャラリーを閉じる" aria-label="ギャラリーを閉じる">
+              <span class="gallery-ctrl-icon" aria-hidden="true">✕</span>
+              <span class="gallery-ctrl-label">閉じる</span>
+            </button>
           </div>
           <div id="galleryDictThumbs" class="gallery-dict-thumbs" aria-label="用語辞典のページ" hidden></div>
         </div>
@@ -711,6 +747,33 @@
     </button>
   </div>
 
+  <!-- お題提案モーダル -->
+  <div id="promptSuggestModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="promptSuggestTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="promptSuggestTitle" class="modal-title">✨ お題を提案する</h3>
+        <button class="modal-close" id="promptSuggestClose" aria-label="閉じる">✕</button>
+      </div>
+      <form id="promptSuggestForm" class="modal-form" novalidate>
+        <p class="form-assurance">明日以降のお題候補に並びます。心が動いたお題に ♡ がいちばん集まったものが、翌日のお題になります。</p>
+        <div class="form-group">
+          <label class="form-label" for="psNick">ニックネーム（任意）</label>
+          <input type="text" id="psNick" class="form-input" placeholder="匿名リスナー" maxlength="20" autocomplete="nickname">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="psText">お題の問いかけ <span class="req">必須</span></label>
+          <textarea id="psText" class="form-textarea" placeholder="例：誰かにそっと教えたくなった景色はありますか？（60文字以内）" maxlength="60" required></textarea>
+          <span class="char-count"><span id="psCharNum">0</span>/60</span>
+          <p class="form-hint">「？」で終わる、やわらかな問いかけがおすすめです。</p>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" id="promptSuggestCancelBtn">キャンセル</button>
+          <button type="submit" class="btn-primary" id="promptSuggestSubmitBtn">お題を送る 🌿</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- スマホ用 Bottom Navigation Bar -->
   <nav class="bottom-nav" id="bottomNav" aria-label="メインナビゲーション">
     <a href="#spots" class="bottom-nav-item" data-section="spots">
@@ -731,6 +794,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260507-1"></script>
+  <script src="app.js?v=20260510-1"></script>
 </body>
 </html>
