@@ -3303,9 +3303,11 @@ function closeGalleryModal() {
   currentGalleryIndex = -1;
   const visual = document.getElementById('galleryModalVisual');
   const pageNumEl = document.getElementById('galleryModalPageNum');
+  const panelPageNumEl = document.getElementById('galleryPanelPageNum');
   const modalBox = document.querySelector('.gallery-modal-box');
   if (visual) visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
   if (pageNumEl) pageNumEl.hidden = true;
+  if (panelPageNumEl) { panelPageNumEl.hidden = true; panelPageNumEl.textContent = ''; }
   if (modalBox) modalBox.classList.remove('is-dictionary-mode', 'is-dictionary-zoomed', 'is-focus-mode');
   hideDictionaryThumbs();
   resetGalleryZoom();
@@ -3419,17 +3421,19 @@ function renderDictionaryThumbs(sameTypeItems, currentTypeIndex, isDict) {
 function injectGalleryNavButtons() {
   const visual = document.getElementById('galleryModalVisual');
   const pageNumEl = document.getElementById('galleryModalPageNum');
+  const panelPageNumEl = document.getElementById('galleryPanelPageNum');
   if (!visual) return;
-  
+
   // Clean up old buttons and page num
   visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
   if (pageNumEl) pageNumEl.hidden = true;
-  
+  if (panelPageNumEl) { panelPageNumEl.hidden = true; panelPageNumEl.textContent = ''; }
+
   // ページ切り替え時にズームを解除
   resetGalleryZoom();
 
   if (currentGalleryIndex < 0) return;
-  
+
   const currentItem = GALLERY_ITEMS[currentGalleryIndex];
   // Only inject nav if it's unlocked or doesn't have a lock
   const locked = currentItem.lockAnswer && !isGalleryUnlocked(currentItem.image);
@@ -3440,14 +3444,18 @@ function injectGalleryNavButtons() {
 
   const isDict = isDictionaryGalleryItem(currentItem);
   const sameTypeItems = getSameGalleryTypeItems(currentItem);
-  
+
   const currentTypeIndex = sameTypeItems.findIndex(x => x.idx === currentGalleryIndex);
   renderDictionaryThumbs(sameTypeItems, currentTypeIndex, isDict);
 
-  // Update page number
-  if (pageNumEl && sameTypeItems.length > 1) {
-    pageNumEl.textContent = isDict ? `用語辞典 ${currentTypeIndex + 1} / ${sameTypeItems.length}` : `${currentTypeIndex + 1} / ${sameTypeItems.length}`;
-    pageNumEl.hidden = false;
+  // Update page number — 下部コントロールパネル内の表示に統合（作品との重なり回避）
+  if (sameTypeItems.length > 1) {
+    const pageText = `${currentTypeIndex + 1} / ${sameTypeItems.length}`;
+    if (panelPageNumEl) {
+      panelPageNumEl.textContent = pageText;
+      panelPageNumEl.setAttribute('aria-label', isDict ? `用語辞典 ${pageText} ページ` : `作品 ${pageText}`);
+      panelPageNumEl.hidden = false;
+    }
   }
   
   // 新しいコントロールパネルの制御
@@ -4058,10 +4066,45 @@ function bindEvents() {
     });
   };
 
+  // 上部ナビの自動退避（スマホで下方向スクロール時のみ隠す）
+  let lastScrollY = window.scrollY;
+  let scrollDir = 'up';
+  let scrollAccum = 0;
+  const NAV_HIDE_THRESHOLD = 14; // 連続して下方向にこれだけ動いたら隠す
+  const NAV_SHOW_THRESHOLD = 8;  // 上方向にこれだけ動いたら出す
+
   window.addEventListener('scroll', () => {
-    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    const navbar = document.getElementById('navbar');
+    const y = window.scrollY;
+    navbar.classList.toggle('scrolled', y > 50);
     const scrollHint = document.querySelector('.scroll-hint');
-    if (scrollHint) scrollHint.classList.toggle('is-hidden', window.scrollY > 120);
+    if (scrollHint) scrollHint.classList.toggle('is-hidden', y > 120);
+
+    const dy = y - lastScrollY;
+    const dir = dy > 0 ? 'down' : 'up';
+    if (dir !== scrollDir) { scrollDir = dir; scrollAccum = 0; }
+    scrollAccum += Math.abs(dy);
+    lastScrollY = y;
+
+    // モバイル幅でだけ自動退避（PCはそのまま）
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+      // モーダル開いている時、ヒーロー域、メニュー展開中はそのまま
+      const modalOpen = document.querySelector('.modal-bg.is-open');
+      const navOpen = document.getElementById('navMobile')?.classList.contains('open');
+      if (!modalOpen && !navOpen) {
+        if (dir === 'down' && y > 160 && scrollAccum > NAV_HIDE_THRESHOLD) {
+          navbar.classList.add('is-stowed');
+        } else if (dir === 'up' && scrollAccum > NAV_SHOW_THRESHOLD) {
+          navbar.classList.remove('is-stowed');
+        }
+      } else {
+        navbar.classList.remove('is-stowed');
+      }
+    } else {
+      navbar.classList.remove('is-stowed');
+    }
+
     updateBottomNavActive();
     refreshCarrotGuideContext();
   }, { passive: true });

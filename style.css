@@ -1862,31 +1862,35 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 }
 
 /* ============================================================
-   ギャラリー：ページ番号・サムネ・閉じるヒントの強化（v20260510）
+   ギャラリー：ページ番号は下部コントロールパネルに統合（v20260510-2）
+   フローティングのページバッジは廃止（作品との重なりを回避）
    ============================================================ */
-.gallery-modal-pagenum {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(28,36,56,0.78);
-  color: #fff;
-  padding: 6px 16px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  z-index: 150;
-  border: 1px solid rgba(255,255,255,0.14);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  pointer-events: none;
-  animation: gallery-pagenum-in 0.4s ease;
+.gallery-modal-pagenum{ display:none !important; }
+
+.gallery-panel-pagenum{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:54px;
+  height:30px;
+  padding:0 12px;
+  margin:0 4px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+  font-size:0.78rem;
+  font-weight:700;
+  letter-spacing:0.04em;
+  font-variant-numeric:tabular-nums;
+  user-select:none;
 }
-@keyframes gallery-pagenum-in{
-  from{opacity:0;transform:translate(-50%,-6px);}
-  to{opacity:1;transform:translate(-50%,0);}
+.gallery-panel-pagenum[hidden]{display:none !important;}
+.gallery-modal-box.is-dictionary-mode .gallery-panel-pagenum{
+  background:rgba(91,141,238,0.14);
+  color:#3759a8;
+}
+@media (max-width:768px){
+  .gallery-panel-pagenum{min-width:auto;padding:0 8px;font-size:0.74rem;height:28px;}
 }
 .gallery-dict-thumb{
   position:relative;
@@ -2217,3 +2221,99 @@ button{ -webkit-tap-highlight-color: transparent; }
 /* 投稿ボタン群のクリック感を少し優しく */
 .btn-add-spot:active{ transform: translateY(-1px) scale(0.985); }
 .weather-settings-btn:active{ transform: scale(0.94); }
+
+/* ============================================================
+   見やすさ・快適さの底上げ（v20260510-3）
+   ============================================================ */
+
+/* iOSで入力時に自動ズームされないよう、フォームの最低フォントサイズを16pxへ */
+@media (max-width: 768px){
+  .form-input, .form-textarea, select.form-input, .gallery-lock-input{
+    font-size: 16px;
+    padding: 13px 16px;
+  }
+  .form-textarea{ min-height: 110px; }
+  .form-label{ font-size: 0.92rem; }
+}
+
+/* タブはスマホで指でつまみやすく */
+@media (max-width: 768px){
+  .tabs{ gap: 6px; padding: 0 4px; margin-bottom: 28px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
+  .tabs::-webkit-scrollbar{ display: none; }
+  .tabs{ scrollbar-width: none; }
+  .tab{ flex: 0 0 auto; padding: 10px 16px; min-height: 40px; scroll-snap-align: start; }
+}
+
+/* セクション余白をスマホで詰めて、コンテンツに集中しやすく */
+@media (max-width: 768px){
+  section{ padding: 56px 0; scroll-margin-top: 76px; }
+  .container{ padding: 0 16px; }
+  .sec-header{ margin-bottom: 18px; }
+  .daily-prompt-card{ padding: 16px; }
+}
+
+/* カードの押下フィードバック（タップ感） */
+.spot-card:active, .visited-card:active, .chat-card:active{
+  transform: translateY(-1px) scale(0.997);
+  transition: transform .12s ease;
+}
+
+/* ボタンのdisabled時を見て分かるように */
+button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: saturate(0.7);
+  box-shadow: none;
+  transform: none !important;
+}
+
+/* 統計ナンバーのローディング感を少しやさしく */
+.stat-num.is-loading{
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  animation: stat-pulse 1.6s ease-in-out infinite;
+}
+@keyframes stat-pulse{ 0%,100%{ opacity: 0.55 } 50%{ opacity: 1 } }
+@media (prefers-reduced-motion: reduce){
+  .stat-num.is-loading{ animation: none; opacity: 0.7; }
+}
+
+/* リンクの下線をホバー時に優しく出す（ナビ以外） */
+.gallery-modal-caption a, .footer-credit a, .guide-note a, .nav-mobile-link:not(:hover){ text-decoration: none; }
+
+/* 「もっと見る」をスマホで押しやすく */
+@media (max-width: 768px){
+  .btn-section-more{ width: 100%; max-width: 320px; padding: 14px 18px; }
+}
+
+/* 掲示板のチャット入力欄を読みやすく */
+@media (max-width: 768px){
+  #cMsg, #fComment, #asReason, #psText{ line-height: 1.7; }
+}
+
+/* スマホでヒーローのスクロールヒントは早めに退避 */
+@media (max-width: 768px){
+  .scroll-hint{ font-size: 0.72rem; }
+}
+
+/* スマホで天気バーの可読性 */
+@media (max-width: 768px){
+  .weather-bar-label{ font-size: 0.78rem; }
+  .weather-items{ font-size: 0.82rem; }
+}
+
+/* ============================================================
+   スマホ：上部ナビの自動退避（下スクロールで隠す）
+   ============================================================ */
+#navbar{ transition: transform 0.32s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s; }
+@media (max-width: 768px){
+  #navbar.is-stowed{ transform: translateY(-100%); }
+  /* 退避中は影も消して気配をなくす */
+  #navbar.is-stowed.scrolled{ box-shadow: none; }
+}
+/* 復帰時に視認性を少しだけ強める */
+#navbar.scrolled{ background: rgba(255,254,250,0.97); }
+@media (prefers-reduced-motion: reduce){
+  #navbar{ transition: none; }
+}
