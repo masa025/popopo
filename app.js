@@ -1524,15 +1524,67 @@ function getSuggestedSpotItems() {
     resources: getSuggestionResources(s),
     memo: s.reason,
     suggested: true,
-    suggestedBy: s.nickname || '匿名リスナー'
+    suggestedBy: s.nickname || '匿名リスナー',
+    timestamp: s.timestamp || 0
   }));
 }
 
+// 数値を返す決定論的なハッシュ（FNV-1a）
+function numericHash(value = '') {
+  const str = String(value);
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h;
+}
+
+// シード付き擬似乱数（Mulberry32）。同じシードなら必ず同じ列を返す。
+function makeSeededRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// 日替わりシード付きの決定論シャッフル（Fisher-Yates）：
+// その日のうちは順序が安定し、翌日になると並びが完全に一新される。
+// 全アイテムが平等に上位に来る機会を持つ。
+function dailyShuffle(items, keyFn) {
+  if (!Array.isArray(items) || items.length <= 1) return [...items];
+  const dayIdx = getDayIndex();
+  const seed = numericHash(`popopo-rotation-${dayIdx}`);
+  const rng = makeSeededRng(seed);
+  // 入力順への依存を排除するため、まずキーで安定ソート
+  const arr = [...items].sort((a, b) =>
+    String(keyFn(a) || '').localeCompare(String(keyFn(b) || ''))
+  );
+  // シード付きFisher-Yatesで一様シャッフル
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
+const NEW_SUGGESTION_TOP_MS = 3 * 86400000;  // スポット提案の先頭固定枠：3日
+const NEW_REVIEW_TOP_MS = 7 * 86400000;      // 感想の先頭固定枠：7日
+
 function getAllSpotItemsForDisplay() {
-  return [
-    ...getSuggestedSpotItems(),
-    ...SPOTS
-  ];
+  const suggested = getSuggestedSpotItems();
+  const now = Date.now();
+  // 直近の提案は先頭固定（投稿者が消えたと感じないため）
+  const fresh = suggested.filter(s => s.timestamp && (now - s.timestamp) < NEW_SUGGESTION_TOP_MS);
+  const olderSuggested = suggested.filter(s => !fresh.includes(s));
+  // 残り全部（古い提案 ＋ 公式 SPOTS）を日替わり順に並び替え
+  const restPool = [...olderSuggested, ...SPOTS];
+  const shuffledRest = dailyShuffle(restPool, item => item.id || item.name || '');
+  return [...fresh, ...shuffledRest];
 }
 
 function highlightDiscoveryElement(el) {
@@ -2448,16 +2500,33 @@ function renderSpotReviewCards(reviews) {
   }).join('');
 }
 
-function renderVisited(posts = []) {
-  const grid = document.getElementById('visitedGrid');
-  const sortedPosts = sortNewest(dedupePosts(posts));
-  const listenerReviewKeys = new Set(sortedPosts.map(getReviewDisplayFingerprint));
-  
-  const officialCards = VISITED
-    .filter(v => !listenerReviewKeys.has(getReviewDisplayFingerprint(v)))
-    .map(v => {
-      const reviewSeenId = getReviewReactionId(v, 'official');
-      return `
+function renderListenerReviewCard(p) {
+  const dateStr = formatVisitDate(p.visitDate);
+  const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
+  const nickname = p.nickname || '匿名リスナー';
+  const media = getPostMedia(p);
+  const previewImage = getResourcePreviewImage(media);
+  const reviewSeenId = getReviewReactionId(p, 'listener');
+  return `
+    <div class="visited-card">
+      <div class="visited-card-body">
+        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(p.cat)}</span>
+        <div class="visited-name">${escHtml(p.spotName)}</div>
+        <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr} &nbsp; 👤 ${escHtml(nickname)}</div>
+        <div class="visited-rating">${renderStars(p.rating || 0)}</div>
+        ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
+        <div class="visited-review">"${escHtml(p.comment)}"</div>
+        ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
+        <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
+        ${renderPostActions(p, 'post')}
+      </div>
+    </div>
+  `;
+}
+
+function renderOfficialReviewCard(v) {
+  const reviewSeenId = getReviewReactionId(v, 'official');
+  return `
     <div class="visited-card">
       <div class="visited-card-body">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(v.cat)}</span>
@@ -2478,33 +2547,30 @@ function renderVisited(posts = []) {
       </div>
     </div>
   `;
-    });
+}
 
-  const listenerCards = sortedPosts.map(p => {
-    const dateStr = formatVisitDate(p.visitDate);
-    const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
-    const nickname = p.nickname || '匿名リスナー';
-    const media = getPostMedia(p);
-    const previewImage = getResourcePreviewImage(media);
-    const reviewSeenId = getReviewReactionId(p, 'listener');
-    return `
-    <div class="visited-card">
-      <div class="visited-card-body">
-        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(p.cat)}</span>
-        <div class="visited-name">${escHtml(p.spotName)}</div>
-        <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr} &nbsp; 👤 ${escHtml(nickname)}</div>
-        <div class="visited-rating">${renderStars(p.rating || 0)}</div>
-        ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
-        <div class="visited-review">"${escHtml(p.comment)}"</div>
-        ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
-        <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
-        ${renderPostActions(p, 'post')}
-      </div>
-    </div>
-    `;
-  });
+function renderVisited(posts = []) {
+  const grid = document.getElementById('visitedGrid');
+  const sortedPosts = sortNewest(dedupePosts(posts));
+  const listenerReviewKeys = new Set(sortedPosts.map(getReviewDisplayFingerprint));
+  const now = Date.now();
 
-  const allCards = [...listenerCards, ...officialCards];
+  // 直近7日のリスナー感想は先頭固定（時系列順）
+  const freshListener = sortedPosts.filter(p => p.timestamp && (now - p.timestamp) < NEW_REVIEW_TOP_MS);
+  const olderListener = sortedPosts.filter(p => !freshListener.includes(p));
+
+  // リスナー感想と重複しない公式感想だけ「古いプール」に入れて、日替わりシャッフル
+  const officialPool = VISITED.filter(v => !listenerReviewKeys.has(getReviewDisplayFingerprint(v)));
+  const olderListenerEntries = olderListener.map(p => ({ kind: 'listener', data: p, key: p.id || p.clientId || `${p.spotName}|${p.timestamp}` }));
+  const officialEntries = officialPool.map(v => ({ kind: 'official', data: v, key: `official|${v.name}|${v.area}` }));
+  const olderPool = [...olderListenerEntries, ...officialEntries];
+  const shuffledOlder = dailyShuffle(olderPool, entry => entry.key);
+
+  const allCards = [
+    ...freshListener.map(renderListenerReviewCard),
+    ...shuffledOlder.map(entry => entry.kind === 'listener' ? renderListenerReviewCard(entry.data) : renderOfficialReviewCard(entry.data))
+  ];
+
   grid.innerHTML = allCards.slice(0, visibleReviewCount).join('');
   setStatText('statVisited', allCards.length);
   updateMoreButton('visitedMoreBtn', allCards.length, Math.min(visibleReviewCount, allCards.length), INITIAL_REVIEW_COUNT);
