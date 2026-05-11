@@ -1430,73 +1430,67 @@ async function votePromptSuggestion(voteId) {
 
 let _promptVotesUnsubscribe = null;
 
-function listenPromptSuggestions() {
-  if (!db) return;
-
-  db.collection('prompt_suggestions').orderBy('timestamp', 'desc').onSnapshot(snap => {
-    // ① リモートデータを取得
-    latestRemotePromptSuggestions = snap.docs.map(d => {
-      const data = d.data() || {};
+// Firestoreから取得したスナップショットをパースして共通処理を行う
+function _processPromptSnap(docs) {
+  // ① リモートデータをパース（orderByなしなのでJS側でソート）
+  latestRemotePromptSuggestions = docs
+    .map(d => {
+      const data = d.data ? d.data() : d;
       return {
-        id: d.id,
+        id: d.id || data.clientId,
         clientId: data.clientId || d.id,
         text: data.text || '',
         nickname: data.nickname || '匿名リスナー',
-        timestamp: data.timestamp?.toMillis?.() || data.timestamp || Date.now(),
+        timestamp: data.timestamp?.toMillis?.() || (typeof data.timestamp === 'number' ? data.timestamp : Date.now()),
       };
-    });
+    })
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // JS側で降順ソート
 
-    // ② localPromptSuggestions をリモートと同期（chatsと同じパターン）
-    //    → これで別端末でも localPromptSuggestions にデータが入るようになる
-    const remoteClientIds = new Set(
-      latestRemotePromptSuggestions.map(r => r.clientId).filter(Boolean)
-    );
-    const now = Date.now();
-    const threshold = 30000; // 30秒以内の新規投稿は維持
-    localPromptSuggestions = localPromptSuggestions.filter(l =>
-      remoteClientIds.has(l.clientId) ||
-      (now - (l.timestamp || 0)) < threshold
-    );
-    localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
+  // ② localPromptSuggestions をリモートと同期
+  const remoteClientIds = new Set(
+    latestRemotePromptSuggestions.map(r => r.clientId).filter(Boolean)
+  );
+  const now = Date.now();
+  localPromptSuggestions = localPromptSuggestions.filter(l =>
+    remoteClientIds.has(l.clientId || l.id) ||
+    (now - (l.timestamp || 0)) < 30000
+  );
+  localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
 
-    // ③ 既存の投票リスナーを解除して再購読（お題が増減したとき用）
-    if (_promptVotesUnsubscribe) {
-      _promptVotesUnsubscribe();
-      _promptVotesUnsubscribe = null;
-    }
+  // ③ 投票数は listenLikes() が全件購読しているので、
+  //    既存の重複リスナーがあれば解除する
+  if (_promptVotesUnsubscribe) {
+    _promptVotesUnsubscribe();
+    _promptVotesUnsubscribe = null;
+  }
 
-    const voteIds = latestRemotePromptSuggestions
-      .map(item => getPromptVoteId(item))
-      .filter(Boolean);
-
-    if (voteIds.length === 0) {
-      renderDailyPrompt();
-      return;
-    }
-
-    // ④ likes コレクションの対象ドキュメントをリアルタイム購読（最大30件/chunk）
-    const chunks = [];
-    for (let i = 0; i < voteIds.length; i += 30) {
-      chunks.push(voteIds.slice(i, i + 30));
-    }
-
-    let settledCount = 0;
-    const unsubs = chunks.map(chunk =>
-      db.collection('likes')
-        .where(firebase.firestore.FieldPath.documentId(), 'in', chunk)
-        .onSnapshot(likesSnap => {
-          likesSnap.docs.forEach(doc => {
-            globalLikes[doc.id] = doc.data().count || 0;
-          });
-          settledCount++;
-          renderDailyPrompt();
-        }, e => console.warn('Prompt votes listener failed:', e))
-    );
-
-    _promptVotesUnsubscribe = () => unsubs.forEach(u => u());
-
-  }, e => console.warn('Prompt suggestion listener failed:', e));
+  renderDailyPrompt();
 }
+
+function listenPromptSuggestions() {
+  if (!db) return;
+
+  // orderBy なしで購読（Firestoreインデックス不要・どの環境でも動く）
+  const unsubscribe = db.collection('prompt_suggestions')
+    .limit(50)
+    .onSnapshot(
+      snap => _processPromptSnap(snap.docs),
+      async err => {
+        // onSnapshot が失敗した場合は getDocs() でフォールバック取得
+        console.warn('Prompt suggestion listener failed, trying getDocs fallback:', err);
+        try {
+          const snap = await db.collection('prompt_suggestions').limit(50).get();
+          _processPromptSnap(snap.docs);
+        } catch (e2) {
+          console.warn('Prompt suggestion getDocs fallback also failed:', e2);
+        }
+      }
+    );
+
+  // 購読解除関数を返す（将来的なクリーンアップ用）
+  return unsubscribe;
+}
+
 
 function getDiscoveryItems() {
   const suggestions = Array.isArray(localSuggestions) ? localSuggestions : [];
@@ -4368,14 +4362,26 @@ function bindEvents() {
   const dailyPromptToggleBtn = document.getElementById('dailyPromptToggleBtn');
   const dailyPromptCandidates = document.getElementById('dailyPromptCandidates');
   if (dailyPromptToggleBtn && dailyPromptCandidates) {
-    dailyPromptToggleBtn.addEventListener('click', () => {
+    dailyPromptToggleBtn.addEventListener('click', async () => {
       const isOpen = dailyPromptToggleBtn.getAttribute('aria-expanded') === 'true';
       const next = !isOpen;
       dailyPromptToggleBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
       dailyPromptCandidates.hidden = !next;
       const label = dailyPromptToggleBtn.querySelector('.daily-prompt-toggle-text');
       if (label) label.textContent = next ? '候補を閉じる' : '明日のお題を決めよう';
-      if (next) renderDailyPromptCandidates();
+      if (next) {
+        // まずキャッシュで即時レンダリング
+        renderDailyPromptCandidates();
+        // さらにFirestoreから最新データを再フェッチして再描画（端末間ラグ対策）
+        if (db) {
+          try {
+            const snap = await db.collection('prompt_suggestions').limit(50).get();
+            _processPromptSnap(snap.docs);
+          } catch (e) {
+            console.warn('Prompt refresh failed:', e);
+          }
+        }
+      }
     });
   }
   const dailyPromptSuggestBtn = document.getElementById('dailyPromptSuggestBtn');
