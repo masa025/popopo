@@ -1174,17 +1174,26 @@ function isPromptVoted(suggestion) {
 }
 
 function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
+  // リモートを正として扱い、まだFirebaseに反映されていないローカル新規分のみ補完する
   const byKey = new Map();
-  localPromptSuggestions.forEach(item => {
+
+  // ① まずリモートデータを入れる（正データ）
+  (remoteList || []).forEach(item => {
     const key = item.clientId || item.id;
     if (key) byKey.set(key, item);
   });
-  (remoteList || []).forEach(item => {
+
+  // ② ローカルのうち、リモートにまだ届いていない新規投稿のみ補完（投稿直後のラグ対策）
+  const now = Date.now();
+  const threshold = 30000; // 30秒以内のローカル投稿のみ
+  localPromptSuggestions.forEach(item => {
     const key = item.clientId || item.id;
     if (!key) return;
-    const existing = byKey.get(key) || {};
-    byKey.set(key, { ...existing, ...item });
+    if (!byKey.has(key) && (now - (item.timestamp || 0)) < threshold) {
+      byKey.set(key, item);
+    }
   });
+
   const cutoff = Date.now() - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
   return Array.from(byKey.values())
     .filter(item => (item.timestamp || 0) >= cutoff)
@@ -1344,6 +1353,7 @@ function listenPromptSuggestions() {
   if (!db) return;
 
   db.collection('prompt_suggestions').orderBy('timestamp', 'desc').onSnapshot(snap => {
+    // ① リモートデータを取得
     latestRemotePromptSuggestions = snap.docs.map(d => {
       const data = d.data() || {};
       return {
@@ -1355,7 +1365,20 @@ function listenPromptSuggestions() {
       };
     });
 
-    // 既存の投票リスナーを解除して再購読（お題が増減したとき用）
+    // ② localPromptSuggestions をリモートと同期（chatsと同じパターン）
+    //    → これで別端末でも localPromptSuggestions にデータが入るようになる
+    const remoteClientIds = new Set(
+      latestRemotePromptSuggestions.map(r => r.clientId).filter(Boolean)
+    );
+    const now = Date.now();
+    const threshold = 30000; // 30秒以内の新規投稿は維持
+    localPromptSuggestions = localPromptSuggestions.filter(l =>
+      remoteClientIds.has(l.clientId) ||
+      (now - (l.timestamp || 0)) < threshold
+    );
+    localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
+
+    // ③ 既存の投票リスナーを解除して再購読（お題が増減したとき用）
     if (_promptVotesUnsubscribe) {
       _promptVotesUnsubscribe();
       _promptVotesUnsubscribe = null;
@@ -1370,28 +1393,24 @@ function listenPromptSuggestions() {
       return;
     }
 
-    // likes コレクションから対象の投票ドキュメントをリアルタイム購読
-    // Firestoreの'in'クエリは最大30件まで対応
+    // ④ likes コレクションの対象ドキュメントをリアルタイム購読（最大30件/chunk）
     const chunks = [];
     for (let i = 0; i < voteIds.length; i += 30) {
       chunks.push(voteIds.slice(i, i + 30));
     }
 
     let settledCount = 0;
-    const unsubs = chunks.map(chunk => {
-      return db.collection('likes')
+    const unsubs = chunks.map(chunk =>
+      db.collection('likes')
         .where(firebase.firestore.FieldPath.documentId(), 'in', chunk)
         .onSnapshot(likesSnap => {
           likesSnap.docs.forEach(doc => {
             globalLikes[doc.id] = doc.data().count || 0;
           });
           settledCount++;
-          // 全チャンクの初回応答が来たら描画（それ以降は即時描画）
-          if (settledCount >= chunks.length || settledCount > 0) {
-            renderDailyPrompt();
-          }
-        }, e => console.warn('Prompt votes listener failed:', e));
-    });
+          renderDailyPrompt();
+        }, e => console.warn('Prompt votes listener failed:', e))
+    );
 
     _promptVotesUnsubscribe = () => unsubs.forEach(u => u());
 
