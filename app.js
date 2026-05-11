@@ -1198,11 +1198,11 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
 
 function getDailyPromptInfo() {
   const merged = mergePromptSuggestions();
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  // 今日のお題：今日より前に提案されていて、得票が一番多い候補
-  const eligible = merged.filter(item => (item.timestamp || 0) < todayStart.getTime() && getPromptVoteCount(item) > 0);
-  const top = eligible[0];
+  if (!merged.length) return { text: getFallbackDailyPrompt(), source: 'fallback' };
+
+  // 得票が1票以上あるものから最多得票を今日のお題にする（当日投稿でも可）
+  const withVotes = merged.filter(item => getPromptVoteCount(item) > 0);
+  const top = withVotes[0]; // mergePromptSuggestions が得票降順でソート済み
   if (top) {
     return {
       text: top.text,
@@ -1212,7 +1212,16 @@ function getDailyPromptInfo() {
       id: top.clientId || top.id,
     };
   }
-  return { text: getFallbackDailyPrompt(), source: 'fallback' };
+
+  // 得票ゼロでも最新のお題を表示する（投稿直後の別端末でも確認できるように）
+  const latest = merged[0];
+  return {
+    text: latest.text,
+    source: 'community',
+    nickname: latest.nickname || '匿名リスナー',
+    votes: 0,
+    id: latest.clientId || latest.id,
+  };
 }
 
 function renderDailyPrompt() {
@@ -1331,7 +1340,7 @@ async function votePromptSuggestion(voteId) {
 
 function listenPromptSuggestions() {
   if (!db) return;
-  db.collection('prompt_suggestions').orderBy('timestamp', 'desc').onSnapshot(snap => {
+  db.collection('prompt_suggestions').orderBy('timestamp', 'desc').onSnapshot(async snap => {
     latestRemotePromptSuggestions = snap.docs.map(d => {
       const data = d.data() || {};
       return {
@@ -1342,6 +1351,27 @@ function listenPromptSuggestions() {
         timestamp: data.timestamp?.toMillis?.() || data.timestamp || Date.now(),
       };
     });
+
+    // 投票数をFirestoreから取得して globalLikes に反映
+    try {
+      const voteIds = latestRemotePromptSuggestions.map(item => getPromptVoteId(item)).filter(Boolean);
+      if (voteIds.length > 0) {
+        // Firestoreの likes コレクションから対応ドキュメントを取得
+        // すでに listenLikes() が全件購読しているので globalLikes を補完するだけでよい
+        // ただし初回ロード時に listenLikes より先に発火する場合があるため個別に取得する
+        const fetchPromises = voteIds.map(voteId =>
+          db.collection('likes').doc(voteId).get().then(doc => {
+            if (doc.exists) {
+              globalLikes[voteId] = doc.data().count || 0;
+            }
+          }).catch(() => {})
+        );
+        await Promise.all(fetchPromises);
+      }
+    } catch (e) {
+      console.warn('Prompt votes fetch failed:', e);
+    }
+
     renderDailyPrompt();
   }, e => console.warn('Prompt suggestion listener failed:', e));
 }
