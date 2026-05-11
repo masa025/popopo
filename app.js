@@ -52,7 +52,16 @@ const GALLERY_ITEMS = [
   { image: "assets/listener-gallery/listener-art-28.jpg", title: "キャラクターのタンブラー", caption: "手描きの愛らしいキャラクターがプリントされた、日常使いしたくなるタンブラー作品。", alt: "キャラクターが描かれた白いタンブラー", type: "art" },
   { image: "assets/listener-gallery/listener-art-29.jpg", title: "手描きイラストのエプロン", caption: "「My Little Artist's Kitchen」の文字と共に、手描きの愛らしいキャラクターが刺繍された素敵なエプロンです。", alt: "キャラクターのイラストが刺繍されたエプロン", type: "art" },
   { image: "assets/listener-gallery/listener-art-30.jpg", title: "ご機嫌なキャラクター", caption: "にっこり笑って、なんだか嬉しそうに立っている愛らしいキャラクタースケッチ。", alt: "笑顔で立っているキャラクターのイラスト", type: "art" },
-  { image: "assets/listener-gallery/listener-art-31.jpg", title: "まったりキャラクター", caption: "絶妙な表情でこちらを見つめる、独特のゆるさが魅力のキャラクタースケッチ。", alt: "まったりした表情のキャラクターのイラスト", type: "art" }
+  { image: "assets/listener-gallery/listener-art-31.jpg", title: "まったりキャラクター", caption: "絶妙な表情でこちらを見つめる、独特のゆるさが魅力のキャラクタースケッチ。", alt: "まったりした表情のキャラクターのイラスト", type: "art" },
+  { 
+    image: "assets/listener-gallery/listener-art-32.jpg", 
+    title: "POPOPO用語辞典 3", 
+    caption: "【ホットマラサダ】の項目が追加された辞典ページ。「辛さは？」という問いかけを「マラサダ」と聞き間違えたエピソードから生まれた言葉です。", 
+    alt: "POPOPO用語辞典の『ホットマラサダ』のページ", 
+    type: "dict_page", 
+    lockAnswer: "TimTam", 
+    lockHint: "ある配信者が牛乳の中に落としたお菓子は何でしょうか？" 
+  }
 ];
 
 // ============================================================
