@@ -1406,6 +1406,8 @@ async function submitPromptSuggestion({ text, nickname }) {
       }, { merge: true });
     } catch (e) {
       console.warn('Prompt suggestion sync failed:', e);
+      // セキュリティルールや通信エラーの可能性を通知
+      showToast('Firebaseへの保存に失敗しました。セキュリティルール設定を確認してください。');
     }
   }
   return item;
@@ -1470,14 +1472,16 @@ function _processPromptSnap(docs) {
 function listenPromptSuggestions() {
   if (!db) return;
 
-  // orderBy なしで購読（Firestoreインデックス不要・どの環境でも動く）
   const unsubscribe = db.collection('prompt_suggestions')
     .limit(50)
     .onSnapshot(
       snap => _processPromptSnap(snap.docs),
       async err => {
-        // onSnapshot が失敗した場合は getDocs() でフォールバック取得
-        console.warn('Prompt suggestion listener failed, trying getDocs fallback:', err);
+        console.warn('Prompt suggestion listener failed:', err);
+        // エラー詳細をトーストで出す（デバッグ用）
+        if (err.code === 'permission-denied') {
+          showToast('Firebaseの権限エラーです。Security Rulesの設定を確認してください。');
+        }
         try {
           const snap = await db.collection('prompt_suggestions').limit(50).get();
           _processPromptSnap(snap.docs);
@@ -1487,7 +1491,6 @@ function listenPromptSuggestions() {
       }
     );
 
-  // 購読解除関数を返す（将来的なクリーンアップ用）
   return unsubscribe;
 }
 
