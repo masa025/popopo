@@ -1260,6 +1260,74 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+// 自分が投稿したお題かどうか判定（localPromptSuggestionsにclientIdが存在するか）
+function isMyPrompt(item) {
+  if (!item) return false;
+  const key = item.clientId || item.id;
+  return localPromptSuggestions.some(l => (l.clientId || l.id) === key);
+}
+
+// お題がFirebaseに反映済みかどうか判定（latestRemoteに存在するか）
+function isPromptSynced(item) {
+  if (!item) return false;
+  const key = item.clientId || item.id;
+  return latestRemotePromptSuggestions.some(r => (r.clientId || r.id) === key);
+}
+
+// ローカルのゴースト投稿を削除する
+function deleteLocalPromptSuggestion(clientId) {
+  localPromptSuggestions = localPromptSuggestions.filter(l => (l.clientId || l.id) !== clientId);
+  localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
+  renderDailyPrompt();
+  showToast('削除しました。');
+}
+
+// お題を再送信する（Firebase未反映の場合）
+async function retrySyncPrompt(clientId) {
+  const item = localPromptSuggestions.find(l => (l.clientId || l.id) === clientId);
+  if (!item || !db) { showToast('再送信できませんでした。'); return; }
+  try {
+    await db.collection('prompt_suggestions').add({
+      clientId: item.clientId || item.id,
+      text: item.text,
+      nickname: item.nickname,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast('再送信しました！✓');
+  } catch (e) {
+    showToast('再送信に失敗しました。接続を確認してください。');
+    console.warn('Retry sync failed:', e);
+  }
+}
+
+// お題を編集する（Firebase反映済みの場合はFirestoreも更新）
+async function editPromptSuggestion(clientId, newText) {
+  const cleanText = String(newText || '').trim();
+  if (!cleanText) return;
+  // ローカルを更新
+  const localItem = localPromptSuggestions.find(l => (l.clientId || l.id) === clientId);
+  if (localItem) {
+    localItem.text = cleanText;
+    localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
+  }
+  // Firestoreも更新（そのドキュメントを探す）
+  if (db) {
+    try {
+      const snap = await db.collection('prompt_suggestions').where('clientId', '==', clientId).limit(1).get();
+      if (!snap.empty) {
+        await snap.docs[0].ref.update({ text: cleanText });
+        showToast('編集しました！✓');
+      } else {
+        showToast('ローカルのみ編集しました（未反映のため）。');
+      }
+    } catch (e) {
+      console.warn('Prompt edit failed:', e);
+      showToast('編集に失敗しました。');
+    }
+  }
+  renderDailyPrompt();
+}
+
 function renderDailyPromptCandidates() {
   const list = document.getElementById('dailyPromptList');
   const empty = document.getElementById('dailyPromptEmpty');
@@ -1279,15 +1347,28 @@ function renderDailyPromptCandidates() {
     const count = getPromptVoteCount(item);
     const isLeading = id === leadingId;
     const nick = item.nickname || '匿名リスナー';
+    const isMine = isMyPrompt(item);
+    const synced = isPromptSynced(item);
+    const syncBadge = isMine && !synced
+      ? `<span class="prompt-sync-badge">⚠ 未反映</span>`
+      : '';
+    const myActions = isMine ? `
+      <div class="prompt-my-actions">
+        ${!synced ? `<button type="button" class="prompt-action-btn prompt-retry-btn" data-prompt-retry-id="${escapeHtml(id)}" title="再送信">🔄 再送信</button>` : ''}
+        <button type="button" class="prompt-action-btn prompt-edit-btn" data-prompt-edit-id="${escapeHtml(id)}" data-prompt-text="${escapeHtml(item.text)}" title="編集">✏️ 編集</button>
+        ${!synced ? `<button type="button" class="prompt-action-btn prompt-delete-btn" data-prompt-delete-id="${escapeHtml(id)}" title="削除（未反映分のみ）">🗑 削除</button>` : ''}
+      </div>` : '';
     return `
-      <li class="daily-prompt-item${isLeading ? ' is-leading' : ''}" data-prompt-id="${escapeHtml(id)}">
+      <li class="daily-prompt-item${isLeading ? ' is-leading' : ''}${isMine ? ' is-mine' : ''}" data-prompt-id="${escapeHtml(id)}">
         <span class="daily-prompt-item-rank" aria-hidden="true">${idx + 1}</span>
         <div class="daily-prompt-item-body">
           <p class="daily-prompt-item-text">${escapeHtml(item.text)}</p>
           <div class="daily-prompt-item-foot">
             <span class="daily-prompt-item-nick">— ${escapeHtml(nick)}</span>
+            ${syncBadge}
             ${isLeading ? '<span class="daily-prompt-item-leading-tag">🌿 今日のお題に表示中</span>' : ''}
           </div>
+          ${myActions}
         </div>
         <button type="button" class="daily-prompt-vote-btn${voted ? ' is-voted' : ''}" data-prompt-vote-id="${escapeHtml(id)}" aria-pressed="${voted ? 'true' : 'false'}" ${voted ? 'disabled' : ''} aria-label="このお題に共感する">
           <span class="daily-prompt-vote-icon" aria-hidden="true">${voted ? '♥' : '♡'}</span>
@@ -4302,18 +4383,49 @@ function bindEvents() {
   bindPromptSuggestModal();
   const promptList = document.getElementById('dailyPromptList');
   if (promptList) {
-    promptList.addEventListener('click', (e) => {
-      const btn = e.target.closest('.daily-prompt-vote-btn');
-      if (!btn) return;
-      const id = btn.dataset.promptVoteId;
-      if (!id) return;
-      // 楽観的にUIを更新
-      btn.classList.add('is-voted');
-      btn.setAttribute('aria-pressed', 'true');
-      btn.disabled = true;
-      const icon = btn.querySelector('.daily-prompt-vote-icon');
-      if (icon) icon.textContent = '♥';
-      votePromptSuggestion(id);
+    promptList.addEventListener('click', async (e) => {
+      // 投票
+      const voteBtn = e.target.closest('.daily-prompt-vote-btn');
+      if (voteBtn) {
+        const id = voteBtn.dataset.promptVoteId;
+        if (!id) return;
+        voteBtn.classList.add('is-voted');
+        voteBtn.setAttribute('aria-pressed', 'true');
+        voteBtn.disabled = true;
+        const icon = voteBtn.querySelector('.daily-prompt-vote-icon');
+        if (icon) icon.textContent = '♥';
+        votePromptSuggestion(id);
+        return;
+      }
+      // 編集
+      const editBtn = e.target.closest('.prompt-edit-btn');
+      if (editBtn) {
+        const id = editBtn.dataset.promptEditId;
+        const currentText = editBtn.dataset.promptText || '';
+        const newText = window.prompt('お題を編集してください（60文字以内）', currentText);
+        if (newText === null) return; // キャンセル
+        if (!newText.trim()) { showToast('文字を入力してください。'); return; }
+        if (newText.length > 60) { showToast('60文字以内で入力してください。'); return; }
+        await editPromptSuggestion(id, newText);
+        return;
+      }
+      // 削除（ゴースト削除）
+      const deleteBtn = e.target.closest('.prompt-delete-btn');
+      if (deleteBtn) {
+        const id = deleteBtn.dataset.promptDeleteId;
+        if (!window.confirm('このお題をローカルから削除しますか？（Webには反映されていない分のみ削除されます）')) return;
+        deleteLocalPromptSuggestion(id);
+        return;
+      }
+      // 再送信
+      const retryBtn = e.target.closest('.prompt-retry-btn');
+      if (retryBtn) {
+        const id = retryBtn.dataset.promptRetryId;
+        retryBtn.disabled = true;
+        retryBtn.textContent = '送信中...';
+        await retrySyncPrompt(id);
+        return;
+      }
     });
   }
   const wantListPostBtn = document.getElementById('wantListPostBtn');

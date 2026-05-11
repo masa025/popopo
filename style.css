@@ -2156,6 +2156,51 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   text-align:center;
   line-height:1.7;
 }
+/* 自分の投稿 */
+.daily-prompt-item.is-mine{
+  border-left:3px solid #6c63ff;
+  background:rgba(108,99,255,0.04);
+}
+/* 未反映バッジ */
+.prompt-sync-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:rgba(255,140,0,0.14);
+  color:#b5631a;
+  font-size:0.68rem;
+  font-weight:700;
+  letter-spacing:0.02em;
+}
+/* 自分のアクションボタン群 */
+.prompt-my-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+.prompt-action-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:0.74rem;
+  font-weight:600;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.8);
+  color:var(--text-muted);
+  cursor:pointer;
+  transition:background .18s,transform .18s;
+}
+.prompt-action-btn:hover{background:#f0eeff;color:#6c63ff;transform:translateY(-1px);}
+.prompt-edit-btn{color:#5a5adc;}
+.prompt-delete-btn{color:#c0392b;}
+.prompt-retry-btn{color:#27ae60;}
+.prompt-action-btn[disabled]{opacity:0.5;cursor:not-allowed;}
+
 @media (max-width:768px){
   .daily-prompt-actions{flex-direction:row;flex-wrap:wrap;align-items:stretch;}
   .daily-prompt-actions .btn-outline,
