@@ -1338,9 +1338,12 @@ async function votePromptSuggestion(voteId) {
   }
 }
 
+let _promptVotesUnsubscribe = null;
+
 function listenPromptSuggestions() {
   if (!db) return;
-  db.collection('prompt_suggestions').orderBy('timestamp', 'desc').onSnapshot(async snap => {
+
+  db.collection('prompt_suggestions').orderBy('timestamp', 'desc').onSnapshot(snap => {
     latestRemotePromptSuggestions = snap.docs.map(d => {
       const data = d.data() || {};
       return {
@@ -1352,27 +1355,46 @@ function listenPromptSuggestions() {
       };
     });
 
-    // 投票数をFirestoreから取得して globalLikes に反映
-    try {
-      const voteIds = latestRemotePromptSuggestions.map(item => getPromptVoteId(item)).filter(Boolean);
-      if (voteIds.length > 0) {
-        // Firestoreの likes コレクションから対応ドキュメントを取得
-        // すでに listenLikes() が全件購読しているので globalLikes を補完するだけでよい
-        // ただし初回ロード時に listenLikes より先に発火する場合があるため個別に取得する
-        const fetchPromises = voteIds.map(voteId =>
-          db.collection('likes').doc(voteId).get().then(doc => {
-            if (doc.exists) {
-              globalLikes[voteId] = doc.data().count || 0;
-            }
-          }).catch(() => {})
-        );
-        await Promise.all(fetchPromises);
-      }
-    } catch (e) {
-      console.warn('Prompt votes fetch failed:', e);
+    // 既存の投票リスナーを解除して再購読（お題が増減したとき用）
+    if (_promptVotesUnsubscribe) {
+      _promptVotesUnsubscribe();
+      _promptVotesUnsubscribe = null;
     }
 
-    renderDailyPrompt();
+    const voteIds = latestRemotePromptSuggestions
+      .map(item => getPromptVoteId(item))
+      .filter(Boolean);
+
+    if (voteIds.length === 0) {
+      renderDailyPrompt();
+      return;
+    }
+
+    // likes コレクションから対象の投票ドキュメントをリアルタイム購読
+    // Firestoreの'in'クエリは最大30件まで対応
+    const chunks = [];
+    for (let i = 0; i < voteIds.length; i += 30) {
+      chunks.push(voteIds.slice(i, i + 30));
+    }
+
+    let settledCount = 0;
+    const unsubs = chunks.map(chunk => {
+      return db.collection('likes')
+        .where(firebase.firestore.FieldPath.documentId(), 'in', chunk)
+        .onSnapshot(likesSnap => {
+          likesSnap.docs.forEach(doc => {
+            globalLikes[doc.id] = doc.data().count || 0;
+          });
+          settledCount++;
+          // 全チャンクの初回応答が来たら描画（それ以降は即時描画）
+          if (settledCount >= chunks.length || settledCount > 0) {
+            renderDailyPrompt();
+          }
+        }, e => console.warn('Prompt votes listener failed:', e));
+    });
+
+    _promptVotesUnsubscribe = () => unsubs.forEach(u => u());
+
   }, e => console.warn('Prompt suggestion listener failed:', e));
 }
 
