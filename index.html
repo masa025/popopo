@@ -265,13 +265,17 @@
       </div>
       <div class="daily-prompt-card" id="dailyPromptCard">
         <div class="daily-prompt-main">
-          <div class="daily-prompt-body">
-            <p class="daily-prompt-kicker">今日のお題</p>
+          <div class="daily-prompt-body" id="dailyPromptBody">
+            <div class="daily-prompt-header-row">
+              <p class="daily-prompt-kicker">今日のお題</p>
+              <div class="daily-prompt-stamp" id="dailyPromptStamp" hidden></div>
+            </div>
             <p class="daily-prompt-text" id="dailyPromptText">最近気になっている場所はありますか？</p>
             <p class="daily-prompt-meta" id="dailyPromptMeta" hidden></p>
           </div>
           <div class="daily-prompt-actions">
             <button type="button" class="btn-outline" id="dailyPromptBtn">このお題でつぶやく</button>
+            <button type="button" class="btn-outline" id="dailyPromptGachaBtn" title="ランダムで別のお題をめくります">🎲 ガチャを回す</button>
             <button type="button" class="daily-prompt-toggle" id="dailyPromptToggleBtn" aria-expanded="false" aria-controls="dailyPromptCandidates">
               <span class="daily-prompt-toggle-text">みんなの提案を見る</span>
               <span class="daily-prompt-toggle-caret" aria-hidden="true">▾</span>
@@ -795,6 +799,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260513-1"></script>
+  <script src="app.js?v=20260513-2"></script>
 </body>
 </html>

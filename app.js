@@ -1207,11 +1207,27 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
+let activeGachaItem = null;
+
 function getDailyPromptInfo() {
   const merged = mergePromptSuggestions();
   if (!merged.length) return { text: getFallbackDailyPrompt(), source: 'fallback' };
 
-  // 投稿順（古い順）に日替わりで順番に表示するローテーション方式
+  // ガチャで選択中のアイテムがあればそれを優先表示
+  if (activeGachaItem && merged.some(m => (m.clientId || m.id) === (activeGachaItem.clientId || activeGachaItem.id))) {
+    const fresh = merged.find(m => (m.clientId || m.id) === (activeGachaItem.clientId || activeGachaItem.id));
+    return {
+      text: fresh.text,
+      source: 'community',
+      nickname: fresh.nickname || '匿名リスナー',
+      votes: getPromptVoteCount(fresh),
+      id: fresh.clientId || fresh.id,
+      timestamp: fresh.timestamp || 0,
+      isGacha: true,
+    };
+  }
+
+  // 通常時は投稿順（古い順）に日替わりで順番に表示するローテーション方式
   const oldestFirst = [...merged].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
   const activeIndex = getDayIndex() % oldestFirst.length;
   const activeItem = oldestFirst[activeIndex];
@@ -1222,18 +1238,31 @@ function getDailyPromptInfo() {
     nickname: activeItem.nickname || '匿名リスナー',
     votes: getPromptVoteCount(activeItem),
     id: activeItem.clientId || activeItem.id,
+    timestamp: activeItem.timestamp || 0,
   };
 }
 
 function renderDailyPrompt() {
   const text = document.getElementById('dailyPromptText');
   const meta = document.getElementById('dailyPromptMeta');
+  const stamp = document.getElementById('dailyPromptStamp');
   const info = getDailyPromptInfo();
   if (text) text.textContent = info.text;
+  if (stamp) {
+    if (info.source === 'community' && info.timestamp) {
+      const d = new Date(info.timestamp);
+      const dateStr = !isNaN(d.getTime()) ? `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}` : 'POPOPO';
+      stamp.innerHTML = `🌸 ${dateStr} 提案`;
+      stamp.hidden = false;
+    } else {
+      stamp.hidden = true;
+    }
+  }
   if (meta) {
     if (info.source === 'community') {
       const nick = (info.nickname || '匿名リスナー').replace(/[<>&]/g, '');
-      meta.innerHTML = `<span class="pill">みんなのお題</span>${nick} さんの提案 ・ ♡ ${info.votes}`;
+      const badge = info.isGacha ? '<span class="pill" style="background:rgba(232,67,147,0.12);color:#d63031;">🎲 ガチャ表示中</span>' : '<span class="pill">みんなのお題</span>';
+      meta.innerHTML = `${badge}${nick} さんの提案 ・ ♡ ${info.votes}`;
       meta.hidden = false;
     } else {
       meta.innerHTML = '';
@@ -1431,6 +1460,36 @@ async function votePromptSuggestion(rawId) {
       console.warn('Prompt vote sync failed:', e);
     }
   }
+}
+
+function triggerReactionEffect(btnElement) {
+  if (!btnElement) return;
+  const icons = ['🌸', '✨', '💖', '🦌', '🌿', '⭐'];
+  const count = 6;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('span');
+    p.className = 'reaction-particle';
+    p.textContent = icons[Math.floor(Math.random() * icons.length)];
+    const angle = (Math.random() * 120 - 60) * (Math.PI / 180);
+    const dist = 35 + Math.random() * 45;
+    const tx = Math.sin(angle) * dist + 'px';
+    const ty = -Math.cos(angle) * dist + 'px';
+    const rot = (Math.random() * 360) + 'deg';
+    p.style.setProperty('--tx', tx);
+    p.style.setProperty('--ty', ty);
+    p.style.setProperty('--rot', rot);
+    p.style.left = '50%';
+    p.style.top = '50%';
+    btnElement.appendChild(p);
+    setTimeout(() => p.remove(), 1100);
+  }
+
+  const messages = ['考えてくれてありがとう！', '素敵な一日になりますように✨', 'ほっこり届きました💖', '共感の輪が広がりました🌿', '温かい気持ちをありがとう🌸'];
+  const bubble = document.createElement('div');
+  bubble.className = 'reaction-bubble';
+  bubble.textContent = messages[Math.floor(Math.random() * messages.length)];
+  btnElement.appendChild(bubble);
+  setTimeout(() => bubble.remove(), 1700);
 }
 
 let _promptVotesUnsubscribe = null;
@@ -4365,6 +4424,30 @@ function bindEvents() {
   if (dailyPromptBtn) dailyPromptBtn.addEventListener('click', () => {
     openChatModal(`今日のお題：${getDailyPrompt()}\n`);
   });
+  const dailyPromptGachaBtn = document.getElementById('dailyPromptGachaBtn');
+  if (dailyPromptGachaBtn) dailyPromptGachaBtn.addEventListener('click', () => {
+    const merged = mergePromptSuggestions();
+    if (merged.length > 1) {
+      const currentInfo = getDailyPromptInfo();
+      const candidates = merged.filter(m => (m.clientId || m.id) !== currentInfo.id);
+      if (candidates.length) {
+        activeGachaItem = candidates[Math.floor(Math.random() * candidates.length)];
+      } else {
+        activeGachaItem = merged[Math.floor(Math.random() * merged.length)];
+      }
+    } else if (merged.length === 1) {
+      activeGachaItem = merged[0];
+    }
+    const body = document.getElementById('dailyPromptBody');
+    if (body) {
+      body.classList.remove('is-flipping');
+      void body.offsetWidth;
+      body.classList.add('is-flipping');
+      setTimeout(() => renderDailyPrompt(), 200);
+    } else {
+      renderDailyPrompt();
+    }
+  });
   const dailyPromptToggleBtn = document.getElementById('dailyPromptToggleBtn');
   const dailyPromptCandidates = document.getElementById('dailyPromptCandidates');
   if (dailyPromptToggleBtn && dailyPromptCandidates) {
@@ -4374,7 +4457,7 @@ function bindEvents() {
       dailyPromptToggleBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
       dailyPromptCandidates.hidden = !next;
       const label = dailyPromptToggleBtn.querySelector('.daily-prompt-toggle-text');
-      if (label) label.textContent = next ? '候補を閉じる' : '明日のお題を決めよう';
+      if (label) label.textContent = next ? '候補を閉じる' : 'みんなの提案を見る';
       if (next) {
         // まずキャッシュで即時レンダリング
         renderDailyPromptCandidates();
@@ -4406,6 +4489,7 @@ function bindEvents() {
         voteBtn.disabled = true;
         const icon = voteBtn.querySelector('.daily-prompt-vote-icon');
         if (icon) icon.textContent = '♥';
+        triggerReactionEffect(voteBtn);
         votePromptSuggestion(id);
         return;
       }
