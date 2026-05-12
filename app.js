@@ -1204,39 +1204,24 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
   const cutoff = Date.now() - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
   return Array.from(byKey.values())
     .filter(item => (item.timestamp || 0) >= cutoff)
-    .sort((a, b) => {
-      const va = getPromptVoteCount(a);
-      const vb = getPromptVoteCount(b);
-      if (vb !== va) return vb - va;
-      return (b.timestamp || 0) - (a.timestamp || 0);
-    });
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
 function getDailyPromptInfo() {
   const merged = mergePromptSuggestions();
   if (!merged.length) return { text: getFallbackDailyPrompt(), source: 'fallback' };
 
-  // 得票が1票以上あるものから最多得票を今日のお題にする（当日投稿でも可）
-  const withVotes = merged.filter(item => getPromptVoteCount(item) > 0);
-  const top = withVotes[0]; // mergePromptSuggestions が得票降順でソート済み
-  if (top) {
-    return {
-      text: top.text,
-      source: 'community',
-      nickname: top.nickname || '匿名リスナー',
-      votes: getPromptVoteCount(top),
-      id: top.clientId || top.id,
-    };
-  }
+  // 投稿順（古い順）に日替わりで順番に表示するローテーション方式
+  const oldestFirst = [...merged].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  const activeIndex = getDayIndex() % oldestFirst.length;
+  const activeItem = oldestFirst[activeIndex];
 
-  // 得票ゼロでも最新のお題を表示する（投稿直後の別端末でも確認できるように）
-  const latest = merged[0];
   return {
-    text: latest.text,
+    text: activeItem.text,
     source: 'community',
-    nickname: latest.nickname || '匿名リスナー',
-    votes: 0,
-    id: latest.clientId || latest.id,
+    nickname: activeItem.nickname || '匿名リスナー',
+    votes: getPromptVoteCount(activeItem),
+    id: activeItem.clientId || activeItem.id,
   };
 }
 
