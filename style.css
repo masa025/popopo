@@ -494,7 +494,7 @@ section{padding:80px 0;scroll-margin-top:120px;}
   align-items: center;
   justify-content: center;
   overflow: hidden; /* ズーム時の制御のため */
-  padding:18px;
+  padding: 18px 18px 86px 18px; /* 縦長画像でも下部の操作パネルと絶対に被らないようクリアランスを確保 */
   touch-action: pan-y;
 }
 .gallery-modal-visual.is-gallery-zoomed{
@@ -503,7 +503,7 @@ section{padding:80px 0;scroll-margin-top:120px;}
 
 .gallery-modal-image {
   max-width: 100%;
-  max-height: 75vh;
+  max-height: calc(75vh - 64px); /* パネル分の高さを引いて全体が綺麗に収まるよう自動調整 */
   object-fit: contain;
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: zoom-in;

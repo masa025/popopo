@@ -131,6 +131,20 @@ const GALLERY_ITEMS = [
     caption: "静かに振り向きながら、どこか優しくまどろんでいるような表情を浮かべるお馬さんキャラクターのシンプルな線画アートです。",
     alt: "静かに振り向く馬のキャラクターの手描きスケッチ",
     type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-43.jpg",
+    title: "オージー探検家 MasaTam",
+    caption: "オーストラリアの国旗が付いたハットとブーツを履き、バッグを下げた陽気なチョコレートサンドキャラクター『MasaTam』。牛乳に落としたあの人気お菓子をオマージュした最高の一枚です！",
+    alt: "ティムタム風のビスケットサンドキャラクターMasaTamのアート作品",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-44.jpg",
+    title: "水墨画風 掛け軸アート",
+    caption: "穏やかで達観したような表情を浮かべるキャラクターが、掛け軸（かけじく）に水墨画の優しい筆致で描かれた、格調高くも心が和む和風アート作品です。",
+    alt: "掛け軸に水墨画調で描かれたキャラクターのアート作品",
+    type: "art"
   }
 ];
 
