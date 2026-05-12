@@ -1626,11 +1626,12 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   .gallery-modal-visual {
     flex: 1;
     min-height: 0;
-    padding: 0;
+    padding: 0 0 84px 0; /* スマホ全画面時も下部の操作バーと被らないよう余白を確保 */
     background: #000; /* モバイル全画面時は黒背景で没入感を */
+    box-sizing: border-box;
   }
   .gallery-modal-image {
-    max-height: 100%;
+    max-height: calc(100% - 12px);
     border-radius: 0;
     border: none;
   }
@@ -1657,12 +1658,13 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 .gallery-modal-box.is-focus-mode .gallery-modal-visual {
   height: 100vh;
   width: 100vw;
-  padding: 0;
+  padding: 0 0 100px 0; /* フォーカスモードでもボタンバーと完全にクリアランスを取る */
   background: #000;
+  box-sizing: border-box;
 }
 
 .gallery-modal-box.is-focus-mode .gallery-modal-image {
-  max-height: 100vh;
+  max-height: calc(100vh - 100px);
   border-radius: 0;
 }
 
