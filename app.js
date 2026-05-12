@@ -96,6 +96,41 @@ const GALLERY_ITEMS = [
     caption: "にっこり微笑むお日様のようなキャラクターがトイレットペーパーを優しく支える、実際に使ってみたくなる愛らしい実写風アート作品です。",
     alt: "太陽のキャラクター風デザインのトイレットペーパーホルダー",
     type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-38.jpg",
+    title: "ご機嫌なお馬さんスケッチ",
+    caption: "にっこり笑う瞳と、きれいに編み込まれたしっぽがチャーミングな、手描きの愛らしいお馬さんキャラクターのスケッチです。",
+    alt: "笑顔で編み込みしっぽの馬のキャラクター手描きスケッチ",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-39.jpg",
+    title: "キャラクター刺繍のポロシャツ",
+    caption: "上質なグリーンのポロシャツの胸元に、POPOPOのキャラクターが精密に刺繍された、スタイリッシュな公式アパレル風のアート作品です。",
+    alt: "緑のポロシャツの胸元にキャラクターが刺繍されたアート作品",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-40.jpg",
+    title: "確かな『声』の力 ポスター",
+    caption: "『視覚のインパクトを越える、確かな「声」の力。』のキャッチコピーと共に、サイバー感溢れる暗い森の中で光るキャラクターたちとMasaさんが描かれたクールな一枚。",
+    alt: "光るキャラクターとMasaさんが描かれたサイバー風ポスター作品",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-41.jpg",
+    title: "おしゃれボーイのUFOキャッチャー",
+    caption: "ピンクのボールや星のクッションがいっぱいに詰まったクレーンゲームの中に、Masaさんのおしゃれボーイフィギュアが並ぶ夢のようなプライズ空間アート。",
+    alt: "Masaさんのフィギュアが並ぶUFOキャッチャー風アート作品",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-42.jpg",
+    title: "まどろむお馬さんのスケッチ",
+    caption: "静かに振り向きながら、どこか優しくまどろんでいるような表情を浮かべるお馬さんキャラクターのシンプルな線画アートです。",
+    alt: "静かに振り向く馬のキャラクターの手描きスケッチ",
+    type: "art"
   }
 ];
 
