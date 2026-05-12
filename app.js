@@ -1157,9 +1157,16 @@ function getDailyPrompt() {
 
 const PROMPT_SUGGESTION_TTL_DAYS = 14;
 
-function getPromptVoteId(suggestion) {
-  if (!suggestion) return '';
-  const key = suggestion.clientId || suggestion.id || hashString(`${suggestion.text || ''}|${suggestion.timestamp || 0}`);
+function getPromptVoteId(suggestionOrId) {
+  if (!suggestionOrId) return '';
+  let key = '';
+  if (typeof suggestionOrId === 'string') {
+    // すでにプレフィックスがある場合はそのまま返す、ない場合は付与する
+    if (suggestionOrId.startsWith('prompt_vote_')) return suggestionOrId;
+    key = suggestionOrId;
+  } else {
+    key = suggestionOrId.clientId || suggestionOrId.id || hashString(`${suggestionOrId.text || ''}|${suggestionOrId.timestamp || 0}`);
+  }
   return `prompt_vote_${key}`;
 }
 
@@ -1287,12 +1294,19 @@ async function retrySyncPrompt(clientId) {
   const item = localPromptSuggestions.find(l => (l.clientId || l.id) === clientId);
   if (!item || !db) { showToast('再送信できませんでした。'); return; }
   try {
+    // お題本体の送信
     await db.collection('prompt_suggestions').add({
       clientId: item.clientId || item.id,
       text: item.text,
       nickname: item.nickname,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    // 初期投票（1票目）の同期も試みる
+    const voteId = getPromptVoteId(item);
+    await db.collection('likes').doc(voteId).set({
+      count: firebase.firestore.FieldValue.increment(1),
+    }, { merge: true });
+
     showToast('再送信しました！✓');
   } catch (e) {
     showToast('再送信に失敗しました。接続を確認してください。');
@@ -1413,12 +1427,16 @@ async function submitPromptSuggestion({ text, nickname }) {
   return item;
 }
 
-async function votePromptSuggestion(voteId) {
-  if (!voteId || localPromptVotes[voteId]) return;
+async function votePromptSuggestion(rawId) {
+  if (!rawId) return;
+  const voteId = getPromptVoteId(rawId); // ここで確実に 'prompt_vote_pr_...' 形式にする
+  
+  if (localPromptVotes[voteId]) return;
   localPromptVotes[voteId] = Date.now();
   localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
   globalLikes[voteId] = (globalLikes[voteId] || 0) + 1;
   renderDailyPrompt();
+  
   if (db) {
     try {
       await db.collection('likes').doc(voteId).set({
