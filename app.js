@@ -61,6 +61,41 @@ const GALLERY_ITEMS = [
     type: "dict_page", 
     lockAnswer: "TimTam", 
     lockHint: "ある配信者が牛乳の中に落としたお菓子は何でしょうか？" 
+  },
+  {
+    image: "assets/listener-gallery/listener-art-33.jpg",
+    title: "こんがりアートなスナック",
+    caption: "こんがりきつね色のスナックに、POPOPOのキャラクターが焼き印のように描かれた美味しそうでユニークな作品です。",
+    alt: "POPOPOキャラクターのイラストが描かれたスナック作品",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-34.jpg",
+    title: "ピンクコーデで森のお散歩",
+    caption: "ピンクのPOPOPOシャツに身を包んだお洒落な男の子が、キャラクターと一緒に木漏れ日の森を並んで歩く素敵な一枚。",
+    alt: "ピンクの服を着た男の子とキャラクターが森を散歩するイラスト",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-35.jpg",
+    title: "朝の商店街とお散歩",
+    caption: "どこか懐かしい日本の商店街で、とんかつ定食の看板の前にたたずむ男の子とキャラクター。日常ののどかな空気感が漂います。",
+    alt: "とんかつ屋の看板の前にたたずむ男の子とキャラクターのイラスト",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-36.jpg",
+    title: "スーパーでの仲直り",
+    caption: "スーパーの野菜売り場で、立派なにんじんの袋を手に「ご、ごめんね…」と謝る男の子と、涙ぐむキャラクターの可愛らしい一コマ。",
+    alt: "にんじんを持って謝る男の子と涙ぐむキャラクターのイラスト",
+    type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-37.jpg",
+    title: "お日様のペーパーホルダー",
+    caption: "にっこり微笑むお日様のようなキャラクターがトイレットペーパーを優しく支える、実際に使ってみたくなる愛らしい実写風アート作品です。",
+    alt: "太陽のキャラクター風デザインのトイレットペーパーホルダー",
+    type: "art"
   }
 ];
 
@@ -469,7 +504,7 @@ function setupHeroGallery() {
     const lockAttrs = item.lockAnswer ? ` data-lock-answer="${item.lockAnswer}" data-lock-hint="${item.lockHint}"` : '';
     return `
       <button type="button" class="hero-gallery-item" data-gallery-index="${index}" data-gallery-item data-image="${item.image}" data-title="${item.title}" data-caption="${item.caption}" data-alt="${item.alt}"${lockAttrs}>
-        <img class="hero-gallery-thumb${isDoc}" src="${item.image}" alt="${item.alt}" loading="lazy">
+        <img class="hero-gallery-thumb${isDoc}" src="${item.image}" alt="${item.alt}" loading="lazy" decoding="async">
       </button>
     `;
   }).join('');
@@ -511,7 +546,11 @@ function setupHeroGallery() {
   startHeroGalleryMotion();
 
   if (!heroGalleryResizeBound) {
+    let lastHeroGalleryWidth = window.innerWidth;
     window.addEventListener('resize', () => {
+      // スマホで上下スクロールに伴いアドレスバーが伸縮した際、高さのみの変化で再描画が走り画像がパカパカ消える現象を防ぐ
+      if (window.innerWidth === lastHeroGalleryWidth) return;
+      lastHeroGalleryWidth = window.innerWidth;
       clearTimeout(heroGalleryResizeTimer);
       heroGalleryResizeTimer = setTimeout(setupHeroGallery, 140);
     });
