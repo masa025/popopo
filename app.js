@@ -255,6 +255,8 @@ let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 let localPromptSuggestions = JSON.parse(localStorage.getItem('popopo_prompt_suggestions') || '[]');
 let localPromptVotes = JSON.parse(localStorage.getItem('popopo_prompt_votes') || '{}');
 let latestRemotePromptSuggestions = [];
+const PROMPT_SEEN_STORAGE_KEY = 'popopo_seen_daily_prompts_v1';
+const PROMPT_SEEN_LIMIT = 240;
 const NICKNAME_STORAGE_KEY = 'popopo_last_nickname';
 const ADD_SPOT_FORM_DRAFT_KEY = 'popopo_add_spot_draft_session_v1';
 let addSpotDraftTimer = null;
@@ -405,6 +407,16 @@ const DAILY_PROMPTS = [
   '投稿しやすくなるために、どんな工夫があるとよさそうですか？',
   'POPOPOコミュニティらしい遊び心のアイデアはありますか？'
 ];
+function loadSeenDailyPromptIds() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PROMPT_SEEN_STORAGE_KEY) || '[]');
+    return Array.isArray(raw) ? raw.filter(Boolean).slice(-PROMPT_SEEN_LIMIT) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+let seenDailyPromptIds = loadSeenDailyPromptIds();
 let visibleSpotCount = INITIAL_SPOT_COUNT;
 let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
@@ -1237,9 +1249,60 @@ function getFallbackDailyPrompt() {
   return DAILY_PROMPTS[getDayIndex() % DAILY_PROMPTS.length];
 }
 
+function saveSeenDailyPromptIds() {
+  try {
+    const compact = Array.from(new Set(seenDailyPromptIds.filter(Boolean))).slice(-PROMPT_SEEN_LIMIT);
+    seenDailyPromptIds = compact;
+    localStorage.setItem(PROMPT_SEEN_STORAGE_KEY, JSON.stringify(compact));
+  } catch (e) {
+    // localStorageが使えない環境では、今回の表示だけで続行する。
+  }
+}
+
+function getFallbackPromptId(text) {
+  return `fallback:${hashString(text || '')}`;
+}
+
+function getCommunityPromptId(item = {}) {
+  return `community:${item.clientId || item.id || hashString(`${item.text || ''}|${item.timestamp || 0}`)}`;
+}
+
+function isDailyPromptSeen(id) {
+  return Boolean(id && seenDailyPromptIds.includes(id));
+}
+
+function markDailyPromptSeen(info = {}) {
+  if (!info.seenId || info.source === 'exhausted') return;
+  if (!seenDailyPromptIds.includes(info.seenId)) {
+    seenDailyPromptIds.push(info.seenId);
+    saveSeenDailyPromptIds();
+  }
+}
+
+function getFallbackPromptItems() {
+  return DAILY_PROMPTS.map((text, index) => ({
+    text,
+    source: 'fallback',
+    id: getFallbackPromptId(text),
+    timestamp: index
+  }));
+}
+
+function getUnseenPromptCandidates({ includeFallback = true, excludeId = '' } = {}) {
+  const communityItems = mergePromptSuggestions()
+    .map(item => ({ ...item, source: 'community', seenId: getCommunityPromptId(item) }))
+    .filter(item => item.seenId !== excludeId && !isDailyPromptSeen(item.seenId));
+  const fallbackItems = includeFallback
+    ? getFallbackPromptItems()
+        .map(item => ({ ...item, seenId: item.id }))
+        .filter(item => item.seenId !== excludeId && !isDailyPromptSeen(item.seenId))
+    : [];
+  return [...communityItems, ...fallbackItems];
+}
+
 // 後方互換：他の箇所からも呼ばれる
 function getDailyPrompt() {
-  const info = getDailyPromptInfo();
+  const info = currentDailyPromptInfo || getDailyPromptInfo();
   return info.text;
 }
 
@@ -1296,37 +1359,81 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
 }
 
 let activeGachaItem = null;
+let currentDailyPromptInfo = null;
 
 function getDailyPromptInfo() {
   const merged = mergePromptSuggestions();
-  if (!merged.length) return { text: getFallbackDailyPrompt(), source: 'fallback' };
+
+  if (!activeGachaItem && currentDailyPromptInfo && currentDailyPromptInfo.source !== 'exhausted') {
+    if (currentDailyPromptInfo.source === 'community') {
+      const stillExists = merged.some(item => getCommunityPromptId(item) === currentDailyPromptInfo.seenId);
+      if (stillExists) return currentDailyPromptInfo;
+    } else if (currentDailyPromptInfo.source === 'fallback') {
+      const hasUnseenCommunity = merged.some(item => !isDailyPromptSeen(getCommunityPromptId(item)));
+      if (!hasUnseenCommunity) return currentDailyPromptInfo;
+    }
+  }
 
   // ガチャで選択中のアイテムがあればそれを優先表示
+  if (activeGachaItem?.source === 'fallback') {
+    return {
+      text: activeGachaItem.text,
+      source: 'fallback',
+      id: activeGachaItem.id,
+      seenId: activeGachaItem.seenId || activeGachaItem.id,
+      isGacha: true,
+    };
+  }
   if (activeGachaItem && merged.some(m => (m.clientId || m.id) === (activeGachaItem.clientId || activeGachaItem.id))) {
     const fresh = merged.find(m => (m.clientId || m.id) === (activeGachaItem.clientId || activeGachaItem.id));
+    const seenId = getCommunityPromptId(fresh);
     return {
       text: fresh.text,
       source: 'community',
       nickname: fresh.nickname || '匿名リスナー',
       votes: getPromptVoteCount(fresh),
       id: fresh.clientId || fresh.id,
+      seenId,
       timestamp: fresh.timestamp || 0,
       isGacha: true,
     };
   }
 
-  // 通常時は投稿順（古い順）に日替わりで順番に表示するローテーション方式
-  const oldestFirst = [...merged].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-  const activeIndex = getDayIndex() % oldestFirst.length;
-  const activeItem = oldestFirst[activeIndex];
+  const unseenCommunity = getUnseenPromptCandidates({ includeFallback: false })
+    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  const activeItem = unseenCommunity[0];
+  if (activeItem) {
+    return {
+      text: activeItem.text,
+      source: 'community',
+      nickname: activeItem.nickname || '匿名リスナー',
+      votes: getPromptVoteCount(activeItem),
+      id: activeItem.clientId || activeItem.id,
+      seenId: activeItem.seenId,
+      timestamp: activeItem.timestamp || 0,
+    };
+  }
 
+  const unseenFallback = getFallbackPromptItems()
+    .filter(item => !isDailyPromptSeen(item.id));
+  if (unseenFallback.length) {
+    const activeIndex = getDayIndex() % unseenFallback.length;
+    const fallbackItem = unseenFallback[activeIndex];
+    return {
+      text: fallbackItem.text,
+      source: 'fallback',
+      id: fallbackItem.id,
+      seenId: fallbackItem.id,
+      timestamp: fallbackItem.timestamp,
+    };
+  }
+
+  activeGachaItem = null;
   return {
-    text: activeItem.text,
-    source: 'community',
-    nickname: activeItem.nickname || '匿名リスナー',
-    votes: getPromptVoteCount(activeItem),
-    id: activeItem.clientId || activeItem.id,
-    timestamp: activeItem.timestamp || 0,
+    text: 'お題をひと通り見ました。新しいお題を提案してみませんか？',
+    source: 'exhausted',
+    id: 'prompt-exhausted',
+    seenId: '',
   };
 }
 
@@ -1334,8 +1441,12 @@ function renderDailyPrompt() {
   const text = document.getElementById('dailyPromptText');
   const meta = document.getElementById('dailyPromptMeta');
   const stamp = document.getElementById('dailyPromptStamp');
+  const promptBtn = document.getElementById('dailyPromptBtn');
+  const gachaBtn = document.getElementById('dailyPromptGachaBtn');
   const info = getDailyPromptInfo();
+  currentDailyPromptInfo = info;
   if (text) text.textContent = info.text;
+  markDailyPromptSeen(info);
   if (stamp) {
     if (info.source === 'community' && info.timestamp) {
       const d = new Date(info.timestamp);
@@ -1346,11 +1457,23 @@ function renderDailyPrompt() {
       stamp.hidden = true;
     }
   }
+  if (promptBtn) {
+    promptBtn.textContent = info.source === 'exhausted' ? 'お題を提案する' : 'このお題でつぶやく';
+  }
+  if (gachaBtn) {
+    const remaining = getUnseenPromptCandidates({ includeFallback: true, excludeId: info.seenId }).length;
+    gachaBtn.disabled = info.source === 'exhausted' || remaining === 0;
+    gachaBtn.textContent = gachaBtn.disabled ? '🎲 お題を見終えました' : '🎲 ガチャを回す';
+    gachaBtn.title = gachaBtn.disabled ? '新しいお題の提案が届くと、また表示できます' : 'まだ見ていないお題をランダムでめくります';
+  }
   if (meta) {
     if (info.source === 'community') {
       const nick = (info.nickname || '匿名リスナー').replace(/[<>&]/g, '');
       const badge = info.isGacha ? '<span class="pill" style="background:rgba(232,67,147,0.12);color:#d63031;">🎲 ガチャ表示中</span>' : '<span class="pill">みんなのお題</span>';
       meta.innerHTML = `${badge}${nick} さんの提案 ・ ♡ ${info.votes}`;
+      meta.hidden = false;
+    } else if (info.source === 'exhausted') {
+      meta.innerHTML = '<span class="pill">お題待ち</span>新しい提案が届くと、またここに表示されます。';
       meta.hidden = false;
     } else {
       meta.innerHTML = '';
@@ -1455,7 +1578,7 @@ function renderDailyPromptCandidates() {
     return;
   }
   if (empty) empty.hidden = true;
-  const todayInfo = getDailyPromptInfo();
+  const todayInfo = currentDailyPromptInfo || getDailyPromptInfo();
   const leadingId = todayInfo.source === 'community' ? todayInfo.id : (merged[0] && getPromptVoteCount(merged[0]) > 0 ? (merged[0].clientId || merged[0].id) : null);
   list.innerHTML = merged.slice(0, 10).map((item, idx) => {
     const id = item.clientId || item.id;
@@ -4510,22 +4633,24 @@ function bindEvents() {
   bindCarrotGuideEvents();
   const dailyPromptBtn = document.getElementById('dailyPromptBtn');
   if (dailyPromptBtn) dailyPromptBtn.addEventListener('click', () => {
-    openChatModal(`今日のお題：${getDailyPrompt()}\n`);
+    const info = currentDailyPromptInfo || getDailyPromptInfo();
+    if (info.source === 'exhausted') {
+      openPromptSuggestModal();
+      return;
+    }
+    openChatModal(`今日のお題：${info.text}\n`);
   });
   const dailyPromptGachaBtn = document.getElementById('dailyPromptGachaBtn');
   if (dailyPromptGachaBtn) dailyPromptGachaBtn.addEventListener('click', () => {
-    const merged = mergePromptSuggestions();
-    if (merged.length > 1) {
-      const currentInfo = getDailyPromptInfo();
-      const candidates = merged.filter(m => (m.clientId || m.id) !== currentInfo.id);
-      if (candidates.length) {
-        activeGachaItem = candidates[Math.floor(Math.random() * candidates.length)];
-      } else {
-        activeGachaItem = merged[Math.floor(Math.random() * merged.length)];
-      }
-    } else if (merged.length === 1) {
-      activeGachaItem = merged[0];
+    const currentInfo = currentDailyPromptInfo || getDailyPromptInfo();
+    const candidates = getUnseenPromptCandidates({ includeFallback: true, excludeId: currentInfo.seenId });
+    if (!candidates.length) {
+      activeGachaItem = null;
+      renderDailyPrompt();
+      showToast('お題をひと通り見ました。新しいお題を提案してみませんか？');
+      return;
     }
+    activeGachaItem = candidates[Math.floor(Math.random() * candidates.length)];
     const body = document.getElementById('dailyPromptBody');
     if (body) {
       body.classList.remove('is-flipping');
