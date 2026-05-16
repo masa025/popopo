@@ -115,7 +115,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;}
 .nav-mobile-link:hover{color:var(--blue);background:var(--blue-light);}
 
 #hero{min-height:100svh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:124px 24px 60px;background:radial-gradient(circle at 20% 15%,rgba(255,207,112,0.26),transparent 24%),radial-gradient(circle at 82% 18%,rgba(94,194,189,0.2),transparent 30%),radial-gradient(circle at 50% 82%,rgba(79,127,216,0.14),transparent 34%),linear-gradient(135deg,#fffefa 0%,#f1fbff 58%,#fff4e2 100%);}
-#hero::before{content:'';position:absolute;inset:-6%;z-index:0;background:linear-gradient(180deg,rgba(255,254,250,0.22),rgba(255,254,250,0.82) 72%,rgba(255,254,250,0.98)),url('assets/popopo-map-visual.png') center 48% / cover no-repeat;opacity:0.22;filter:saturate(0.92) contrast(0.96);pointer-events:none;}
+#hero::before{content:'';position:absolute;inset:-7%;z-index:0;background:radial-gradient(ellipse at center,rgba(255,254,250,0.96) 0%,rgba(255,254,250,0.9) 34%,rgba(255,254,250,0.56) 66%,rgba(255,254,250,0.36) 100%),url('assets/popopo-map-visual.png') center 46% / cover no-repeat;opacity:0.34;filter:saturate(0.96) contrast(1);pointer-events:none;}
 #hero::after{content:'';position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(0deg,rgba(79,127,216,0.055) 0 1px,transparent 1px 34px);pointer-events:none;}
 .hero-orbs{position:absolute;inset:0;pointer-events:none;z-index:0;}
 .hero-showcase{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
@@ -434,7 +434,7 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .about-page{background:radial-gradient(circle at 14% 16%,rgba(94,194,189,0.14),transparent 30%),radial-gradient(circle at 86% 8%,rgba(238,155,0,0.13),transparent 28%),linear-gradient(180deg,#fffefa 0%,#f7fbff 48%,#fffaf0 100%);}
 .about-hero{padding:132px 24px 64px;text-align:center;}
 .about-hero-luxury{min-height:auto;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:84px 24px 16px;background:radial-gradient(circle at 22% 18%,rgba(255,207,112,0.24),transparent 24%),radial-gradient(circle at 78% 22%,rgba(94,194,189,0.17),transparent 28%),linear-gradient(135deg,#fffefa 0%,#f3fbff 56%,#fff6e8 100%);color:var(--text);}
-.about-hero-luxury::before{content:'';position:absolute;inset:-8%;z-index:0;background:linear-gradient(180deg,rgba(255,254,250,0.66),rgba(255,254,250,0.9)),url('assets/popopo-map-visual.png') center 48% / cover no-repeat;opacity:0.24;filter:saturate(0.88) contrast(0.95);pointer-events:none;}
+.about-hero-luxury::before{content:'';position:absolute;inset:-8%;z-index:0;background:radial-gradient(ellipse at center,rgba(255,254,250,0.92) 0%,rgba(255,254,250,0.82) 36%,rgba(255,254,250,0.48) 68%,rgba(255,254,250,0.34) 100%),url('assets/popopo-map-visual.png') center 48% / cover no-repeat;opacity:0.38;filter:saturate(0.92) contrast(0.98);pointer-events:none;}
 .about-hero-luxury::after{content:'';position:absolute;inset:0;z-index:0;background:repeating-linear-gradient(0deg,rgba(91,141,238,0.075) 0 1px,transparent 1px 34px);pointer-events:none;}
 .about-hero-inner{position:relative;z-index:1;max-width:920px;margin:0 auto;}
 .about-luxury-label{display:inline-flex;align-items:center;justify-content:center;padding:6px 16px;border-radius:52% 48% 46% 54% / 50% 54% 46% 50%;border:1.5px dashed rgba(42,157,143,0.5);background:rgba(255,255,255,0.68);color:#2a7d74;font-family:'Yomogi','Noto Sans JP',sans-serif;font-size:0.94rem;font-weight:400;letter-spacing:0.12em;margin-bottom:16px;transform:rotate(-2deg);}
@@ -644,6 +644,7 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 
 @media(max-width:768px){
   #hero{align-items:flex-start;padding:114px 16px 80px;}
+  #hero::before{inset:-10%;opacity:0.28;background-position:center 42%;}
   .hero-content{margin-top:0;padding:0;max-width:100%;}
   .hero-badge{font-size:0.75rem;padding:6px 12px;margin-bottom:10px;}
   .hero-gallery-band{margin:0 calc(50% - 50vw) 10px;}
@@ -687,7 +688,7 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   .daily-prompt-card{align-items:stretch;flex-direction:column;}
   .daily-prompt-card .btn-outline{justify-content:center;width:100%;}
   .about-hero-luxury{min-height:auto;padding:96px 18px 40px;}
-  .about-hero-luxury::before{inset:-10%;opacity:0.16;background-position:center 42%;}
+  .about-hero-luxury::before{inset:-10%;opacity:0.28;background-position:center 42%;}
   .about-hero-luxury::after{bottom:42px;width:70vw;}
   .about-luxury-label{margin-bottom:20px;font-size:0.82rem;}
   .about-luxury-title{font-size:2.35rem;line-height:1.42;}
