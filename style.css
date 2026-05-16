@@ -114,7 +114,9 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;}
 .nav-mobile-link{padding:12px 16px;border-radius:var(--r-sm);color:var(--text-muted);font-size:0.95rem;transition:all .2s;}
 .nav-mobile-link:hover{color:var(--blue);background:var(--blue-light);}
 
-#hero{min-height:100svh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:124px 24px 60px;background:radial-gradient(circle at 20% 15%,rgba(255,207,112,0.26),transparent 24%),radial-gradient(circle at 82% 18%,rgba(94,194,189,0.2),transparent 30%),radial-gradient(circle at 50% 82%,rgba(79,127,216,0.14),transparent 34%),repeating-linear-gradient(0deg,rgba(79,127,216,0.055) 0 1px,transparent 1px 34px),linear-gradient(135deg,#fffefa 0%,#f1fbff 58%,#fff4e2 100%);}
+#hero{min-height:100svh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:124px 24px 60px;background:radial-gradient(circle at 20% 15%,rgba(255,207,112,0.26),transparent 24%),radial-gradient(circle at 82% 18%,rgba(94,194,189,0.2),transparent 30%),radial-gradient(circle at 50% 82%,rgba(79,127,216,0.14),transparent 34%),linear-gradient(135deg,#fffefa 0%,#f1fbff 58%,#fff4e2 100%);}
+#hero::before{content:'';position:absolute;inset:-6%;z-index:0;background:linear-gradient(180deg,rgba(255,254,250,0.22),rgba(255,254,250,0.82) 72%,rgba(255,254,250,0.98)),url('assets/popopo-map-visual.png') center 48% / cover no-repeat;opacity:0.22;filter:saturate(0.92) contrast(0.96);pointer-events:none;}
+#hero::after{content:'';position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(0deg,rgba(79,127,216,0.055) 0 1px,transparent 1px 34px);pointer-events:none;}
 .hero-orbs{position:absolute;inset:0;pointer-events:none;z-index:0;}
 .hero-showcase{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
 .hero-float-card{position:absolute;border-radius:24px 18px 26px 20px;background:rgba(255,254,250,0.92);border:1.5px solid rgba(79,127,216,0.15);box-shadow:0 12px 30px rgba(43,67,120,0.12);backdrop-filter:blur(8px);padding:14px 15px;color:var(--text);opacity:0;transform:rotate(var(--card-rot)) scale(var(--card-scale,1));will-change:transform,opacity;animation:heroCardFadeIn 0.9s cubic-bezier(0.2,0.8,0.2,1) forwards;}
@@ -431,9 +433,9 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .story-kicker{display:inline-flex;align-self:flex-start;padding:5px 12px;border-radius:999px;background:var(--blue-light);color:var(--blue);font-size:0.78rem;font-weight:700;}
 .about-page{background:radial-gradient(circle at 14% 16%,rgba(94,194,189,0.14),transparent 30%),radial-gradient(circle at 86% 8%,rgba(238,155,0,0.13),transparent 28%),linear-gradient(180deg,#fffefa 0%,#f7fbff 48%,#fffaf0 100%);}
 .about-hero{padding:132px 24px 64px;text-align:center;}
-.about-hero-luxury{min-height:auto;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:84px 24px 16px;background:radial-gradient(circle at 22% 18%,rgba(255,207,112,0.24),transparent 24%),radial-gradient(circle at 78% 22%,rgba(94,194,189,0.17),transparent 28%),repeating-linear-gradient(0deg,rgba(91,141,238,0.075) 0 1px,transparent 1px 34px),linear-gradient(135deg,#fffefa 0%,#f3fbff 56%,#fff6e8 100%);color:var(--text);}
-.about-hero-luxury::before{content:'STORY';position:absolute;top:49%;left:50%;transform:translate(-50%,-50%) rotate(-4deg);font-family:'Yomogi','Noto Sans JP',sans-serif;font-size:clamp(5.2rem,17vw,14rem);font-weight:400;line-height:1;color:rgba(91,141,238,0.08);letter-spacing:0.06em;pointer-events:none;white-space:nowrap;}
-.about-hero-luxury::after{content:'';position:absolute;left:50%;bottom:58px;width:min(520px,74vw);height:18px;transform:translateX(-50%) rotate(-1.2deg);border-bottom:2px solid rgba(42,157,143,0.28);border-radius:50%;pointer-events:none;}
+.about-hero-luxury{min-height:auto;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:84px 24px 16px;background:radial-gradient(circle at 22% 18%,rgba(255,207,112,0.24),transparent 24%),radial-gradient(circle at 78% 22%,rgba(94,194,189,0.17),transparent 28%),linear-gradient(135deg,#fffefa 0%,#f3fbff 56%,#fff6e8 100%);color:var(--text);}
+.about-hero-luxury::before{content:'';position:absolute;inset:-8%;z-index:0;background:linear-gradient(180deg,rgba(255,254,250,0.66),rgba(255,254,250,0.9)),url('assets/popopo-map-visual.png') center 48% / cover no-repeat;opacity:0.24;filter:saturate(0.88) contrast(0.95);pointer-events:none;}
+.about-hero-luxury::after{content:'';position:absolute;inset:0;z-index:0;background:repeating-linear-gradient(0deg,rgba(91,141,238,0.075) 0 1px,transparent 1px 34px);pointer-events:none;}
 .about-hero-inner{position:relative;z-index:1;max-width:920px;margin:0 auto;}
 .about-luxury-label{display:inline-flex;align-items:center;justify-content:center;padding:6px 16px;border-radius:52% 48% 46% 54% / 50% 54% 46% 50%;border:1.5px dashed rgba(42,157,143,0.5);background:rgba(255,255,255,0.68);color:#2a7d74;font-family:'Yomogi','Noto Sans JP',sans-serif;font-size:0.94rem;font-weight:400;letter-spacing:0.12em;margin-bottom:16px;transform:rotate(-2deg);}
 .about-luxury-title{position:relative;max-width:1180px;margin:0 auto 16px;color:#1f2a45;font-family:'Yomogi','Noto Sans JP',sans-serif;font-size:clamp(2.35rem,5.1vw,4.7rem);font-weight:400;line-height:1.2;letter-spacing:0;}
@@ -685,7 +687,7 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   .daily-prompt-card{align-items:stretch;flex-direction:column;}
   .daily-prompt-card .btn-outline{justify-content:center;width:100%;}
   .about-hero-luxury{min-height:auto;padding:96px 18px 40px;}
-  .about-hero-luxury::before{top:48%;font-size:5.2rem;}
+  .about-hero-luxury::before{inset:-10%;opacity:0.16;background-position:center 42%;}
   .about-hero-luxury::after{bottom:42px;width:70vw;}
   .about-luxury-label{margin-bottom:20px;font-size:0.82rem;}
   .about-luxury-title{font-size:2.35rem;line-height:1.42;}
@@ -2491,4 +2493,3 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
 .daily-prompt-vote-btn {
   position: relative;
 }
-
