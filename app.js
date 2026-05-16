@@ -257,6 +257,7 @@ let localPromptVotes = JSON.parse(localStorage.getItem('popopo_prompt_votes') ||
 let latestRemotePromptSuggestions = [];
 const PROMPT_SEEN_STORAGE_KEY = 'popopo_seen_daily_prompts_v1';
 const PROMPT_SEEN_LIMIT = 240;
+const PROMPT_ARCHIVE_CUTOFF = new Date('2026-05-17T00:00:00+09:00').getTime();
 const NICKNAME_STORAGE_KEY = 'popopo_last_nickname';
 const ADD_SPOT_FORM_DRAFT_KEY = 'popopo_add_spot_draft_session_v1';
 let addSpotDraftTimer = null;
@@ -407,6 +408,7 @@ const DAILY_PROMPTS = [
   '投稿しやすくなるために、どんな工夫があるとよさそうですか？',
   'POPOPOコミュニティらしい遊び心のアイデアはありますか？'
 ];
+const FALLBACK_PROMPTS_ARE_ARCHIVED = true;
 function loadSeenDailyPromptIds() {
   try {
     const raw = JSON.parse(localStorage.getItem(PROMPT_SEEN_STORAGE_KEY) || '[]');
@@ -1292,7 +1294,7 @@ function getUnseenPromptCandidates({ includeFallback = true, excludeId = '' } = 
   const communityItems = mergePromptSuggestions()
     .map(item => ({ ...item, source: 'community', seenId: getCommunityPromptId(item) }))
     .filter(item => item.seenId !== excludeId && !isDailyPromptSeen(item.seenId));
-  const fallbackItems = includeFallback
+  const fallbackItems = includeFallback && !FALLBACK_PROMPTS_ARE_ARCHIVED
     ? getFallbackPromptItems()
         .map(item => ({ ...item, seenId: item.id }))
         .filter(item => item.seenId !== excludeId && !isDailyPromptSeen(item.seenId))
@@ -1354,7 +1356,7 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
 
   const cutoff = Date.now() - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
   return Array.from(byKey.values())
-    .filter(item => (item.timestamp || 0) >= cutoff)
+    .filter(item => (item.timestamp || 0) >= cutoff && (item.timestamp || 0) >= PROMPT_ARCHIVE_CUTOFF)
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
@@ -1414,8 +1416,9 @@ function getDailyPromptInfo() {
     };
   }
 
-  const unseenFallback = getFallbackPromptItems()
-    .filter(item => !isDailyPromptSeen(item.id));
+  const unseenFallback = FALLBACK_PROMPTS_ARE_ARCHIVED
+    ? []
+    : getFallbackPromptItems().filter(item => !isDailyPromptSeen(item.id));
   if (unseenFallback.length) {
     const activeIndex = getDayIndex() % unseenFallback.length;
     const fallbackItem = unseenFallback[activeIndex];
@@ -1446,7 +1449,6 @@ function renderDailyPrompt() {
   const info = getDailyPromptInfo();
   currentDailyPromptInfo = info;
   if (text) text.textContent = info.text;
-  markDailyPromptSeen(info);
   if (stamp) {
     if (info.source === 'community' && info.timestamp) {
       const d = new Date(info.timestamp);
@@ -4643,6 +4645,7 @@ function bindEvents() {
   const dailyPromptGachaBtn = document.getElementById('dailyPromptGachaBtn');
   if (dailyPromptGachaBtn) dailyPromptGachaBtn.addEventListener('click', () => {
     const currentInfo = currentDailyPromptInfo || getDailyPromptInfo();
+    markDailyPromptSeen(currentInfo);
     const candidates = getUnseenPromptCandidates({ includeFallback: true, excludeId: currentInfo.seenId });
     if (!candidates.length) {
       activeGachaItem = null;
