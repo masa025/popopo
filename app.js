@@ -1293,6 +1293,7 @@ function getFallbackPromptItems() {
 function getUnseenPromptCandidates({ includeFallback = true, excludeId = '' } = {}) {
   const communityItems = mergePromptSuggestions()
     .map(item => ({ ...item, source: 'community', seenId: getCommunityPromptId(item) }))
+    .filter(item => (item.timestamp || 0) >= PROMPT_ARCHIVE_CUTOFF)
     .filter(item => item.seenId !== excludeId && !isDailyPromptSeen(item.seenId));
   const fallbackItems = includeFallback && !FALLBACK_PROMPTS_ARE_ARCHIVED
     ? getFallbackPromptItems()
@@ -1356,7 +1357,7 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
 
   const cutoff = Date.now() - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
   return Array.from(byKey.values())
-    .filter(item => (item.timestamp || 0) >= cutoff && (item.timestamp || 0) >= PROMPT_ARCHIVE_CUTOFF)
+    .filter(item => (item.timestamp || 0) >= cutoff)
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
@@ -1581,7 +1582,7 @@ function renderDailyPromptCandidates() {
   }
   if (empty) empty.hidden = true;
   const todayInfo = currentDailyPromptInfo || getDailyPromptInfo();
-  const leadingId = todayInfo.source === 'community' ? todayInfo.id : (merged[0] && getPromptVoteCount(merged[0]) > 0 ? (merged[0].clientId || merged[0].id) : null);
+  const leadingId = todayInfo.source === 'community' ? todayInfo.id : null;
   list.innerHTML = merged.slice(0, 10).map((item, idx) => {
     const id = item.clientId || item.id;
     const voted = isPromptVoted(item);
