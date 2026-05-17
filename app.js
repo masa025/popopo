@@ -306,19 +306,25 @@ const CARROT_GUIDE_HINTS = {
   hero: [
     {
       title: 'はじめて迷ったら',
-      text: '上の「おすすめスポットを見る」と「みんなの感想を見る」から入ると、今のサイトの流れがつかみやすいです。',
-      actionLabel: '入口を見る',
+      text: 'トップ画像の下にある入口から、おすすめスポットやみんなの感想へ進めます。まずは気になる場所を眺めてみてください。',
+      actionLabel: 'スポットへ',
+      href: '#spots'
+    },
+    {
+      title: '今日の発見は入れ替わります',
+      text: '上の小さな発見欄は、投稿されたスポットや感想から少しずつ入れ替わります。名前を押すと、そのカードを開けます。',
+      actionLabel: '発見を見る',
       href: '#hero'
     },
     {
       title: '小さな作品も触れます',
-      text: '上に流れている作品アイコンは、横に動かして選べます。気になる作品を押すと大きく開きます。',
+      text: 'トップに流れている作品アイコンは、横に動かして選べます。気になる作品を押すと大きく開きます。',
       actionLabel: '作品を見る',
       href: '#hero'
     },
     {
       title: 'しっかり知りたい時は',
-      text: '使い方ページには、投稿・行きたいリスト・ギャラリーの見方をまとめています。',
+      text: '使い方ページには、投稿、行きたいリスト、ギャラリー、フリートークの見方をまとめています。',
       actionLabel: '使い方へ',
       href: 'how-to.html'
     }
@@ -332,7 +338,7 @@ const CARROT_GUIDE_HINTS = {
     },
     {
       title: '最近の感想もヒントに',
-      text: 'スポットカードには最新の感想が1行だけ出ます。誰かの体験から次の行き先を探せます。',
+      text: 'スポットカードには最新の感想が1行だけ出ます。「みんなの感想」から、その場所の声を一覧で見られます。',
       actionLabel: '感想を見る',
       href: '#visited'
     },
@@ -340,7 +346,7 @@ const CARROT_GUIDE_HINTS = {
       title: 'おすすめも投稿できます',
       text: '「スポットを追加する」から場所を提案できます。投稿後は同じ端末のブラウザで編集できます。',
       actionLabel: '追加する',
-      href: '#spots'
+      href: '#add-spot'
     }
   ],
   visited: [
@@ -352,7 +358,7 @@ const CARROT_GUIDE_HINTS = {
     },
     {
       title: '行ってみたら一言でも',
-      text: '写真や投稿URLは任意です。短い感想でも、次に行く人の背中をそっと押します。',
+      text: '写真や投稿URLは任意です。投稿後は同じ端末のブラウザで編集できます。短い感想でも次の人のヒントになります。',
       actionLabel: '投稿する',
       href: '#visited'
     }
@@ -4525,6 +4531,13 @@ function bindCarrotGuideEvents() {
   if (nextBtn) nextBtn.addEventListener('click', () => openCarrotGuide(true));
   if (closeBtn) closeBtn.addEventListener('click', closeCarrotGuide);
   if (action) action.addEventListener('click', closeCarrotGuide);
+  if (action) action.addEventListener('click', (e) => {
+    if (action.getAttribute('href') === '#add-spot') {
+      e.preventDefault();
+      closeCarrotGuide();
+      openAddSpotModal();
+    }
+  });
   maybeShowCarrotGuideOnce();
 }
 

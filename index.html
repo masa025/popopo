@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260516-1">
+  <link rel="stylesheet" href="style.css?v=20260517-5">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -128,42 +128,46 @@
         <span class="ticker-content" id="tickerContent" style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🎙️ POPOPO リスナーコミュニティ</span>
         <span style="font-size:0.8rem; opacity:0.7;">→</span>
       </a>
-      <div class="hero-gallery-band" aria-label="配信で届いた作品">
-        <div class="hero-gallery-marquee" id="heroGalleryMarquee">
-          <div class="hero-gallery-track" id="heroGalleryTrack">
-            <!-- JS dynamically injects this -->
+      <div class="hero-map-stage">
+        <figure class="hero-map-visual" aria-label="POPOPO お出かけマップのイメージ">
+          <img src="assets/popopo-map-visual.png" alt="人から人へ伝わる小さな発見を描いたPOPOPO お出かけマップの水彩イラスト">
+        </figure>
+        <div class="hero-map-overlay hero-map-overlay--top">
+          <div class="hero-gallery-band" aria-label="配信で届いた作品">
+            <div class="hero-gallery-marquee" id="heroGalleryMarquee">
+              <div class="hero-gallery-track" id="heroGalleryTrack">
+                <!-- JS dynamically injects this -->
+              </div>
+            </div>
+            <div class="hero-gallery-action">
+              <button id="viewAllGalleryBtn" class="btn-gallery-all">🖼️ すべての作品・辞典を見る</button>
+            </div>
           </div>
         </div>
-        <div class="hero-gallery-action">
-          <button id="viewAllGalleryBtn" class="btn-gallery-all">🖼️ すべての作品・辞典を見る</button>
+        <div class="hero-map-overlay hero-map-overlay--bottom">
+          <a href="about.html" class="hero-story-link">🌿 この場所を作った理由</a>
+          <div class="hero-quick-links" aria-label="主要コンテンツを見る">
+            <a href="#spots" class="hero-quick-link">📍 おすすめスポットを見る</a>
+            <a href="#visited" class="hero-quick-link">💬 みんなの感想を見る</a>
+            <button type="button" class="hero-quick-link hero-quick-link--gacha" id="heroGachaBtn" aria-label="おすすめや感想から、ポポッと選びます" title="ポポッと選ぶ">
+              <span class="hero-gacha-label hero-gacha-label--full">✨ ポポッと選ぶ</span>
+              <span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">✨ ポポッと</span>
+            </button>
+            <a href="https://popooshi.vercel.app/" target="_blank" rel="noopener noreferrer" class="hero-quick-link" style="background:linear-gradient(135deg, #6eb0ff, #5b8dee); color:#fff; border-color:rgba(255,255,255,0.1);" title="POPOOSHIで遊ぶ"><span class="hero-gacha-label hero-gacha-label--full">🎮 POPOOSHIで遊ぶ</span><span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">🎮 ゲーム</span></a>
+          </div>
         </div>
-      </div>
-      <h1 class="hero-title">みんなで作る<br><span class="hero-accent">お出かけマップ</span></h1>
-      <p class="hero-sub">人から人へ伝わる、ちいさなお出かけ案内。<br>POPOPO コミュニティでおすすめや感想を<br>みんなで集めています。あなたのおすすめもぜひ教えてください！</p>
-      <a href="about.html" class="hero-story-link">🌿 この場所を作った理由</a>
-      <div class="hero-quick-links" aria-label="主要コンテンツを見る">
-        <a href="#spots" class="hero-quick-link">📍 おすすめスポットを見る</a>
-        <a href="#visited" class="hero-quick-link">💬 みんなの感想を見る</a>
-        <button type="button" class="hero-quick-link hero-quick-link--gacha" id="heroGachaBtn" aria-label="おすすめや感想から、ポポッと選びます" title="ポポッと選ぶ">
-          <span class="hero-gacha-label hero-gacha-label--full">✨ ポポッと選ぶ</span>
-          <span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">✨ ポポッと</span>
-        </button>
-        <a href="https://popooshi.vercel.app/" target="_blank" rel="noopener noreferrer" class="hero-quick-link" style="background:linear-gradient(135deg, #6eb0ff, #5b8dee); color:#fff; border-color:rgba(255,255,255,0.1);" title="POPOOSHIで遊ぶ"><span class="hero-gacha-label hero-gacha-label--full">🎮 POPOOSHIで遊ぶ</span><span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">🎮 ゲーム</span></a>
       </div>
       <div class="hero-stats">
         <a href="#spots" class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></a>
         <div class="stat-divider"></div>
         <a href="#community" class="stat">
-          <div class="stat-num is-loading" id="statPosts">読み込み中</div>
-          <div class="stat-label">フリートーク投稿数</div>
+          <span class="stat-num is-loading" id="statPosts">読み込み中</span>
+          <span class="stat-label">つぶやき</span>
         </a>
         <div class="stat-divider"></div>
-        <a href="#visited" class="stat"><span class="stat-num is-loading" id="statVisited">読み込み中</span><span class="stat-label">みんなの感想</span></a>
+        <a href="#visited" class="stat"><span class="stat-num is-loading" id="statVisited">読み込み中</span><span class="stat-label">感想</span></a>
         <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num is-loading" id="statViews">読み込み中</span><span class="stat-label">👀 訪問者数</span></div>
-      </div>
-      <div class="hero-btns">
-        <a href="how-to.html" class="btn-outline" id="heroHowToBtn">💡 使い方を見る</a>
+        <div class="stat"><span class="stat-num is-loading" id="statViews">読み込み中</span><span class="stat-label">👀 訪問</span></div>
       </div>
     </div>
     <a class="scroll-hint" href="#spots" aria-label="おすすめスポットへ移動">
@@ -737,7 +741,7 @@
 
   <div class="carrot-guide" id="carrotGuide" aria-live="polite">
     <div class="carrot-guide-bubble" id="carrotGuideBubble" role="dialog" aria-labelledby="carrotGuideTitle" hidden>
-      <p class="carrot-guide-kicker">人参鹿さんのヒント</p>
+      <p class="carrot-guide-kicker">人参鹿さんの使い方ヒント</p>
       <h3 class="carrot-guide-title" id="carrotGuideTitle">迷ったらここから</h3>
       <p class="carrot-guide-text" id="carrotGuideText">おすすめスポットとみんなの感想から、気になる入口を選んでみてください。</p>
       <div class="carrot-guide-actions">
@@ -746,9 +750,9 @@
         <button class="carrot-guide-link" id="carrotGuideClose" type="button">閉じる</button>
       </div>
     </div>
-    <button class="carrot-guide-btn" id="carrotGuideBtn" type="button" aria-expanded="false" aria-controls="carrotGuideBubble" aria-label="人参鹿さんのヒントを見る">
+    <button class="carrot-guide-btn" id="carrotGuideBtn" type="button" aria-expanded="false" aria-controls="carrotGuideBubble" aria-label="人参鹿さんの使い方ヒントを見る">
       <img src="assets/admin-profile.jpg" alt="" width="72" height="72" loading="lazy">
-      <span>ヒント</span>
+      <span>使い方</span>
     </button>
   </div>
 
@@ -799,6 +803,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260517-3"></script>
+  <script src="app.js?v=20260517-6"></script>
 </body>
 </html>
