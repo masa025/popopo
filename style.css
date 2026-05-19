@@ -173,6 +173,8 @@ button.hero-quick-link{cursor:pointer;font-family:inherit;}
 .hero-gacha-label--compact{display:none;}
 .hero-quick-link--gacha{border-color:rgba(200,182,150,0.42);background:linear-gradient(165deg,rgba(255,252,246,0.95),rgba(255,255,255,0.72));color:#5c5346;}
 .hero-quick-link--gacha:hover{border-color:rgba(168,148,120,0.55);color:#3d3830;}
+.hero-quick-link--game{border-color:rgba(91,141,238,0.22);background:rgba(255,255,255,0.72);color:#4f7fd8;}
+.hero-quick-link--game:hover{border-color:rgba(91,141,238,0.45);color:#2b5db3;background:rgba(255,255,255,0.86);}
 .gacha-modal .modal-box{overflow:hidden;}
 .gacha-modal-box{position:relative;transition:border-color .5s ease,box-shadow .5s ease;}
 .gacha-modal-lead{font-size:0.86rem;color:var(--text-muted);line-height:1.75;margin:-6px auto 18px;padding:0 12px;max-width:36em;}
