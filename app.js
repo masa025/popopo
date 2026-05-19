@@ -148,12 +148,548 @@ const GALLERY_ITEMS = [
   }
 ];
 
+let currentLanguage = localStorage.getItem('popopo_language') || 'jp';
+
+const TRANSLATIONS = {
+  jp: {
+    logo_sub: "お出かけマップ",
+    nav_spots: "📍 おすすめスポット",
+    nav_visited: "💬 みんなの感想",
+    nav_talk: "💬 フリートーク掲示板",
+    nav_about: "🌿 この場所を作った理由",
+    nav_howto: "💡 使い方",
+    nav_howto_mobile: "💡 使い方を見る",
+    hero_view_map: "地図を見る",
+    hero_view_gallery: "🖼️ すべての作品・辞典を見る",
+    hero_quick_spots: "📍 おすすめスポットを見る",
+    hero_quick_visited: "💬 みんなの感想を見る",
+    hero_gacha_full: "✨ ポポッと選ぶ",
+    hero_gacha_compact: "✨ ポポッと",
+    hero_game_full: "🎮 POPOOSHIで遊ぶ",
+    hero_game_compact: "🎮 ゲーム",
+    loading: "読み込み中",
+    stats_spots: "スポット",
+    stats_posts: "つぶやき",
+    stats_visited: "感想",
+    stats_views: "👀 訪問",
+    sec_spots: "🗺️ おすすめスポット",
+    sec_spots_sub: "『これ良かったよ』の気持ちをみんなでシェア。あなたの好きも、ぜひ教えてください。",
+    btn_add_spot: "スポットを追加する",
+    add_spot_hint: "「ここ気になる」「行ってみたい」そんな一言からで大丈夫！",
+    weather_hint: "🌤️ 今日のお出かけヒント",
+    weather_loading: "天気を取得中...",
+    tab_all: "すべて",
+    tab_food: "🍴 飲食店",
+    tab_mohinga: "🍜 食べたいもの",
+    tab_museum: "🎨 美術館・博物館",
+    tab_event: "🌿 イベント",
+    tab_nature: "🌳 自然・よりみち",
+    tab_book: "📚 本・しらべもの",
+    tab_shop: "🛒 くらし・雑貨",
+    tab_view: "✨ おきにいりの景色",
+    tab_relax: "🛁 癒やし・ととのう",
+    tab_entertainment: "🎬 エンタメ",
+    btn_want_list: "🔖 行きたいリスト（0）",
+    btn_add_want: "🌱 これから行きたい場所を追加",
+    want_hint_text: "行ってみた場所があれば、感想を残してみませんか？",
+    btn_post_review: "感想を投稿する",
+    btn_more: "もっと見る",
+    sec_visited: "💬 みんなの感想",
+    sec_visited_sub: "実際に訪れたスポットの感想を集めています",
+    sec_talk: "💬 フリートーク掲示板",
+    sec_talk_sub: "お出かけの予定、POPOPOの感想、サイトへのご意見など自由に語り合いましょう！",
+    btn_post_chat: "✏️ つぶやく",
+    prompt_kicker: "今日のお題",
+    prompt_default: "最近気になっている場所はありますか？",
+    btn_prompt_post: "このお題でつぶやく",
+    btn_prompt_gacha: "🎲 ガチャを回す",
+    btn_prompt_view_all: "みんなの提案を見る",
+    prompt_candidates_lead: "みんなが提案してくれたお題を順番に「今日のお題」として表示しています。<br>心が動いたお題や共感したものには、ぜひ ♡ を押して応援してみてください✨",
+    btn_prompt_suggest: "お題を提案する",
+    prompt_suggest_hint: "ふと思いついた問いかけで大丈夫。だれかの一日にそっと届きます。",
+    prompt_empty: "まだ提案はありません。最初のひとつ目、書いてみませんか？",
+    footer_desc: "POPOPOで紹介された場所を、みんなで楽しもう。",
+    footer_update: "最終更新：2026年5月11日",
+    footer_spots_link: "スポット一覧",
+    footer_admin: "お手入れ係",
+    footer_contact: "🦋 masa0a へ連絡する / Bluesky",
+    upload_disclaimer: "※画像は自動的に最適化（縮小・圧縮）して保存されます。"
+  },
+  en: {
+    logo_sub: "Outing Map",
+    nav_spots: "📍 Recommended Spots",
+    nav_visited: "💬 Guest Reviews",
+    nav_talk: "💬 Free Talk Board",
+    nav_about: "🌿 Why We Built This",
+    nav_howto: "💡 Guide",
+    nav_howto_mobile: "💡 Open Guide",
+    hero_view_map: "View Map",
+    hero_view_gallery: "🖼️ View Art & Dictionary",
+    hero_quick_spots: "📍 Browse Spots",
+    hero_quick_visited: "💬 Read Reviews",
+    hero_gacha_full: "✨ Pop & Pick!",
+    hero_gacha_compact: "✨ Pop Pick",
+    hero_game_full: "🎮 Play POPOOSHI",
+    hero_game_compact: "🎮 Game",
+    loading: "Loading...",
+    stats_spots: "Spots",
+    stats_posts: "Chats",
+    stats_visited: "Reviews",
+    stats_views: "👀 Visits",
+    sec_spots: "🗺️ Recommended Spots",
+    sec_spots_sub: "Share your 'I loved this place' moments with everyone. Tell us your favorites!",
+    btn_add_spot: "Add a Spot",
+    add_spot_hint: "Just a small recommendation or 'I want to go here' is perfect!",
+    weather_hint: "🌤️ Today's Outing Hint",
+    weather_loading: "Fetching weather...",
+    tab_all: "All",
+    tab_food: "🍴 Food & Cafe",
+    tab_mohinga: "🍜 Must-Try",
+    tab_museum: "🎨 Art & Museum",
+    tab_event: "🌿 Events",
+    tab_nature: "🌳 Nature & Walk",
+    tab_book: "📚 Book & Study",
+    tab_shop: "🛒 Lifestyle & Goods",
+    tab_view: "✨ Lovely Views",
+    tab_relax: "🛁 Relax & Bath",
+    tab_entertainment: "🎬 Fun & Media",
+    btn_want_list: "🔖 Want to Go (0)",
+    btn_add_want: "🌱 Add a Spot You Want to Visit",
+    want_hint_text: "Visited some spots? Share your impressions!",
+    btn_post_review: "Write a Review",
+    btn_more: "See More",
+    sec_visited: "💬 Guest Reviews",
+    sec_visited_sub: "Real reviews and impressions from guests who visited the spots",
+    sec_talk: "💬 Free Talk Board",
+    sec_talk_sub: "Feel free to talk about your plans, thoughts on POPOPO, feedback, or anything!",
+    btn_post_chat: "✏️ Post Chat",
+    prompt_kicker: "Today's Topic",
+    prompt_default: "Are there any places you are curious about lately?",
+    btn_prompt_post: "Chat on This Topic",
+    btn_prompt_gacha: "🎲 Roll Topic Gacha",
+    btn_prompt_view_all: "View All Topics",
+    prompt_candidates_lead: "We show topics suggested by everyone as 'Today\'s Topic' in turn.<br>Press ♡ to support topics that touch your heart or make you relate✨",
+    btn_prompt_suggest: "Suggest a Topic",
+    prompt_suggest_hint: "Any casual question is fine! It will reach someone's day gently.",
+    prompt_empty: "No suggestions yet. Why not write the first one?",
+    footer_desc: "Let's explore and enjoy spots introduced in POPOPO together.",
+    footer_update: "Last Updated: May 11, 2026",
+    footer_spots_link: "Spots Directory",
+    footer_admin: "Curator",
+    footer_contact: "🦋 Contact masa0a / Bluesky",
+    upload_disclaimer: "*Images will be optimized (shrunk/compressed) and saved automatically."
+  }
+};
+
+const SPOT_TRANSLATIONS = {
+  'lion': {
+    name: 'Meikyoku Kissa Lion',
+    memo: 'A historic cafe where you can enjoy classical music masterpieces in a serene, church-like atmosphere.'
+  },
+  'beltz': {
+    name: 'BELTZ',
+    memo: 'Famous Basque cheesecake shop.'
+  },
+  'torikatsu': {
+    name: 'Torikatsu Chicken',
+    memo: 'A popular deep-fried chicken cutlet shop hidden in an alleyway.'
+  },
+  'hinto': {
+    name: 'Hinto',
+    memo: 'A popular local noodle and dining spot in Nishinomiya.'
+  },
+  'comme-chinois': {
+    name: 'Comme Chinois',
+    memo: 'A highly popular bakery in Kobe offering a vast variety of delicious pastries and bread. Morning croissants are absolutely heavenly!'
+  },
+  'karayaki': {
+    name: 'Kamayaki Latorato',
+    memo: 'A cozy kamado-baked pizza and Italian dining spot.'
+  },
+  'yugi': {
+    name: 'Yugi Shouten',
+    memo: 'A Chinese grocery and food court in Ikebukuro. Highly recommended for xiaolongbao, Liangpi, morning congee, and Youtiao!'
+  },
+  'haidilao': {
+    name: 'Haidilao Hotpot',
+    memo: 'A globally famous Sichuan hotpot chain with great hospitality.'
+  },
+  'dennys': {
+    name: "Denny's",
+    memo: 'Jambalaya and Mala Tang are recommended options at this family restaurant.'
+  },
+  'manchs': {
+    name: "Munch's Burger Shack",
+    memo: 'Famous custom-blend beef burgers. Even President Trump dined here!'
+  },
+  'kameju': {
+    name: 'Kameju',
+    memo: 'A legendary traditional sweets shop in Asakusa. Famous for its exceptionally fluffy Dorayaki.'
+  },
+  'kamado-gohan-matsushima': {
+    name: 'Kamado Gohan Matsushima',
+    memo: 'Located in Ningyocho, accessible directly from Asakusa. Offers delicious, traditional stove-cooked rice lunch sets.'
+  },
+  'yamaya-ikebukuro': {
+    name: 'Hakata Motsunabe Yamaya Ikebukuro',
+    memo: 'Great spot for Hakata-style offal hotpot (Motsunabe) and all-you-can-eat spicy cod roe (Mentai) lunch sets.'
+  },
+  'kura-global-flagship': {
+    name: 'Kura Sushi Global Flagship Store',
+    memo: 'An entertainment-focused conveyor belt sushi experience. Several flagship locations are available in Tokyo.'
+  },
+  'saryo-tsujiri-daimaru': {
+    name: 'Saryo Tsujiri Daimaru Tokyo',
+    memo: 'Directly connected to Tokyo Station. Perfect for rich matcha parfaits and traditional Japanese tea desserts.'
+  },
+  'leonards-japan': {
+    name: "Leonard's Japan",
+    memo: 'Enjoy authentic Hawaiian Malasadas in Yokohama. Crispy on the outside, fluffy and sweet on the inside.'
+  },
+  'shinpachi-shokudo': {
+    name: 'Shinpachi Shokudo',
+    memo: 'A popular restaurant chain specializing in charcoal-grilled fish sets. Perfect for a quick, healthy Japanese meal.'
+  },
+  'tokyo-mitaiwara': {
+    name: 'Tokyo Mitaiwala',
+    memo: 'An Indian sweets cafe in Nishi-Kasai, famous for its unique traditional desserts like Barfi.'
+  },
+  'rakusho-ramen': {
+    name: 'Rakusho Ramen',
+    memo: 'A budget-friendly Hakata ramen spot in the heart of Tenjin, Fukuoka. Their curry is also popular.'
+  },
+  'kusamakura-cafe': {
+    name: 'Kusamakura Cafe',
+    memo: 'A tranquil cafe in Minato-ku. Cozy lighting, friendly staff, and books make it a relaxing place to unwind.'
+  },
+  'matsuya-morning': {
+    name: 'Matsuya Breakfast',
+    memo: 'Affordable and filling traditional Japanese breakfast sets served until 11:00 AM nationwide.'
+  },
+  'sanin-gyokai-chuka-soba': {
+    name: 'Sanin Gyokai Chuka Soba',
+    memo: 'Located in a residential area of Nerima. Known for its rich shijimi clam broth ramen with an eye-catching presentation.'
+  },
+  'frijoles-yaesu': {
+    name: 'Frijoles Tokyo Midtown Yaesu',
+    memo: 'Hearty, fresh burritos loaded with proteins and vegetables. Perfect for a quick and healthy meal.'
+  },
+  'oyama-milk-no-sato': {
+    name: 'Daisen Makiba Milk no Sato',
+    memo: 'The official concept shop for the famous Shirobara Milk brand, offering fresh soft-serve ice cream and Tottori dairy products.'
+  },
+  'ramen-otama': {
+    name: 'Ramen Otama',
+    memo: 'A local favorite in Yonago, Tottori, serving savory beef bone broth (Gyukotsu) ramen.'
+  },
+  'mohinga': {
+    name: 'Mohinga (Myanmar Cuisine)',
+    memo: "Myanmar's famous national dish of rice noodles in a rich, savory fish broth. Find it in Takadanobaba."
+  },
+  '400do-pizza': {
+    name: '400 Degree Pizza',
+    memo: 'An extremely popular artisanal pizza parlor in Hiroshima and Okayama, recently featured on popular media.'
+  },
+  'yamatane': {
+    name: 'Yamatane Museum of Art',
+    memo: 'A beautiful museum in Shibuya specializing in traditional Nihonga (Japanese-style paintings).'
+  },
+  'nmwa': {
+    name: 'National Museum of Western Art',
+    memo: 'Located in Ueno, housed in a magnificent building designed by the legendary architect Le Corbusier (World Heritage).'
+  },
+  'edo': {
+    name: 'Edo-Tokyo Museum',
+    memo: 'Experience the fascinating history and culture of Edo (old Tokyo) and modern Tokyo through full-scale replicas.'
+  },
+  'hokusai': {
+    name: 'The Sumida Hokusai Museum',
+    memo: 'Dedicated to the world-renowned Ukiyo-e master Katsushika Hokusai, exhibiting many of his iconic works.'
+  },
+  'ota-memorial-museum': {
+    name: 'Ota Memorial Museum of Art',
+    memo: 'A lovely museum in Harajuku dedicated exclusively to traditional Ukiyo-e woodblock prints.'
+  },
+  'japan-coast-guard-museum-yokohama': {
+    name: 'Japan Coast Guard Museum Yokohama',
+    memo: 'Free museum showcasing patrol vessels and informative exhibits about maritime safety.'
+  },
+  'queen-hiroba-yokohama-customs': {
+    name: 'Queen\'s Plaza Yokohama Customs Museum',
+    memo: 'A free museum showcasing Yokohama Customs history, including historic anti-smuggling exhibits.'
+  },
+  'yoyogi': {
+    name: 'Yoyogi Park Events',
+    memo: 'A spacious city park hosting various international cultural festivals and lively weekend events.'
+  },
+  'kagurazaka-machibutai-2026': {
+    name: 'Kagurazaka Machibutai Oedo Meguri 2026',
+    memo: 'A vibrant traditional arts festival held across the atmospheric streets of Kagurazaka in mid-May.'
+  },
+  'ikebukuro-jazz-festival': {
+    name: 'Ikebukuro Jazz Festival',
+    memo: 'An open-air jazz event across Ikebukuro. Drop by for free while strolling around the neighborhood.'
+  },
+  'thai-festival-tokyo': {
+    name: 'Thai Festival Tokyo',
+    memo: 'A highly popular annual event in Yoyogi Park celebrating authentic Thai food, music, and cultural performances.'
+  },
+  'lafollejournee-tokyo-2026': {
+    name: 'La Folle Journee TOKYO 2026',
+    memo: 'A lively classical music festival at Tokyo International Forum featuring affordable short concerts and food stalls.'
+  },
+  'niconico-chokaigi': {
+    name: 'Niconico Chokaigi',
+    memo: 'Japan\'s massive pop-culture convention in Makuhari, uniting internet culture, gaming, and traditional arts.'
+  },
+  'inokashira': {
+    name: 'Inokashira Park',
+    memo: 'A lush, serene park in Musashino/Mitaka. Perfect for calming strolls, swan boat rides, and relaxing among trees.'
+  },
+  'koishikawa-korakuen': {
+    name: 'Koishikawa Korakuen Garden',
+    memo: 'A historic, tranquil Japanese garden near Tokyo Dome. A perfect hidden retreat to experience seasonal nature.'
+  },
+  'tsutaya': {
+    name: 'Daikanyama T-Site (Tsutaya Books)',
+    memo: 'A beautifully designed lifestyle bookstore offering books, cafes, and creative inspiration.'
+  },
+  'kakimori': {
+    name: 'Kakimori Kuramae',
+    memo: 'A renowned stationery shop in Kuramae where you can design and craft your own custom notebook.'
+  },
+  'shibuyasky': {
+    name: 'SHIBUYA SKY',
+    memo: 'A breathtaking open-air observation deck on the roof of Shibuya Scramble Square, offering panoramic views of Tokyo.'
+  },
+  'kasai-rinkai-crystal-view': {
+    name: 'Kasai Rinkai Park Crystal View',
+    memo: 'A stunning, minimalist glass structure overlooking Tokyo Bay inside Kasai Rinkai Park. Free admission.'
+  },
+  'kogane': {
+    name: 'Koganeyu',
+    memo: 'A chic, modern public bath (Sento) in Sumida-ku, famous for its craft beer bar and designer sauna room.'
+  },
+  'aagan': {
+    name: 'Aagan',
+    memo: 'A Nepalese/Newari restaurant in Okubo, Shinjuku. Highly praised for delicious, authentic flavors and generous portions.'
+  },
+  'rosetsu': {
+    name: 'Fuchu Art Museum — Nagasawa Rosetsu Exhibition',
+    memo: 'An exhibition showing the cute origin of Japanese art and the dynamic brushstrokes of Nagasawa Rosetsu.'
+  }
+};
+
+const ADDRESS_TRANSLATION_MAP = {
+  '東京': 'Tokyo',
+  '兵庫': 'Hyogo',
+  '神奈川': 'Kanagawa',
+  '福岡': 'Fukuoka',
+  '鳥取': 'Tottori',
+  '広島': 'Hiroshima',
+  '千葉': 'Chiba',
+  '全国': 'Japan Nationwide',
+  'オンライン': 'Online',
+  '道玄坂': 'Dogenzaka, Shibuya',
+  '渋谷・広尾': 'Shibuya / Hiroo',
+  '兵庫県西宮市': 'Nishinomiya, Hyogo',
+  '神戸・三宮': 'Sannomiya, Kobe',
+  '渋谷区百人町': 'Hyakunincho, Shibuya',
+  '池袋': 'Ikebukuro',
+  '全国': 'Nationwide',
+  '港区芝': 'Shiba, Minato-ku',
+  '浅草': 'Asakusa',
+  '人形町': 'Ningyocho',
+  '池袋・東池袋': 'Ikebukuro / Higashi-Ikebukuro',
+  '銀座・原宿・浅草ROX・押上など': 'Ginza / Harajuku / Asakusa / Oshiage',
+  '東京駅・大丸東京店': 'Tokyo Station / Daimaru Tokyo',
+  '横浜ワールドポーターズ': 'Yokohama World Porters',
+  '東京ほか': 'Tokyo and others',
+  '西葛西': 'Nishi-Kasai',
+  '福岡市中央区天神': 'Tenjin, Chuo-ku, Fukuoka',
+  '港区': 'Minato-ku',
+  '東京都練馬区': 'Nerima-ku, Tokyo',
+  '東京ミッドタウン八重洲': 'Tokyo Midtown Yaesu',
+  '鳥取・大山': 'Daisen, Tottori',
+  '鳥取・米子': 'Yonago, Tottori',
+  '高田馬場など': 'Takadanobaba and others',
+  '広島・岡山': 'Hiroshima / Okayama',
+  '墨田区': 'Sumida-ku',
+  '原宿': 'Harajuku',
+  '横浜': 'Yokohama',
+  '代々木公園': 'Yoyogi Park',
+  '神楽坂エリア': 'Kagurazaka Area',
+  '東京国際フォーラム': 'Tokyo International Forum',
+  '幕張': 'Makuhari',
+  '武蔵野市・三鷹市': 'Musashino / Mitaka',
+  '文京区後楽': 'Koraku, Bunkyo-ku',
+  '代官山': 'Daikanyama',
+  '蔵前': 'Kuramae',
+  '渋谷': 'Shibuya',
+  '江戸川区': 'Edogawa-ku',
+  'Amazon Prime Video': 'Amazon Prime Video',
+  'NHK': 'NHK',
+  '新宿区大久保': 'Okubo, Shinjuku'
+};
+
+function convertToEnglishAddress(area, pref) {
+  const tArea = ADDRESS_TRANSLATION_MAP[area] || area;
+  const tPref = ADDRESS_TRANSLATION_MAP[pref] || pref;
+  if (tPref === 'Japan Nationwide' || tPref === 'Online' || tPref === 'Nationwide') {
+    return tPref;
+  }
+  if (tArea === tPref) {
+    return tArea;
+  }
+  return `${tArea}, ${tPref}`;
+}
+
+function getGoogleMapsUrl(s) {
+  if (SPOT_COORDINATES[s.id]) {
+    const { lat, lng } = SPOT_COORDINATES[s.id];
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
+  const query = encodeURIComponent(`${s.name} ${s.pref || ''} ${s.area || ''}`);
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+function renderInboundTags(s, lang) {
+  let html = '';
+  const isEn = lang === 'en';
+  if (s.vegan) {
+    html += `<span class="inbound-tag inbound-tag--vegan">${isEn ? '🌱 Vegan' : '🌱 ヴィーガン対応'}</span>`;
+  }
+  if (s.card) {
+    html += `<span class="inbound-tag inbound-tag--card">${isEn ? '💳 Card OK' : '💳 カード決済可'}</span>`;
+  }
+  if (s.wifi) {
+    html += `<span class="inbound-tag inbound-tag--wifi">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fiあり'}</span>`;
+  }
+  if (s.traditional) {
+    html += `<span class="inbound-tag inbound-tag--traditional">${isEn ? '⛩️ Traditional Japan' : '⛩️ 日本の伝統・文化'}</span>`;
+  }
+  return html ? `<div class="inbound-tags-container" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${html}</div>` : '';
+}
+
+async function fetchTranslation(text, targetLang = 'en') {
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Translation failed');
+    const data = await res.json();
+    if (data && data[0]) {
+      return data[0].map(s => s[0]).join('');
+    }
+    throw new Error('Invalid translation format');
+  } catch (err) {
+    console.error('Translation error:', err);
+    return null;
+  }
+}
+
+window.toggleTranslation = async function(btn) {
+  const container = btn.closest('.visited-card-body, .spot-review-card, .chat-content');
+  if (!container) return;
+
+  let translatedBox = container.querySelector('.translated-box');
+  if (translatedBox) {
+    translatedBox.remove();
+    btn.innerHTML = `🌐 ${currentLanguage === 'en' ? 'Japanese' : 'English'}`;
+    return;
+  }
+
+  const originalText = btn.dataset.translateText || '';
+  if (!originalText) return;
+
+  btn.disabled = true;
+  const originalLabel = btn.innerHTML;
+  btn.innerHTML = `<span class="translation-loading"></span> ${currentLanguage === 'en' ? 'Translating...' : '翻訳中...'}`;
+
+  const targetLang = currentLanguage === 'en' ? 'ja' : 'en';
+  const translated = await fetchTranslation(originalText, targetLang);
+
+  btn.disabled = false;
+  if (translated) {
+    translatedBox = document.createElement('div');
+    translatedBox.className = 'translated-box';
+    translatedBox.textContent = translated;
+    
+    const reviewEl = container.querySelector('.visited-review, .spot-review-comment, .chat-msg');
+    if (reviewEl) {
+      reviewEl.after(translatedBox);
+    } else {
+      container.appendChild(translatedBox);
+    }
+    btn.innerHTML = `🌐 ${currentLanguage === 'en' ? 'Show Original' : '原文を表示'}`;
+  } else {
+    btn.innerHTML = originalLabel;
+    alert(currentLanguage === 'en' ? 'Translation failed. Please try again.' : '翻訳に失敗しました。もう一度お試しください。');
+  }
+};
+
+function renderTranslationButton(text) {
+  if (!text) return '';
+  const label = currentLanguage === 'en' ? '🌐 English' : '🌐 日本語';
+  return `
+    <div class="translate-btn-container">
+      <button class="translate-btn" data-translate-text="${escHtml(text)}" onclick="toggleTranslation(this)">
+        ${label}
+      </button>
+    </div>
+  `;
+}
+
+function applyLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('popopo_language', lang);
+  document.documentElement.lang = lang === 'en' ? 'en' : 'ja';
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
+      if (TRANSLATIONS[lang][key].includes('<') && TRANSLATIONS[lang][key].includes('>')) {
+        el.innerHTML = TRANSLATIONS[lang][key];
+      } else {
+        el.textContent = TRANSLATIONS[lang][key];
+      }
+    }
+  });
+
+  const toggleBtnLabel = document.querySelector('#langToggleBtn .lang-label');
+  if (toggleBtnLabel) {
+    toggleBtnLabel.textContent = lang === 'en' ? 'EN' : 'JP';
+  }
+  const toggleBtnMobileLabel = document.querySelector('#langToggleBtnMobile .lang-label-mobile');
+  if (toggleBtnMobileLabel) {
+    toggleBtnMobileLabel.textContent = lang === 'en' ? 'EN' : 'JP';
+  }
+
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) {
+    chatInput.placeholder = lang === 'en' 
+      ? 'Share your thoughts, suggestions, or comments here...' 
+      : 'ここに感想やお題へのつぶやきを書いてね...';
+  }
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.placeholder = lang === 'en'
+      ? 'Search spots, areas, or keywords...'
+      : 'スポット名、エリア、キーワードで検索...';
+  }
+
+  const activeTab = document.querySelector('.tab.active');
+  renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+  if (typeof allPosts !== 'undefined') {
+    renderVisited(allPosts);
+  }
+}
+
 // ============================================================
 // 3. スポットデータ
 // ============================================================
 const SPOTS = [
   // --- 飲食店 ---
-  { id: 'lion', cat: 'food', emoji: '☕', name: '名曲喫茶ライオン', area: '道玄坂', pref: '東京', url: 'https://tabelog.com/tokyo/A1303/A130301/13001723/', memo: '名曲を聴きながら楽しめる喫茶店' },
+  { id: 'lion', cat: 'food', emoji: '☕', name: '名曲喫茶ライオン', area: '道玄坂', pref: '東京', url: 'https://tabelog.com/tokyo/A1303/A130301/13001723/', memo: '名曲を聴きながら楽しめる喫茶店', traditional: true },
   { id: 'beltz', cat: 'food', emoji: '🍽️', name: 'BELTZ', area: '渋谷・広尾', pref: '東京', url: 'https://beltztokyo.stores.jp/', memo: '' },
   { id: 'torikatsu', cat: 'food', emoji: '🍗', name: 'とりかつ', area: '道玄坂', pref: '東京', url: 'https://tabelog.com/tokyo/A1303/A130301/13001699/', memo: '' },
   { id: 'hinto', cat: 'food', emoji: '🍜', name: '貧頭', area: '兵庫県西宮市', pref: '兵庫', url: 'https://tabelog.com/hyogo/A2803/A280301/28000906/', memo: '' },
@@ -161,7 +697,8 @@ const SPOTS = [
     id: 'comme-chinois', cat: 'food', emoji: '🥐', name: 'Comme Chinois（コム・シノワ）', area: '神戸・三宮', pref: '兵庫', 
     url: 'https://www.comme-chinois.com/', 
     memo: 'あらゆるジャンルのパンが揃う神戸の人気店。モーニングのクロワッサンは感動の美味しさです！',
-    suggested: true, suggestedBy: 'パンダ🐼' 
+    suggested: true, suggestedBy: 'パンダ🐼',
+    vegan: true, card: true
   },
   { id: 'karayaki', cat: 'food', emoji: '🍕', name: '釜焼きラトマト', area: '渋谷区百人町', pref: '東京', url: 'https://tabelog.com/tokyo/A1304/A130404/13263740/', memo: '' },
   {
@@ -175,7 +712,7 @@ const SPOTS = [
   { id: 'kameju', cat: 'food', emoji: '🍡', name: '亀十', area: '浅草', pref: '東京', url: 'https://tabelog.com/tokyo/A1311/A131102/13003655/', memo: '浅草の老舗和菓子店。どら焼きや和菓子好きの寄り道候補。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'kamado-gohan-matsushima', cat: 'food', emoji: '🍚', name: '竈門ご飯 松しま', area: '人形町', pref: '東京', url: 'https://tabelog.com/tokyo/A1302/A130204/13319779/', memo: '浅草から都営浅草線で乗り換えなし。開店したばかりで、ランチがお得で美味しいとのリスナー推薦。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'yamaya-ikebukuro', cat: 'food', emoji: '🍲', name: '博多もつ鍋 やまや 池袋店', area: '池袋・東池袋', pref: '東京', url: 'https://tabelog.com/tokyo/A1305/A130501/13164146/dtlrvwlst/', memo: '明太子やもつ鍋、ランチ定食の候補。池袋方面のお出かけメモとして。', suggested: true, suggestedBy: '匿名リスナー' },
-  { id: 'kura-global-flagship', cat: 'food', emoji: '🍣', name: 'くら寿司 グローバル旗艦店', area: '銀座・原宿・浅草ROX・押上など', pref: '東京', url: 'https://www.kurasushi.co.jp/global_flagship/', memo: 'いつもの回転寿司に、少しエンタメ感を足したい時の候補。都内に複数のグローバル旗艦店があります。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'kura-global-flagship', cat: 'food', emoji: '🍣', name: 'くら寿司 グローバル旗艦店', area: '銀座・原宿・浅草ROX・押上など', pref: '東京', url: 'https://www.kurasushi.co.jp/global_flagship/', memo: 'いつもの回転寿司に、少しエンタメ感を足したい時の候補。都内に複数のグローバル旗艦店があります。', suggested: true, suggestedBy: '匿名リスナー', card: true, wifi: true },
   { id: 'saryo-tsujiri-daimaru', cat: 'food', emoji: '🍵', name: '茶寮都路里 大丸東京店', area: '東京駅・大丸東京店', pref: '東京', url: 'https://www.giontsujiri.co.jp/store/tokyo-daimaru/', memo: '東京駅直結で立ち寄りやすい、抹茶や甘味の休憩スポット。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'leonards-japan', cat: 'food', emoji: '🍩', name: "Leonard's Japan", area: '横浜ワールドポーターズ', pref: '神奈川', url: 'https://leonardsjapan.com/about-2/', memo: 'ハワイのマラサダを横浜で。外はサクッと、中はもちもちの甘い寄り道候補。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'shinpachi-shokudo', cat: 'food', emoji: '🐟', name: '炭火焼干物定食 しんぱち食堂', area: '東京ほか', pref: '全国', url: 'https://www.shinpachi-shokudo.com/', memo: '焼き魚とごはん、味噌汁の定食を気軽に食べたい時に。朝・昼・夜の候補にしやすいお店。', suggested: true, suggestedBy: '匿名リスナー' },
@@ -198,21 +735,21 @@ const SPOTS = [
   // --- 美術館・博物館 ---
   { id: 'yamatane', cat: 'museum', emoji: '🎨', name: '山種美術館', area: '渋谷・広尾', pref: '東京', url: 'https://www.yamatane-museum.jp/', memo: '日本画専門の美術館' },
   { id: 'nmwa', cat: 'museum', emoji: '🏛️', name: '国立西洋美術館', area: '上野', pref: '東京', url: 'https://www.nmwa.go.jp/jp/', memo: 'ル・コルビュジエ設計の世界遺産建築' },
-  { id: 'edo', cat: 'museum', emoji: '🗼', name: '江戸東京博物館', area: '墨田区', pref: '東京', url: 'https://www.edo-tokyo-museum.or.jp/', memo: '江戸〜東京の歴史を体感できる' },
-  { id: 'hokusai', cat: 'museum', emoji: '🌊', name: 'すみだ北斎美術館', area: '墨田区', pref: '東京', url: 'https://hokusai-museum.jp/', memo: '葛飾北斎の作品を多数展示' },
-  { id: 'ota-memorial-museum', cat: 'museum', emoji: '🖼️', name: '太田記念美術館', area: '原宿', pref: '東京', url: 'https://www.ukiyoe-ota-muse.jp/', memo: '原宿にある浮世絵専門の美術館。浮世絵をたくさん見られる場所として投稿されています。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'edo', cat: 'museum', emoji: '🗼', name: '江戸東京博物館', area: '墨田区', pref: '東京', url: 'https://www.edo-tokyo-museum.or.jp/', memo: '江戸〜東京の歴史を体感できる', traditional: true },
+  { id: 'hokusai', cat: 'museum', emoji: '🌊', name: 'すみだ北斎美術館', area: '墨田区', pref: '東京', url: 'https://hokusai-museum.jp/', memo: '葛飾北斎 of 作品を多数展示', traditional: true },
+  { id: 'ota-memorial-museum', cat: 'museum', emoji: '🖼️', name: '太田記念美術館', area: '原宿', pref: '東京', url: 'https://www.ukiyoe-ota-muse.jp/', memo: '原宿にある浮世絵専門の美術館。浮世絵をたくさん見られる場所として投稿されています。', suggested: true, suggestedBy: '匿名リスナー', traditional: true },
   { id: 'japan-coast-guard-museum-yokohama', cat: 'museum', emoji: '🚢', name: '海上保安資料館横浜館', area: '横浜', pref: '神奈川', url: 'https://share.google/OR8sP7aiI4xg6s26C', memo: '工作船や押収された武器などを見られる、入館無料の資料館。展示の迫力が印象的だったという投稿があります。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'queen-hiroba-yokohama-customs', cat: 'museum', emoji: '🏛️', name: 'クイーンのひろば', area: '横浜', pref: '神奈川', url: 'https://share.google/ynCJht8MwoGxLxyn2', memo: '横浜税関の博物館。入館無料で、密輸の手口などを知ることができる展示があります。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- イベント ---
   { id: 'yoyogi', cat: 'event', emoji: '🌿', name: '代々木公園 イベント', area: '代々木公園', pref: '東京', url: 'https://www.yoyogikoen.info/', memo: 'さまざまなイベントが開催される都心の公園' },
-  { id: 'kagurazaka-machibutai-2026', cat: 'event', emoji: '🎭', name: '神楽坂まち舞台・大江戸めぐり2026', area: '神楽坂エリア', pref: '東京', url: 'https://kaguramachi.jp/', memo: '2026年5月16日（土）・17日（日）開催予定。神楽坂の街全体で伝統芸能を楽しめるフェスティバル。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'kagurazaka-machibutai-2026', cat: 'event', emoji: '🎭', name: '神楽坂まち舞台・大江戸めぐり2026', area: '神楽坂エリア', pref: '東京', url: 'https://kaguramachi.jp/', memo: '2026年5月16日（土）・17日（日）開催予定。神楽坂の街全体で伝統芸能を楽しめるフェスティバル。', suggested: true, suggestedBy: '匿名リスナー', traditional: true },
   { id: 'ikebukuro-jazz-festival', cat: 'event', emoji: '🎺', name: '池袋ジャズフェスティバル', area: '池袋', pref: '東京', url: 'https://www.ikebukurojazz.com/', memo: '池袋の街なかで音楽が聴こえてくる、無料でふらっと立ち寄れるジャズイベント。カフェ巡りや散歩の途中にも楽しめる、やさしい空気のフェスです。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'thai-festival-tokyo', cat: 'event', emoji: '🇹🇭', name: 'タイフェスティバル東京', area: '代々木公園', pref: '東京', url: 'https://thaifes.jp/', memo: '代々木公園で開催される、タイの食・音楽・文化を楽しめる人気イベント。東京にいながらタイ旅行のような気分を味わえる場所です。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'lafollejournee-tokyo-2026', cat: 'event', emoji: '🎻', name: 'ラフォルジュルネTOKYO2026', area: '東京国際フォーラム', pref: '東京', url: 'https://www.lfj.jp/lfj_2026/guide/pdf/lfj2026_timetable_0424.pdf', memo: '東京国際フォーラムで開催されるクラシック音楽祭。無料エリアやフードコートもあり、クラシック初心者でも気軽に楽しめるイベントです。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'niconico-chokaigi', cat: 'event', emoji: '🎪', name: 'ニコニコ超会議', area: '幕張', pref: '千葉', url: 'https://chokaigi.jp/', memo: 'ネット発のみんなで作る日本最大級の文化祭。ニコニコ動画のカルチャーをリアルに体験できるイベントです。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- 自然・よりみち ---
   { id: 'inokashira', cat: 'nature', emoji: '🌳', name: '井の頭恩賜公園', area: '武蔵野市・三鷹市', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/format/index044.html', memo: '【サンプル】散歩するだけで心が整う、緑豊かな公園。' },
-  { id: 'koishikawa-korakuen', cat: 'nature', emoji: '🌿', name: '小石川後楽園', area: '文京区後楽', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/koishikawakorakuen/index.html', memo: '都内でアクセスしやすいのに、落ち着いて過ごせる庭園。リスナーさん曰く「人少なくてチル」。東京ドーム方面のライブ音が聞こえてきたこともあるそう。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'koishikawa-korakuen', cat: 'nature', emoji: '🌿', name: '小石川後楽園', area: '文京区後楽', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/koishikawakorakuen/index.html', memo: '都内でアクセスしやすいのに、落ち着いて過ごせる庭園。リスナーさん曰く「人少なくてチル」。東京ドーム方面のライブ音が聞こえてきたこともあるそう。', suggested: true, suggestedBy: '匿名リスナー', traditional: true },
   // --- 本・しらべもの ---
   { id: 'tsutaya', cat: 'book', emoji: '📚', name: '代官山 蔦屋書店', area: '代官山', pref: '東京', url: 'https://store.tsite.jp/daikanyama/', memo: '【サンプル】新しい本との出会いがある、心地よい空間。' },
   // --- くらし・雑貨 ---
@@ -358,6 +895,8 @@ let latestRemoteChats = [];
 let currentReviewSpotName = '';
 let editingId = null;
 let editingClientId = null;
+let uploadedSpotImageBase64 = null;
+let uploadedPostImageBase64 = null;
 const INITIAL_SPOT_COUNT = 6;
 const INITIAL_REVIEW_COUNT = 6;
 const INITIAL_CHAT_COUNT = 5;
@@ -2595,16 +3134,20 @@ function renderChatReactionButton(reactionId, icon, label, reactedLabel) {
 function renderSeenReviewButton(reviewId) {
   const isSeen = Boolean(localSeenReviews[reviewId]);
   const count = getSeenReviewCount(reviewId);
+  const isEn = currentLanguage === 'en';
   return `
     <button type="button" class="review-seen-btn ${isSeen ? 'is-seen' : ''}" data-review-seen-id="${escHtml(reviewId)}" aria-pressed="${isSeen ? 'true' : 'false'}">
       <span class="review-seen-icon">👀</span>
-      <span class="review-seen-text">${isSeen ? '見たよ済み' : '見たよ'}</span>
+      <span class="review-seen-text">${isSeen ? (isEn ? 'Seen' : '見たよ済み') : (isEn ? 'Seen' : '見たよ')}</span>
       <span class="review-seen-count" id="like-count-${escHtml(reviewId)}">${count}</span>
     </button>
   `;
 }
 
 function isDirectImageUrl(url) {
+  if (typeof url === 'string' && url.startsWith('data:image/')) {
+    return true;
+  }
   return /\.(png|jpe?g|gif|webp|avif)(\?.*)?$/i.test(url || '');
 }
 
@@ -2917,7 +3460,12 @@ function getSpotReviews(spotName) {
 }
 
 function formatVisitDate(date) {
-  return date ? new Date(date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
+  if (!date) return currentLanguage === 'en' ? 'Unknown Date' : '日付不明';
+  const d = new Date(date);
+  if (currentLanguage === 'en') {
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function getSavedSpotIds() {
@@ -3130,11 +3678,12 @@ function renderSpotCards(cat = 'all') {
   const visibleSpots = filtered.slice(0, visibleSpotCount);
   updateWantListButton();
   updateWantListHint(filtered.length);
+  const isEn = currentLanguage === 'en';
   if (showingWantList && filtered.length === 0) {
     grid.innerHTML = `
       <div class="spots-empty-card">
-        <strong>まだ行きたいスポットがありません</strong>
-        <span>気になるスポットの「🔖 行きたい」を押すと、ここに集まります。</span>
+        <strong>${isEn ? 'No spots saved yet' : 'まだ行きたいスポットがありません'}</strong>
+        <span>${isEn ? "Tap 'Want to Go' on any spot to collect them here." : '気になるスポットの「🔖 行きたい」を押すと、ここに集まります。'}</span>
       </div>
     `;
     setStatText('statSpots', allSpots.length);
@@ -3144,40 +3693,68 @@ function renderSpotCards(cat = 'all') {
   grid.innerHTML = visibleSpots.map(s => {
     const reviews = getSpotReviews(s.name);
     const reviewCount = reviews.length;
+    
+    // Translation logic
+    const spotTrans = SPOT_TRANSLATIONS[s.id] || {};
+    const displayName = isEn && spotTrans.name ? spotTrans.name : s.name;
+    const displayMemo = isEn && spotTrans.memo ? spotTrans.memo : (s.memo || s.reason || '');
+    const displayArea = isEn ? convertToEnglishAddress(s.area, s.pref) : `${s.area}${s.pref && s.pref !== '東京' && s.pref !== '全国' && s.pref !== 'オンライン' ? '（' + s.pref + '）' : ''}`;
+    const categoryLabel = getCatLabel(s.cat);
+    
     const latestReviewText = reviews[0]?.comment ? truncateText(reviews[0].comment, 46) : '';
     const resources = getSuggestionResources(s);
     const previewImage = getResourcePreviewImage(resources);
+    
+    // Inbound tags and google maps link
+    const gmapsUrl = getGoogleMapsUrl(s);
+    const gmapsText = isEn ? '🗺️ Open in Google Maps' : '🗺️ Google Mapsで開く';
+    const inboundTagsHtml = renderInboundTags(s, currentLanguage);
+    
+    // Like button config
+    const isLiked = localLikes[s.id];
+    const likeLabel = isEn ? (isLiked ? 'Saved' : 'Want to Go') : (isLiked ? '行きたい済み' : '行きたい');
+    const likeIcon = isLiked ? '✅' : '🔖';
+    
+    const suggestedByText = isEn ? `Suggested by: ${s.suggestedBy}` : `提案者：${s.suggestedBy}`;
+    const reviewsBtnLabel = isEn ? `💬 Reviews (${reviewCount})` : `💬 みんなの感想（${reviewCount}件）`;
+    const postBtnLabel = isEn ? "📝 I've Been Here!" : '📝 行ってみた！';
+    const recentReviewLabel = isEn ? 'Recent Review' : '最近の感想';
+
     return `
     <div class="spot-card" data-cat="${s.cat}" data-id="${s.id}">
       <div class="spot-card-top">
         <div class="spot-card-badges">
-          <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
-          ${s.intent === 'want' ? '<span class="spot-intent-badge">🌱 これから行きたい</span>' : ''}
+          <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${categoryLabel}</span>
+          ${s.intent === 'want' ? `<span class="spot-intent-badge">${isEn ? '🌱 Plan to Visit' : '🌱 これから行きたい'}</span>` : ''}
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           ${s.suggested ? renderPostActions(s, 'suggestion') : ''}
-          <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}" aria-pressed="${localLikes[s.id] ? 'true' : 'false'}">
-            <span class="spot-like-icon">${localLikes[s.id] ? '✅' : '🔖'}</span>
-            <span class="spot-like-label">${localLikes[s.id] ? '行きたい済み' : '行きたい'}</span>
-            <span class="spot-like-count" id="like-count-${s.id}">${globalLikes[s.id] || localLikes[s.id] || 0}</span>
+          <button class="spot-like-btn ${isLiked ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}" aria-pressed="${isLiked ? 'true' : 'false'}">
+            <span class="spot-like-icon">${likeIcon}</span>
+            <span class="spot-like-label">${likeLabel}</span>
+            <span class="spot-like-count" id="like-count-${s.id}">${globalLikes[s.id] || isLiked || 0}</span>
           </button>
         </div>
       </div>
       ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
-      <div class="spot-name">${escHtml(s.name)}</div>
-      <div class="spot-area"><span>📍 ${escHtml(s.area)}${s.pref && s.pref !== '東京' && s.pref !== '全国' && s.pref !== 'オンライン' ? '（' + escHtml(s.pref) + '）' : ''}</span></div>
-      ${s.memo || s.reason ? `<div class="spot-memo">${escHtml(s.memo || s.reason)}</div>` : ''}
-      ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">提案者：${escHtml(s.suggestedBy)}</div>` : ''}
+      <div class="spot-name">${escHtml(displayName)}</div>
+      <div class="spot-area"><span>📍 ${escHtml(displayArea)}</span></div>
+      ${inboundTagsHtml}
+      <a href="${gmapsUrl}" target="_blank" rel="noopener" class="spot-gmaps-btn">
+        ${gmapsText}
+      </a>
+      ${displayMemo ? `<div class="spot-memo">${escHtml(displayMemo)}</div>` : ''}
+      ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">${escHtml(suggestedByText)}</div>` : ''}
       ${resources.length ? `<div class="spot-resources">${renderResourceLinks(resources, 'spot', 'spot-link')}</div>` : ''}
       ${latestReviewText ? `
-        <button type="button" class="spot-latest-review" data-spotname="${escHtml(s.name)}" aria-label="${escHtml(s.name)}のみんなの感想を見る">
-          <span>最近の感想</span>
+        <button type="button" class="spot-latest-review" data-spotname="${escHtml(s.name)}" aria-label="${escHtml(displayName)}のみんなの感想を見る">
+          <span>${recentReviewLabel}</span>
           <strong>${escHtml(latestReviewText)}</strong>
         </button>
       ` : ''}
       <div class="spot-footer">
-        <button class="spot-reviews-btn" data-spotname="${escHtml(s.name)}">💬 みんなの感想（${reviewCount}件）</button>
-        <button class="spot-post-btn" data-spotname="${escHtml(s.name)}">📝 行ってみた！</button>
+        <button class="spot-reviews-btn" data-spotname="${escHtml(s.name)}">${reviewsBtnLabel}</button>
+        <button class="spot-post-btn" data-spotname="${escHtml(s.name)}">${postBtnLabel}</button>
       </div>
     </div>
   `;
@@ -3193,7 +3770,7 @@ function renderSpotCards(cat = 'all') {
       const icon = btn.querySelector('.spot-like-icon');
       const label = btn.querySelector('.spot-like-label');
       if (icon) icon.textContent = '✅';
-      if (label) label.textContent = '行きたい済み';
+      if (label) label.textContent = currentLanguage === 'en' ? 'Saved' : '行きたい済み';
       updateWantListButton();
     });
   });
@@ -3207,24 +3784,24 @@ function renderSpotCards(cat = 'all') {
     btn.addEventListener('click', () => openSpotReviews(btn.dataset.spotname));
   });
 
-  // スポット数更新（提案含む）
   setStatText('statSpots', allSpots.length);
   updateMoreButton('spotsMoreBtn', filtered.length, Math.min(visibleSpotCount, filtered.length), INITIAL_SPOT_COUNT);
 }
 
 function getCatLabel(cat) {
+  const isEn = currentLanguage === 'en';
   return { 
-    food: '🍴 飲食店', 
-    mohinga: '🍜 食べたいもの', 
-    museum: '🎨 美術館・博物館', 
-    event: '🌿 イベント', 
-    nature: '🌳 自然・よりみち',
-    book: '📚 本・しらべもの',
-    shop: '🛒 くらし・雑貨',
-    view: '✨ おきにいりの景色',
-    relax: '🛁 癒やし・ととのう',
-    entertainment: '🎬 エンタメ' 
-  }[cat] || '📍 スポット';
+    food: isEn ? '🍴 Food & Cafe' : '🍴 飲食店', 
+    mohinga: isEn ? '🍜 Must-Try' : '🍜 食べたいもの', 
+    museum: isEn ? '🎨 Art & Museum' : '🎨 美術館・博物館', 
+    event: isEn ? '🌿 Events' : '🌿 イベント', 
+    nature: isEn ? '🌳 Nature & Walk' : '🌳 自然・よりみち',
+    book: isEn ? '📚 Book & Study' : '📚 本・しらべもの',
+    shop: isEn ? '🛒 Lifestyle & Goods' : '🛒 くらし・雑貨',
+    view: isEn ? '✨ Lovely Views' : '✨ おきにいりの景色',
+    relax: isEn ? '🛁 Relax & Bath' : '🛁 癒やし・とをととのう',
+    entertainment: isEn ? '🎬 Fun & Media' : '🎬 エンタメ' 
+  }[cat] || (isEn ? '📍 Spot' : '📍 スポット');
 }
 
 function formatMemo(memo) {
@@ -3232,12 +3809,16 @@ function formatMemo(memo) {
 }
 
 function renderSpotReviewCards(reviews) {
+  const isEn = currentLanguage === 'en';
   return reviews.map(p => {
-    const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
-    const nickname = p.nickname || '匿名リスナー';
+    const areaStr = p.area 
+      ? `📍 ${isEn ? (ADDRESS_TRANSLATION_MAP[p.area] || p.area) : p.area}` 
+      : (isEn ? '📍 Unknown Area' : '📍 エリア不明');
+    const nickname = p.nickname || (isEn ? 'Anonymous' : '匿名リスナー');
     const media = getPostMedia(p);
     const previewImage = getResourcePreviewImage(media);
     const reviewSeenId = getReviewReactionId(p, 'listener');
+    const translationHtml = renderTranslationButton(p.comment);
     return `
       <article class="spot-review-card">
         <div class="spot-review-head">
@@ -3247,6 +3828,7 @@ function renderSpotReviewCards(reviews) {
         <div class="spot-review-meta">${areaStr} &nbsp; 📅 ${formatVisitDate(p.visitDate)} &nbsp; 👤 ${escHtml(nickname)}</div>
         ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
         <div class="spot-review-comment">"${escHtml(p.comment)}"</div>
+        ${translationHtml}
         ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
         <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
       </article>
@@ -3255,12 +3837,16 @@ function renderSpotReviewCards(reviews) {
 }
 
 function renderListenerReviewCard(p) {
+  const isEn = currentLanguage === 'en';
   const dateStr = formatVisitDate(p.visitDate);
-  const areaStr = p.area ? `📍 ${escHtml(p.area)}` : '📍 エリア不明';
-  const nickname = p.nickname || '匿名リスナー';
+  const areaStr = p.area 
+    ? `📍 ${isEn ? (ADDRESS_TRANSLATION_MAP[p.area] || p.area) : p.area}` 
+    : (isEn ? '📍 Unknown Area' : '📍 エリア不明');
+  const nickname = p.nickname || (isEn ? 'Anonymous' : '匿名リスナー');
   const media = getPostMedia(p);
   const previewImage = getResourcePreviewImage(media);
   const reviewSeenId = getReviewReactionId(p, 'listener');
+  const translationHtml = renderTranslationButton(p.comment);
   return `
     <div class="visited-card">
       <div class="visited-card-body">
@@ -3270,6 +3856,7 @@ function renderListenerReviewCard(p) {
         <div class="visited-rating">${renderStars(p.rating || 0)}</div>
         ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
         <div class="visited-review">"${escHtml(p.comment)}"</div>
+        ${translationHtml}
         ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
         <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
         ${renderPostActions(p, 'post')}
@@ -3280,21 +3867,25 @@ function renderListenerReviewCard(p) {
 
 function renderOfficialReviewCard(v) {
   const reviewSeenId = getReviewReactionId(v, 'official');
+  const isEn = currentLanguage === 'en';
+  const displayArea = isEn ? (ADDRESS_TRANSLATION_MAP[v.area] || v.area) : v.area;
+  const translationHtml = renderTranslationButton(v.review);
   return `
     <div class="visited-card">
       <div class="visited-card-body">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(v.cat)}</span>
         <div class="visited-name">${v.name}</div>
-        <div class="visited-area">📍 ${v.area}</div>
+        <div class="visited-area">📍 ${displayArea}</div>
         <div class="visited-rating">${renderStars(v.rating)}</div>
         <div class="visited-review">"${v.review}"</div>
+        ${translationHtml}
         <div class="visited-photos">
           ${v.photos.map(p => `<a href="${p.url}" target="_blank" rel="noopener" class="visited-photo-link">${p.label}</a>`).join('')}
           ${v.url ? `<a href="${v.url}" target="_blank" rel="noopener" class="visited-photo-link">🔗 食べログ</a>` : ''}
         </div>
         ${v.book ? `
           <div class="visited-book">
-            📚 <strong>関連本：</strong><a href="${v.book.url}" target="_blank" rel="noopener">${v.book.title}</a><br>
+            📚 <strong>${isEn ? 'Related Book:' : '関連本：'}</strong><a href="${v.book.url}" target="_blank" rel="noopener">${v.book.title}</a><br>
             <span style="font-size:0.78rem;opacity:0.7;">${v.book.note}</span>
           </div>` : ''}
         <div class="review-reactions">${renderSeenReviewButton(reviewSeenId)}</div>
@@ -3372,17 +3963,26 @@ function renderChats(chats) {
   const visibleTopLevel = topLevel.slice(0, visibleChatCount);
 
   function createChatCardHtml(chat, depth = 0) {
-    const dateStr = new Date(chat.timestamp).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const nick = chat.nickname || '匿名リスナー';
+    const isEn = currentLanguage === 'en';
+    const dateStr = new Date(chat.timestamp).toLocaleString(isEn ? 'en-US' : 'ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const nick = chat.nickname || (isEn ? 'Anonymous' : '匿名リスナー');
     const initial = Array.from(nick)[0].toUpperCase();
     const thanksId = getChatReactionId(chat, 'thanks');
     const curiousId = getChatReactionId(chat, 'curious');
     const cid = getChatKey(chat);
     const parent = chat.parentId ? chatMap.get(chat.parentId) : null;
-    const parentNick = parent?.nickname || chat.parentNick || '元の投稿';
+    const parentNick = parent?.nickname || chat.parentNick || (isEn ? 'Original Post' : '元の投稿');
     const replyContext = chat.parentId
-      ? `<div class="chat-reply-context">↳ ${escHtml(parentNick)} への返信</div>`
+      ? `<div class="chat-reply-context">${isEn ? `↳ Reply to ${escHtml(parentNick)}` : `↳ ${escHtml(parentNick)} への返信`}</div>`
       : '';
+
+    const thanksLabel = isEn ? 'Thanks' : 'ありがとう';
+    const thanksReacted = isEn ? 'Thanked' : 'ありがとう済み';
+    const curiousLabel = isEn ? 'Curious' : '気になる';
+    const curiousReacted = isEn ? 'Curious' : '気になる済み';
+    const replyLabel = isEn ? '💬 Reply' : '💬 返信';
+
+    const translationHtml = renderTranslationButton(chat.message);
 
     return `
       <div class="chat-card ${depth > 0 ? 'is-reply' : ''}" data-chat-id="${escHtml(cid)}" data-depth="${Math.min(depth, 3)}">
@@ -3394,10 +3994,11 @@ function renderChats(chats) {
           </div>
           ${replyContext}
           <div class="chat-msg">${escHtml(chat.message)}</div>
+          ${translationHtml}
           <div class="chat-reactions">
-            ${renderChatReactionButton(thanksId, '💐', 'ありがとう', 'ありがとう済み')}
-            ${renderChatReactionButton(curiousId, '👀', '気になる', '気になる済み')}
-            <button class="btn-reply" onclick="initiateReply('${escHtml(cid)}')">💬 返信</button>
+            ${renderChatReactionButton(thanksId, '💐', thanksLabel, thanksReacted)}
+            ${renderChatReactionButton(curiousId, '👀', curiousLabel, curiousReacted)}
+            <button class="btn-reply" onclick="initiateReply('${escHtml(cid)}')">${replyLabel}</button>
           </div>
           ${renderPostActions(chat, 'chat')}
         </div>
@@ -3667,10 +4268,26 @@ function updateAddSpotIntentUI() {
 
 function applySuggestionResourcesToAddSpotRows(s) {
   const resources = getSuggestionResources(s);
+  
+  // Find the Base64 uploaded photo if exists
+  const base64Photo = resources.find(r => r.kind === 'photo' && r.url && r.url.startsWith('data:image/'));
+  if (base64Photo) {
+    uploadedSpotImageBase64 = base64Photo.url;
+    const preview = document.getElementById('asImagePreview');
+    const container = document.getElementById('asImagePreviewContainer');
+    if (preview && container) {
+      preview.src = base64Photo.url;
+      container.style.display = 'block';
+    }
+  }
+
+  // Filter out the Base64 photo from the link inputs
+  const remainingResources = resources.filter(r => !(r.kind === 'photo' && r.url && r.url.startsWith('data:image/')));
+  
   for (let i = 0; i < 3; i += 1) {
     const urlEl = document.getElementById(`asUrl${i + 1}`);
     const kindEl = document.getElementById(`asKind${i + 1}`);
-    const entry = resources[i];
+    const entry = remainingResources[i];
     if (urlEl) urlEl.value = entry?.url || '';
     if (kindEl) kindEl.value = entry?.kind || 'reference';
   }
@@ -3695,6 +4312,16 @@ function openAddSpotModal(id = null, clientId = null) {
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
   document.getElementById('addSpotForm').reset();
+
+  // Reset custom image upload states & previews
+  uploadedSpotImageBase64 = null;
+  const asFileInput = document.getElementById('asImageFile');
+  if (asFileInput) asFileInput.value = '';
+  const asPreview = document.getElementById('asImagePreview');
+  const asContainer = document.getElementById('asImagePreviewContainer');
+  if (asPreview) asPreview.src = '';
+  if (asContainer) asContainer.style.display = 'none';
+
   populateAddSpotPrefSelect();
   setAddSpotIntent('recommend');
   document.getElementById('asCharNum').textContent = '0';
@@ -3735,6 +4362,15 @@ function closeAddSpotModal() {
   document.body.style.overflow = '';
   editingId = null;
   editingClientId = null;
+
+  // Cleanup spot image upload states
+  uploadedSpotImageBase64 = null;
+  const asFileInput = document.getElementById('asImageFile');
+  if (asFileInput) asFileInput.value = '';
+  const asPreview = document.getElementById('asImagePreview');
+  const asContainer = document.getElementById('asImagePreviewContainer');
+  if (asPreview) asPreview.src = '';
+  if (asContainer) asContainer.style.display = 'none';
 }
 
 // 掲示板投稿モーダル
@@ -4610,6 +5246,29 @@ function openModal(preselect = '', id = null, clientId = null) {
       document.getElementById('fComment').value = post.comment || '';
       selectedRating = post.rating || 0;
       updateStars();
+
+      // Populate media resources
+      const mediaItems = getPostMedia(post);
+      const base64Photo = mediaItems.find(m => m.kind === 'photo' && m.url && m.url.startsWith('data:image/'));
+      if (base64Photo) {
+        uploadedPostImageBase64 = base64Photo.url;
+        const preview = document.getElementById('fImagePreview');
+        const container = document.getElementById('fImagePreviewContainer');
+        if (preview && container) {
+          preview.src = base64Photo.url;
+          container.style.display = 'block';
+        }
+      }
+
+      // Filter out the Base64 photo from the standard link inputs
+      const remainingMedia = mediaItems.filter(m => !(m.kind === 'photo' && m.url && m.url.startsWith('data:image/')));
+      for (let i = 0; i < 3; i += 1) {
+        const urlEl = document.getElementById(`fMediaUrl${i + 1}`);
+        const kindEl = document.getElementById(`fMediaKind${i + 1}`);
+        const entry = remainingMedia[i];
+        if (urlEl) urlEl.value = entry?.url || '';
+        if (kindEl) kindEl.value = entry?.kind || 'photo';
+      }
     }
   } else {
     if (title) title.textContent = '🗺️ 行った場所を共有';
@@ -4627,6 +5286,17 @@ function updateStars() {
 function closeModal() {
   document.getElementById('postModal').classList.remove('is-open');
   document.body.style.overflow = '';
+  editingId = null;
+  editingClientId = null;
+
+  // Cleanup post image upload states
+  uploadedPostImageBase64 = null;
+  const fileInput = document.getElementById('fImageFile');
+  if (fileInput) fileInput.value = '';
+  const preview = document.getElementById('fImagePreview');
+  const container = document.getElementById('fImagePreviewContainer');
+  if (preview) preview.src = '';
+  if (container) container.style.display = 'none';
 }
 
 function resetForm() {
@@ -4635,6 +5305,15 @@ function resetForm() {
   document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('charNum').textContent = '0';
   clearResourceValidation('post');
+
+  // Clear image upload states & previews
+  uploadedPostImageBase64 = null;
+  const fileInput = document.getElementById('fImageFile');
+  if (fileInput) fileInput.value = '';
+  const preview = document.getElementById('fImagePreview');
+  const container = document.getElementById('fImagePreviewContainer');
+  if (preview) preview.src = '';
+  if (container) container.style.display = 'none';
 }
 
 // ============================================================
@@ -4651,6 +5330,9 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
   if (!name || !location.pref || !location.city || !area || !reason) { alert('スポット名、都道府県、市区町村、おすすめポイントを入力してください'); return; }
   const resources = validateResourceEntries('spot');
   if (!resources) return;
+  if (uploadedSpotImageBase64) {
+    resources.unshift({ kind: 'photo', label: '写真', url: uploadedSpotImageBase64 });
+  }
   const btn = document.getElementById('addSpotSubmitBtn');
   btn.disabled = true; btn.textContent = '送信中...';
   const data = {
@@ -4778,6 +5460,9 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   if (!comment) { alert('コメントを入力してください'); return; }
   const media = validateResourceEntries('post');
   if (!media) return;
+  if (uploadedPostImageBase64) {
+    media.unshift({ kind: 'photo', label: '写真', url: uploadedPostImageBase64 });
+  }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = '送信中...';
@@ -4872,6 +5557,46 @@ async function updatePostRecord(id, clientId, data) {
 function escHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function compressAndEncodeImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const maxW = 600;
+        const maxH = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxW || height > maxH) {
+          if (width > height) {
+            height = Math.round((height * maxW) / width);
+            width = maxW;
+          } else {
+            width = Math.round((width * maxH) / height);
+            height = maxH;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress to JPEG with 0.6 (60%) quality
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.60);
+        resolve(compressedBase64);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
 }
 
 function getCarrotGuideElements() {
@@ -5079,6 +5804,22 @@ function bindEvents() {
   document.querySelectorAll('.nav-mobile-link').forEach(l => {
     l.addEventListener('click', () => document.getElementById('navMobile').classList.remove('open'));
   });
+  
+  // 言語切り替えトグルのバインド
+  const langToggleBtn = document.getElementById('langToggleBtn');
+  if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', () => {
+      const nextLang = currentLanguage === 'en' ? 'jp' : 'en';
+      applyLanguage(nextLang);
+    });
+  }
+  const langToggleBtnMobile = document.getElementById('langToggleBtnMobile');
+  if (langToggleBtnMobile) {
+    langToggleBtnMobile.addEventListener('click', () => {
+      const nextLang = currentLanguage === 'en' ? 'jp' : 'en';
+      applyLanguage(nextLang);
+    });
+  }
   ['heroPostBtn','emptyPostBtn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', () => openModal());
@@ -5497,6 +6238,72 @@ function bindEvents() {
   if (mapModal) {
     mapModal.addEventListener('click', (e) => {
       if (e.target === mapModal) closeMapModal();
+    });
+  }
+
+  // スポット追加の画像アップロードイベント
+  const asImageFile = document.getElementById('asImageFile');
+  if (asImageFile) {
+    asImageFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const compressed = await compressAndEncodeImage(file);
+        uploadedSpotImageBase64 = compressed;
+        const preview = document.getElementById('asImagePreview');
+        const container = document.getElementById('asImagePreviewContainer');
+        if (preview && container) {
+          preview.src = compressed;
+          container.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Image compression failed:', err);
+        alert('画像の読み込み・圧縮に失敗しました。');
+      }
+    });
+  }
+  const asImageClearBtn = document.getElementById('asImageClearBtn');
+  if (asImageClearBtn) {
+    asImageClearBtn.addEventListener('click', () => {
+      if (asImageFile) asImageFile.value = '';
+      uploadedSpotImageBase64 = null;
+      const preview = document.getElementById('asImagePreview');
+      const container = document.getElementById('asImagePreviewContainer');
+      if (preview) preview.src = '';
+      if (container) container.style.display = 'none';
+    });
+  }
+
+  // 行ってみた投稿の画像アップロードイベント
+  const fImageFile = document.getElementById('fImageFile');
+  if (fImageFile) {
+    fImageFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const compressed = await compressAndEncodeImage(file);
+        uploadedPostImageBase64 = compressed;
+        const preview = document.getElementById('fImagePreview');
+        const container = document.getElementById('fImagePreviewContainer');
+        if (preview && container) {
+          preview.src = compressed;
+          container.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Image compression failed:', err);
+        alert('画像の読み込み・圧縮に失敗しました。');
+      }
+    });
+  }
+  const fImageClearBtn = document.getElementById('fImageClearBtn');
+  if (fImageClearBtn) {
+    fImageClearBtn.addEventListener('click', () => {
+      if (fImageFile) fImageFile.value = '';
+      uploadedPostImageBase64 = null;
+      const preview = document.getElementById('fImagePreview');
+      const container = document.getElementById('fImagePreviewContainer');
+      if (preview) preview.src = '';
+      if (container) container.style.display = 'none';
     });
   }
 }
@@ -6133,6 +6940,9 @@ function init() {
   bindEvents();
   initWeatherCityPicker();
   maybeShowIntroStory();
+
+  // 初期言語の設定を適用
+  applyLanguage(currentLanguage);
 }
 
 document.addEventListener('DOMContentLoaded', init);

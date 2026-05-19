@@ -8,6 +8,9 @@
   <meta name="google-site-verification" content="QZMkVUNM2MBvgmuVahQX4sgTYkAAfBdRGzGwmafOM1A" />
   <meta name="author" content="masa0a">
   <link rel="canonical" href="https://popopo-comm.netlify.app/">
+  <link rel="alternate" hreflang="ja" href="https://popopo-comm.netlify.app/">
+  <link rel="alternate" hreflang="en" href="https://popopo-comm.netlify.app/spots/en/">
+  <link rel="alternate" hreflang="x-default" href="https://popopo-comm.netlify.app/">
   <meta property="og:locale" content="ja_JP">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="POPOPO お出かけマップ">
@@ -81,25 +84,33 @@
     <div class="nav-inner">
       <a href="#hero" class="nav-logo">
         <span class="logo-main">POPOPO</span>
-        <span class="logo-sub">お出かけマップ</span>
+        <span class="logo-sub" data-i18n="logo_sub">お出かけマップ</span>
       </a>
       <div class="nav-links" id="navLinks">
-        <a href="#spots" class="nav-link">📍 おすすめスポット</a>
-        <a href="#visited" class="nav-link">💬 みんなの感想</a>
-        <a href="#community" class="nav-link">💬 フリートーク掲示板</a>
-        <a href="about.html" class="nav-link">🌿 この場所を作った理由</a>
-        <a href="how-to.html" class="nav-link" id="navHowToBtn">💡 使い方</a>
+        <a href="#spots" class="nav-link" data-i18n="nav_spots">📍 おすすめスポット</a>
+        <a href="#visited" class="nav-link" data-i18n="nav_visited">💬 みんなの感想</a>
+        <a href="#community" class="nav-link" data-i18n="nav_talk">💬 フリートーク掲示板</a>
+        <a href="about.html" class="nav-link" data-i18n="nav_about">🌿 この場所を作った理由</a>
+        <a href="how-to.html" class="nav-link" id="navHowToBtn" data-i18n="nav_howto">💡 使い方</a>
+        <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Switch Language / 言語切替">
+          <span class="lang-icon">🌐</span> <span class="lang-label">JP</span>
+        </button>
       </div>
       <button class="hamburger" id="hamburger" aria-label="メニュー">
         <span></span><span></span><span></span>
       </button>
     </div>
     <div class="nav-mobile" id="navMobile">
-      <a href="#spots" class="nav-mobile-link">📍 おすすめスポット</a>
-      <a href="#visited" class="nav-mobile-link">💬 みんなの感想</a>
-      <a href="#community" class="nav-mobile-link">💬 フリートーク掲示板</a>
-      <a href="about.html" class="nav-mobile-link">🌿 この場所を作った理由</a>
-      <a href="how-to.html" class="nav-mobile-link" id="mobileHowToBtn">💡 使い方を見る</a>
+      <a href="#spots" class="nav-mobile-link" data-i18n="nav_spots">📍 おすすめスポット</a>
+      <a href="#visited" class="nav-mobile-link" data-i18n="nav_visited">💬 みんなの感想</a>
+      <a href="#community" class="nav-mobile-link" data-i18n="nav_talk">💬 フリートーク掲示板</a>
+      <a href="about.html" class="nav-mobile-link" data-i18n="nav_about">🌿 この場所を作った理由</a>
+      <a href="how-to.html" class="nav-mobile-link" id="mobileHowToBtn" data-i18n="nav_howto_mobile">💡 使い方を見る</a>
+      <div class="nav-mobile-lang">
+        <button id="langToggleBtnMobile" class="lang-toggle-btn-mobile">
+          <span class="lang-icon">🌐</span> Language: <span class="lang-label-mobile">JP</span>
+        </button>
+      </div>
     </div>
     <div class="nav-discovery" id="weeklyDiscoveryCard" aria-label="おすすめと感想のピックアップ">
       <div class="nav-discovery-row">
@@ -137,7 +148,7 @@
           <!-- Elegant watercolor sticker style badge overlaying near the top-center text -->
           <div class="map-watercolor-label">
             <span class="label-emoji">🗺️</span>
-            <span class="label-text">地図を見る</span>
+            <span class="label-text" data-i18n="hero_view_map">地図を見る</span>
           </div>
         </figure>
         <div class="hero-map-overlay hero-map-overlay--top">
@@ -148,34 +159,34 @@
               </div>
             </div>
             <div class="hero-gallery-action">
-              <button id="viewAllGalleryBtn" class="btn-gallery-all">🖼️ すべての作品・辞典を見る</button>
+              <button id="viewAllGalleryBtn" class="btn-gallery-all" data-i18n="hero_view_gallery">🖼️ すべての作品・辞典を見る</button>
             </div>
           </div>
         </div>
         <div class="hero-map-overlay hero-map-overlay--bottom">
-          <a href="about.html" class="hero-story-link">🌿 この場所を作った理由</a>
+          <a href="about.html" class="hero-story-link" data-i18n="nav_about">🌿 この場所を作った理由</a>
           <div class="hero-quick-links" aria-label="主要コンテンツを見る">
-            <a href="#spots" class="hero-quick-link">📍 おすすめスポットを見る</a>
-            <a href="#visited" class="hero-quick-link">💬 みんなの感想を見る</a>
+            <a href="#spots" class="hero-quick-link" data-i18n="hero_quick_spots">📍 おすすめスポットを見る</a>
+            <a href="#visited" class="hero-quick-link" data-i18n="hero_quick_visited">💬 みんなの感想を見る</a>
             <button type="button" class="hero-quick-link hero-quick-link--gacha" id="heroGachaBtn" aria-label="おすすめや感想から、ポポッと選びます" title="ポポッと選ぶ">
-              <span class="hero-gacha-label hero-gacha-label--full">✨ ポポッと選ぶ</span>
-              <span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">✨ ポポッと</span>
+              <span class="hero-gacha-label hero-gacha-label--full" data-i18n="hero_gacha_full">✨ ポポッと選ぶ</span>
+              <span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true" data-i18n="hero_gacha_compact">✨ ポポッと</span>
             </button>
-            <a href="https://popooshi.vercel.app/" target="_blank" rel="noopener noreferrer" class="hero-quick-link hero-quick-link--game" title="POPOOSHIで遊ぶ"><span class="hero-gacha-label hero-gacha-label--full">🎮 POPOOSHIで遊ぶ</span><span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true">🎮 ゲーム</span></a>
+            <a href="https://popooshi.vercel.app/" target="_blank" rel="noopener noreferrer" class="hero-quick-link hero-quick-link--game" title="POPOOSHIで遊ぶ"><span class="hero-gacha-label hero-gacha-label--full" data-i18n="hero_game_full">🎮 POPOOSHIで遊ぶ</span><span class="hero-gacha-label hero-gacha-label--compact" aria-hidden="true" data-i18n="hero_game_compact">🎮 ゲーム</span></a>
           </div>
         </div>
       </div>
       <div class="hero-stats">
-        <a href="#spots" class="stat"><span class="stat-num is-loading" id="statSpots">読み込み中</span><span class="stat-label">スポット</span></a>
+        <a href="#spots" class="stat"><span class="stat-num is-loading" id="statSpots" data-i18n="loading">読み込み中</span><span class="stat-label" data-i18n="stats_spots">スポット</span></a>
         <div class="stat-divider"></div>
         <a href="#community" class="stat">
-          <span class="stat-num is-loading" id="statPosts">読み込み中</span>
-          <span class="stat-label">つぶやき</span>
+          <span class="stat-num is-loading" id="statPosts" data-i18n="loading">読み込み中</span>
+          <span class="stat-label" data-i18n="stats_posts">つぶやき</span>
         </a>
         <div class="stat-divider"></div>
-        <a href="#visited" class="stat"><span class="stat-num is-loading" id="statVisited">読み込み中</span><span class="stat-label">感想</span></a>
+        <a href="#visited" class="stat"><span class="stat-num is-loading" id="statVisited" data-i18n="loading">読み込み中</span><span class="stat-label" data-i18n="stats_visited">感想</span></a>
         <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num is-loading" id="statViews">読み込み中</span><span class="stat-label">👀 訪問</span></div>
+        <div class="stat"><span class="stat-num is-loading" id="statViews" data-i18n="loading">読み込み中</span><span class="stat-label" data-i18n="stats_views">👀 訪問</span></div>
       </div>
     </div>
     <a class="scroll-hint" href="#spots" aria-label="おすすめスポットへ移動">
@@ -205,50 +216,50 @@
     <div class="container">
       <div class="sec-header-row">
         <div class="sec-header">
-          <h2 class="sec-title">🗺️ おすすめスポット</h2>
-          <p class="sec-sub">『これ良かったよ』の気持ちをみんなでシェア。あなたの好きも、ぜひ教えてください。</p>
+          <h2 class="sec-title" data-i18n="sec_spots">🗺️ おすすめスポット</h2>
+          <p class="sec-sub" data-i18n="sec_spots_sub">『これ良かったよ』の気持ちをみんなでシェア。あなたの好きも、ぜひ教えてください。</p>
         </div>
         <div class="add-spot-container">
-          <button class="btn-add-spot" id="addSpotBtn"><span class="btn-icon">✨</span> スポットを追加する</button>
-          <p class="add-spot-hint">「ここ気になる」「行ってみたい」そんな一言からで大丈夫！</p>
+          <button class="btn-add-spot" id="addSpotBtn"><span class="btn-icon">✨</span> <span data-i18n="btn_add_spot">スポットを追加する</span></button>
+          <p class="add-spot-hint" data-i18n="add_spot_hint">「ここ気になる」「行ってみたい」そんな一言からで大丈夫！</p>
         </div>
       </div>
       <div class="weather-bar-wrap" aria-label="今日のお出かけヒント">
         <div class="weather-bar" id="weatherBar">
-          <div class="weather-bar-label">🌤️ 今日のお出かけヒント</div>
+          <div class="weather-bar-label" data-i18n="weather_hint">🌤️ 今日のお出かけヒント</div>
           <div class="weather-marquee">
             <div class="weather-items" id="weatherItems">
-              <span style="color:var(--text-muted); font-size:0.85rem;">天気を取得中...</span>
+              <span style="color:var(--text-muted); font-size:0.85rem;" data-i18n="weather_loading">天気を取得中...</span>
             </div>
           </div>
           <button class="weather-settings-btn" id="weatherSettingsBtn" aria-label="表示する都市を設定">⚙️</button>
         </div>
       </div>
       <div class="tabs" id="tabs">
-        <button class="tab active" data-cat="all">すべて</button>
-        <button class="tab" data-cat="food">🍴 飲食店</button>
-        <button class="tab" data-cat="mohinga">🍜 食べたいもの</button>
-        <button class="tab" data-cat="museum">🎨 美術館・博物館</button>
-        <button class="tab" data-cat="event">🌿 イベント</button>
-        <button class="tab" data-cat="nature">🌳 自然・よりみち</button>
-        <button class="tab" data-cat="book">📚 本・しらべもの</button>
-        <button class="tab" data-cat="shop">🛒 くらし・雑貨</button>
-        <button class="tab" data-cat="view">✨ おきにいりの景色</button>
-        <button class="tab" data-cat="relax">🛁 癒やし・ととのう</button>
-        <button class="tab" data-cat="entertainment">🎬 エンタメ</button>
+        <button class="tab active" data-cat="all" data-i18n="tab_all">すべて</button>
+        <button class="tab" data-cat="food" data-i18n="tab_food">🍴 飲食店</button>
+        <button class="tab" data-cat="mohinga" data-i18n="tab_mohinga">🍜 食べたいもの</button>
+        <button class="tab" data-cat="museum" data-i18n="tab_museum">🎨 美術館・博物館</button>
+        <button class="tab" data-cat="event" data-i18n="tab_event">🌿 イベント</button>
+        <button class="tab" data-cat="nature" data-i18n="tab_nature">🌳 自然・よりみち</button>
+        <button class="tab" data-cat="book" data-i18n="tab_book">📚 本・しらべもの</button>
+        <button class="tab" data-cat="shop" data-i18n="tab_shop">🛒 くらし・雑貨</button>
+        <button class="tab" data-cat="view" data-i18n="tab_view">✨ おきにいりの景色</button>
+        <button class="tab" data-cat="relax" data-i18n="tab_relax">🛁 癒やし・ととのう</button>
+        <button class="tab" data-cat="entertainment" data-i18n="tab_entertainment">🎬 エンタメ</button>
       </div>
       <div class="area-filter" id="areaFilter" aria-label="エリアで絞り込む"></div>
       <div class="spot-list-actions">
-        <button type="button" class="want-list-toggle" id="wantListToggleBtn" aria-pressed="false">🔖 行きたいリスト（0）</button>
-        <button type="button" class="want-list-toggle want-add-btn" id="wantAddSpotBtn">🌱 これから行きたい場所を追加</button>
+        <button type="button" class="want-list-toggle" id="wantListToggleBtn" aria-pressed="false" data-i18n="btn_want_list">🔖 行きたいリスト（0）</button>
+        <button type="button" class="want-list-toggle want-add-btn" id="wantAddSpotBtn" data-i18n="btn_add_want">🌱 これから行きたい場所を追加</button>
       </div>
       <div class="want-list-hint" id="wantListHint" hidden>
-        <span>行ってみた場所があれば、感想を残してみませんか？</span>
-        <button type="button" class="btn-outline" id="wantListPostBtn">感想を投稿する</button>
+        <span data-i18n="want_hint_text">行ってみた場所があれば、感想を残してみませんか？</span>
+        <button type="button" class="btn-outline" id="wantListPostBtn" data-i18n="btn_post_review">感想を投稿する</button>
       </div>
       <div class="spots-grid" id="spotsGrid"></div>
       <div class="section-actions">
-        <button type="button" class="btn-outline btn-section-more" id="spotsMoreBtn">もっと見る</button>
+        <button type="button" class="btn-outline btn-section-more" id="spotsMoreBtn" data-i18n="btn_more">もっと見る</button>
       </div>
     </div>
   </section>
@@ -257,12 +268,12 @@
   <section id="visited">
     <div class="container">
       <div class="sec-header">
-        <h2 class="sec-title">💬 みんなの感想</h2>
-        <p class="sec-sub">実際に訪れたスポットの感想を集めています</p>
+        <h2 class="sec-title" data-i18n="sec_visited">💬 みんなの感想</h2>
+        <p class="sec-sub" data-i18n="sec_visited_sub">実際に訪れたスポットの感想を集めています</p>
       </div>
       <div class="visited-grid" id="visitedGrid"></div>
       <div class="section-actions">
-        <button type="button" class="btn-outline btn-section-more" id="visitedMoreBtn">もっと見る</button>
+        <button type="button" class="btn-outline btn-section-more" id="visitedMoreBtn" data-i18n="btn_more">もっと見る</button>
       </div>
     </div>
   </section>
@@ -272,53 +283,53 @@
     <div class="container">
       <div class="community-header">
         <div class="sec-header" style="margin-bottom:20px;">
-          <h2 class="sec-title">💬 フリートーク掲示板</h2>
-          <p class="sec-sub">お出かけの予定、POPOPOの感想、サイトへのご意見など自由に語り合いましょう！</p>
+          <h2 class="sec-title" data-i18n="sec_talk">💬 フリートーク掲示板</h2>
+          <p class="sec-sub" data-i18n="sec_talk_sub">お出かけの予定、POPOPOの感想、サイトへのご意見など自由に語り合いましょう！</p>
         </div>
-        <button class="btn-primary" id="openChatModalBtn" style="margin-bottom:20px;">✏️ つぶやく</button>
+        <button class="btn-primary" id="openChatModalBtn" style="margin-bottom:20px;" data-i18n="btn_post_chat">✏️ つぶやく</button>
       </div>
       <div class="daily-prompt-card" id="dailyPromptCard">
         <div class="daily-prompt-main">
           <div class="daily-prompt-body" id="dailyPromptBody">
             <div class="daily-prompt-header-row">
-              <p class="daily-prompt-kicker">今日のお題</p>
+              <p class="daily-prompt-kicker" data-i18n="prompt_kicker">今日のお題</p>
               <div class="daily-prompt-stamp" id="dailyPromptStamp" hidden></div>
             </div>
-            <p class="daily-prompt-text" id="dailyPromptText">最近気になっている場所はありますか？</p>
+            <p class="daily-prompt-text" id="dailyPromptText" data-i18n="prompt_default">最近気になっている場所はありますか？</p>
             <p class="daily-prompt-meta" id="dailyPromptMeta" hidden></p>
           </div>
           <div class="daily-prompt-actions">
-            <button type="button" class="btn-outline" id="dailyPromptBtn">このお題でつぶやく</button>
-            <button type="button" class="btn-outline" id="dailyPromptGachaBtn" title="ランダムで別のお題をめくります">🎲 ガチャを回す</button>
+            <button type="button" class="btn-outline" id="dailyPromptBtn" data-i18n="btn_prompt_post">このお題でつぶやく</button>
+            <button type="button" class="btn-outline" id="dailyPromptGachaBtn" data-i18n="btn_prompt_gacha" title="ランダムで別のお題をめくります">🎲 ガチャを回す</button>
             <button type="button" class="daily-prompt-toggle" id="dailyPromptToggleBtn" aria-expanded="false" aria-controls="dailyPromptCandidates">
-              <span class="daily-prompt-toggle-text">みんなの提案を見る</span>
+              <span class="daily-prompt-toggle-text" data-i18n="btn_prompt_view_all">みんなの提案を見る</span>
               <span class="daily-prompt-toggle-caret" aria-hidden="true">▾</span>
             </button>
           </div>
         </div>
         <div class="daily-prompt-candidates" id="dailyPromptCandidates" hidden>
-          <p class="daily-prompt-candidates-lead">みんなが提案してくれたお題を順番に「今日のお題」として表示しています。<br>心が動いたお題や共感したものには、ぜひ ♡ を押して応援してみてください✨</p>
+          <p class="daily-prompt-candidates-lead" data-i18n="prompt_candidates_lead">みんなが提案してくれたお題を順番に「今日のお題」として表示しています。<br>心が動いたお題や共感したものには、ぜひ ♡ を押して応援してみてください✨</p>
           <div class="daily-prompt-suggest">
             <button type="button" class="btn-outline daily-prompt-suggest-btn" id="dailyPromptSuggestBtn">
               <span class="btn-icon" aria-hidden="true">✨</span>
-              <span>お題を提案する</span>
+              <span data-i18n="btn_prompt_suggest">お題を提案する</span>
             </button>
-            <p class="daily-prompt-suggest-hint">ふと思いついた問いかけで大丈夫。だれかの一日にそっと届きます。</p>
+            <p class="daily-prompt-suggest-hint" data-i18n="prompt_suggest_hint">ふと思いついた問いかけで大丈夫。だれかの一日にそっと届きます。</p>
           </div>
           <ul class="daily-prompt-list" id="dailyPromptList" aria-live="polite"></ul>
-          <p class="daily-prompt-empty" id="dailyPromptEmpty" hidden>まだ提案はありません。最初のひとつ目、書いてみませんか？</p>
+          <p class="daily-prompt-empty" id="dailyPromptEmpty" data-i18n="prompt_empty" hidden>まだ提案はありません。最初のひとつ目、書いてみませんか？</p>
         </div>
       </div>
 
       <div class="posts-empty" id="chatsEmpty" style="display:block;">
         <div class="empty-icon">💬</div>
-        <p>読み込み中</p>
+        <p data-i18n="loading">読み込み中</p>
       </div>
       <div class="chats-grid" id="chatsGrid">
         <!-- チャットカードがここに入る -->
       </div>
       <div class="section-actions">
-        <button type="button" class="btn-outline btn-section-more" id="chatsMoreBtn">もっと見る</button>
+        <button type="button" class="btn-outline btn-section-more" id="chatsMoreBtn" data-i18n="btn_more">もっと見る</button>
       </div>
     </div>
   </section>
@@ -328,16 +339,16 @@
     <div class="footer-inner">
       <div class="footer-logo">
         <span class="logo-main">POPOPO</span>
-        <span class="logo-sub">お出かけマップ</span>
+        <span class="logo-sub" data-i18n="logo_sub">お出かけマップ</span>
       </div>
-      <p class="footer-desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
-      <p class="footer-update">最終更新：2026年5月11日</p>
-      <p class="footer-credit">With gratitude to all POPOPO members for their ideas, and to you for visiting. <a href="spots/">スポット一覧</a></p>
+      <p class="footer-desc" data-i18n="footer_desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
+      <p class="footer-update" data-i18n="footer_update">最終更新：2026年5月11日</p>
+      <p class="footer-credit">With gratitude to all POPOPO members for their ideas, and to you for visiting. <a href="spots/" data-i18n="footer_spots_link">スポット一覧</a></p>
       <div class="footer-admin">
         <img class="footer-admin-avatar" src="assets/admin-profile.jpg" alt="お手入れ係 masa0a のプロフィール画像" width="96" height="96" loading="lazy">
         <div class="footer-admin-body">
-          <p class="footer-admin-label">お手入れ係</p>
-          <a class="footer-admin-link" href="https://bsky.app/profile/masa0a.bsky.social" target="_blank" rel="noopener">
+          <p class="footer-admin-label" data-i18n="footer_admin">お手入れ係</p>
+          <a class="footer-admin-link" href="https://bsky.app/profile/masa0a.bsky.social" target="_blank" rel="noopener" data-i18n="footer_contact">
             🦋 masa0a へ連絡する / Bluesky
           </a>
         </div>
@@ -442,6 +453,21 @@
           <label class="form-label" for="fComment">コメント <span class="req">必須</span></label>
           <textarea id="fComment" class="form-textarea" placeholder="感想を教えてください！（200文字以内）" maxlength="200" required></textarea>
           <span class="char-count"><span id="charNum">0</span>/200</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">写真アップロード（任意）</label>
+          <div class="image-upload-wrapper">
+            <label class="image-upload-trigger" id="fUploadTrigger">
+              <input type="file" id="fImageFile" accept="image/*" style="display:none;">
+              <span class="upload-icon">📷</span>
+              <span class="upload-text">画像を選択する</span>
+            </label>
+            <div class="image-upload-preview-container" id="fImagePreviewContainer" style="display:none;">
+              <img id="fImagePreview" class="image-upload-preview" src="" alt="プレビュー">
+              <button type="button" class="image-upload-clear-btn" id="fImageClearBtn" aria-label="画像を削除">✕</button>
+            </div>
+          </div>
+          <p class="form-help" style="margin-top:6px;font-size:0.75rem;color:var(--text-dim);" data-i18n="upload_disclaimer">※画像は自動的に最適化（縮小・圧縮）して保存されます。</p>
         </div>
         <div class="form-group">
           <label class="form-label">写真・投稿URL（任意・最大3件）</label>
@@ -557,6 +583,21 @@
           <label class="form-label" for="asReason">おすすめポイント <span class="req">必須</span></label>
           <textarea id="asReason" class="form-textarea" placeholder="どんな場所か教えて下さい！（150文字以内）" maxlength="150" required></textarea>
           <span class="char-count"><span id="asCharNum">0</span>/150</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">写真アップロード（任意）</label>
+          <div class="image-upload-wrapper">
+            <label class="image-upload-trigger" id="asUploadTrigger">
+              <input type="file" id="asImageFile" accept="image/*" style="display:none;">
+              <span class="upload-icon">📷</span>
+              <span class="upload-text">画像を選択する</span>
+            </label>
+            <div class="image-upload-preview-container" id="asImagePreviewContainer" style="display:none;">
+              <img id="asImagePreview" class="image-upload-preview" src="" alt="プレビュー">
+              <button type="button" class="image-upload-clear-btn" id="asImageClearBtn" aria-label="画像を削除">✕</button>
+            </div>
+          </div>
+          <p class="form-help" style="margin-top:6px;font-size:0.75rem;color:var(--text-dim);" data-i18n="upload_disclaimer">※画像は自動的に最適化（縮小・圧縮）して保存されます。</p>
         </div>
         <div class="form-group">
           <label class="form-label">参考URL（任意・最大3件）</label>

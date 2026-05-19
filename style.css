@@ -2845,3 +2845,246 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
   }
 }
 
+/* ============================================================
+   写真アップロード関連スタイル
+   ============================================================ */
+.image-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+.image-upload-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background: var(--blue-light);
+  border: 1.5px dashed var(--blue);
+  border-radius: 18px 14px 20px 15px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+.image-upload-trigger:hover {
+  background: rgba(79, 127, 216, 0.15);
+  transform: translateY(-1px);
+}
+.image-upload-preview-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 20px 16px 22px 18px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+  background: #fff;
+  align-self: flex-start;
+}
+.image-upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-upload-clear-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.image-upload-clear-btn:hover {
+  background: #ffedea;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ============================================================
+   インバウンド多言語対応 ＆ リアルタイム翻訳 CSS (v20260520)
+   ============================================================ */
+
+/* 言語切り替えトグル（デスクトップ） */
+.lang-toggle-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid #dcdde1;
+  border-radius: 20px;
+  padding: 5px 12px;
+  color: var(--text-dark);
+  font-family: 'Yomogi', cursive, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.06);
+  margin-left: 12px;
+}
+.lang-toggle-btn:hover {
+  background: #fff;
+  border-color: var(--text-dim);
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+.lang-toggle-btn:active {
+  transform: translateY(0);
+}
+.lang-toggle-btn .lang-icon {
+  font-size: 0.9rem;
+}
+
+/* 言語切り替え（モバイル） */
+.nav-mobile-lang {
+  padding: 8px 16px 16px 16px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  margin-top: 10px;
+}
+.lang-toggle-btn-mobile {
+  width: 100%;
+  background: rgba(255, 254, 250, 0.9);
+  border: 1.5px dashed var(--text-dim);
+  border-radius: 12px;
+  padding: 10px;
+  font-family: 'Yomogi', cursive, sans-serif;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.lang-toggle-btn-mobile:active {
+  background: #fff;
+  transform: scale(0.98);
+}
+
+/* インバウンド向けタグバッジ */
+.spot-inbound-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 10px 0;
+}
+.inbound-tag {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.04);
+  border: 1px dashed rgba(0,0,0,0.06);
+  font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+}
+.inbound-tag--vegan {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+.inbound-tag--card {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+.inbound-tag--wifi {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+}
+.inbound-tag--traditional {
+  background-color: #fff3e0;
+  color: #d84315;
+}
+
+/* Google Maps 連携ボタン */
+.spot-gmaps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+  font-family: 'Yomogi', 'Noto Sans JP', sans-serif;
+  width: fit-content;
+}
+.spot-gmaps-btn:hover {
+  color: #34a853;
+  background: rgba(52, 168, 83, 0.06);
+}
+
+/* リアルタイム翻訳UI */
+.translate-btn-container {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-start;
+}
+.translate-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--text-dim);
+  font-size: 0.74rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-family: 'Yomogi', sans-serif;
+}
+.translate-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-dark);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+.translated-box {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 235, 160, 0.12); /* ほのかな温かみのある水彩画風黄色ハイライト */
+  border-left: 3px solid #ffe082;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #5d4037;
+  font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+  animation: fadeInTranslate 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes fadeInTranslate {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.translation-loading {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  border-left-color: var(--text-dim);
+  border-radius: 50%;
+  animation: spinLoading 0.8s linear infinite;
+  margin-right: 4px;
+}
+@keyframes spinLoading {
+  to { transform: rotate(360deg); }
+}
+

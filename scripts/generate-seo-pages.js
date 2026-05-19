@@ -3,7 +3,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const baseUrl = 'https://popopo-comm.netlify.app';
-const lastmod = '2026-05-18';
+const lastmod = '2026-05-20';
 
 const spots = [
   {
@@ -52,7 +52,7 @@ const spots = [
     area: '人形町',
     pref: '東京',
     url: 'https://tabelog.com/tokyo/A1302/A130204/13319779/',
-    memo: '浅草から都営浅草線で乗り換えなし。開店したばかりで、ランチがお得で美味しいとのリスナー推薦です。',
+    memo: '浅浅草から都営浅草線で乗り換えなし。開店したばかりで、ランチがお得で美味しいとのリスナー推薦です。',
     point: '浅草から行きやすいランチ候補として、地域検索との相性が良いスポットです。'
   },
   {
@@ -426,6 +426,234 @@ const spots = [
   }
 ];
 
+// Load configurations dynamically from app.js to prevent duplication
+const appJsPath = path.join(root, 'app.js');
+let SPOT_TRANSLATIONS = {};
+let ADDRESS_TRANSLATION_MAP = {};
+let SPOT_COORDINATES = {};
+let SPOTS = [];
+let VISITED = [];
+
+try {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  
+  function extractJsObject(jsContent, objectName) {
+    const regex = new RegExp(`const\\s+${objectName}\\s*=\\s*(\\{[\\s\\S]*?\\});`, 'm');
+    const match = jsContent.match(regex);
+    if (match) {
+      try {
+        return Function(`return ${match[1]};`)();
+      } catch (e) {
+        console.error(`Failed to parse ${objectName}:`, e);
+      }
+    }
+    // Try array match
+    const regexArr = new RegExp(`const\\s+${objectName}\\s*=\\s*(\\[[\\s\\S]*?\\]);`, 'm');
+    const matchArr = jsContent.match(regexArr);
+    if (matchArr) {
+      try {
+        return Function(`return ${matchArr[1]};`)();
+      } catch (e) {
+        console.error(`Failed to parse ${objectName} as array:`, e);
+      }
+    }
+    return null;
+  }
+  
+  SPOT_TRANSLATIONS = extractJsObject(appJsContent, 'SPOT_TRANSLATIONS') || {};
+  ADDRESS_TRANSLATION_MAP = extractJsObject(appJsContent, 'ADDRESS_TRANSLATION_MAP') || {};
+  SPOT_COORDINATES = extractJsObject(appJsContent, 'SPOT_COORDINATES') || {};
+  SPOTS = extractJsObject(appJsContent, 'SPOTS') || [];
+  VISITED = extractJsObject(appJsContent, 'VISITED') || [];
+  console.log('Successfully loaded SPOT_TRANSLATIONS, ADDRESS_TRANSLATION_MAP, SPOT_COORDINATES, SPOTS, and VISITED from app.js');
+} catch (err) {
+  console.error('Error parsing app.js:', err);
+}
+
+// English Category Labels Map
+const CAT_LABELS_EN = {
+  'food': 'Food & Cafe',
+  'mohinga': 'Must-Try',
+  'museum': 'Art & Museum',
+  'event': 'Events',
+  'nature': 'Nature & Walk',
+  'book': 'Book & Study',
+  'shop': 'Lifestyle & Goods',
+  'view': 'Lovely Views',
+  'relax': 'Relax & Bath',
+  'entertainment': 'Fun & Media'
+};
+
+// Extra translations for reviews/points that aren't defined in app.js
+const EXTRA_SPOT_TRANSLATIONS = {
+  'comme-chinois': {
+    point: 'Easy to reach for people searching for bakeries or breakfast spots in Kobe/Sannomiya.'
+  },
+  'yugi': {
+    point: 'Contains highly searched specific keywords such as Ikebukuro, Xiaolongbao, Liangpi, and Breakfast.',
+    review: 'Guests noted that after the TV broadcast, there were long lines outside, and the herbal soup of Malatang left a lasting impression with its spicy and aromatic spices.'
+  },
+  'kameju': {
+    point: 'Highly searchable in the context of Asakusa, Dorayaki, and traditional Japanese sweets.'
+  },
+  'kamado-gohan-matsushima': {
+    point: 'Great synergy with local searches as a lunch spot easily accessible from Asakusa.'
+  },
+  'yamaya-ikebukuro': {
+    point: 'Includes keywords with clear search intent, such as Ikebukuro lunch, Mentsuko (spicy cod roe), and motsunabe.'
+  },
+  'kura-global-flagship': {
+    point: 'Highly useful for tourists, families, and those looking for conveyor-belt sushi in Tokyo.'
+  },
+  'saryo-tsujiri-daimaru': {
+    point: 'Matches search demand for Tokyo Station, matcha, sweets, and cafe breaks.'
+  },
+  'leonards-japan': {
+    point: 'Highly specific with the combination of Yokohama, Malasadas, and Hawaiian sweets.'
+  },
+  'shinpachi-shokudo': {
+    point: 'Fits a wide range of search intents like solo dining, set meals, and breakfast.'
+  },
+  'mohinga': {
+    point: 'Ideal for niche searches like Myanmar food, Mohinga, and Takadanobaba.'
+  },
+  '400do-pizza': {
+    point: 'Contains popular proper nouns highly searched as famous pizza spots in Hiroshima and Okayama.'
+  },
+  'yamatane': {
+    point: 'Clear museum name and area name, making it suitable for cultural outing searches.'
+  },
+  'nmwa': {
+    point: 'Perfect for search contexts relating to Ueno, art museums, and World Heritage architecture.'
+  },
+  'hokusai': {
+    point: 'Strong keyword combination of Hokusai, museum, and Sumida-ku.'
+  },
+  'kagurazaka-machibutai-2026': {
+    point: 'Includes event name, dates, and Kagurazaka local context, suitable for seasonal searches.'
+  },
+  'koishikawa-korakuen': {
+    point: 'Useful as a detour option near Tokyo Dome, Bunkyo-ku, or urban gardens.'
+  },
+  'ikebukuro-jazz-festival': {
+    point: 'Contains real-life impressions matching search intents for Ikebukuro, jazz festivals, free events, and city walks.',
+    review: 'Hearing about it on POPOPO, a listener dropped by for a break during studies and was deeply moved by the live saxophone performance and the sense of unity at the venue.'
+  },
+  'thai-festival-tokyo': {
+    point: 'Suitable for searches for Yoyogi Park, Thai Festival, Gapao rice, and international events.',
+    review: 'Reviews highlight the lively atmosphere, authentic Thai food, and a space where music and food naturally bring out smiles.'
+  },
+  'lafollejournee-tokyo-2026': {
+    point: 'Matches searches for Tokyo International Forum, classical music festivals, and free concerts.',
+    review: 'Listeners were naturally drawn in by the musicians\' dedication to their art, the acoustic resonance of the venue, and the shared excitement of the audience.'
+  },
+  'niconico-chokaigi': {
+    point: 'Strong theme for searches about Niconico Chokaigi, Makuhari, Vocaloid, internet culture, and event reviews.',
+    review: 'Various impressions from the venue include DJ lives by Vocaloid producers, famous personalities at merch booths, and Sachiko Kobayashi\'s Senbonzakura.'
+  },
+  'kasai-rinkai-crystal-view': {
+    point: 'Perfect for searches regarding Kasai Rinkai Park, Crystal View, free entry, and sea view spots.'
+  },
+  'tokyo-mitaiwara': {
+    point: 'Suits niche and specific searches for Nishi-Kasai, Indian sweets, and Barfi.'
+  },
+  'ota-memorial-museum': {
+    point: 'Highly searchable combination of Harajuku, Ukiyo-e, and art museum.'
+  },
+  'rakusho-ramen': {
+    point: 'Matches search intents for Fukuoka, Tenjin, ramen, curry, and cheap lunch.'
+  },
+  'kusamakura-cafe': {
+    point: 'Perfect for searches for Minato-ku, quiet cafes, and cafes with books.'
+  },
+  'japan-coast-guard-museum-yokohama': {
+    point: 'Fits specific searches for Yokohama, free museums, maritime safety, and patrol boat exhibits.'
+  },
+  'matsuya-morning': {
+    point: 'Ideal for daily searches such as Matsuya breakfast, morning sets, value dining, and early lunch.',
+    review: 'Reviews express surprise at the excellent balance of price and satisfaction, mentioning options like Tokucho Gyusara Teishoku and domestic grated yam.'
+  },
+  'sanin-gyokai-chuka-soba': {
+    point: 'Perfect for searches for Nerima, clam ramen, morning ramen, and seafood ramen.'
+  },
+  'frijoles-yaesu': {
+    point: 'Matches searches for Tokyo Station, Yaesu, burritos, and healthy lunch.'
+  },
+  'oyama-milk-no-sato': {
+    point: 'Suits searches for Tottori, Daisen, Shirobara Milk, soft-serve ice cream, and dairy farm sightseeing.',
+    review: 'Impressions highlight the clean air, grazing cows, picnics on the grass, and the rich yet refreshing flavor of the soft-serve ice cream.'
+  },
+  'ramen-otama': {
+    point: 'Matches local search interests for Yonago, Tottori, beef bone ramen, and fried rice.',
+    review: 'A guest who tried beef bone ramen for the first time noted that it was delicious, free from any gamey smell, and had a beautiful clear broth.'
+  },
+  'queen-hiroba-yokohama-customs': {
+    point: 'Matches specific searches for Yokohama, Yokohama Customs, free museums, and smuggling exhibits.'
+  },
+  'aagan': {
+    point: 'Allows adding real-life guest reviews for dining options around Okubo.',
+    review: 'Delicious! I was deeply impressed by the generous portions of refills.'
+  },
+  'rosetsu': {
+    point: 'Features cultural search keywords like Fuchu Art Museum, Nagasawa Rosetsu, and Japanese art, matching art search intents.',
+    review: 'The origin of cute Japanese art. I was deeply moved by Rosetsu\'s dynamic and lively brushwork.'
+  }
+};
+
+// Merge vegan/card/wifi tags dynamically from SPOTS and VISITED arrays in app.js
+const allAppSpots = [...SPOTS, ...VISITED];
+for (const spot of spots) {
+  const appSpot = allAppSpots.find(s => s.id === spot.id);
+  if (appSpot) {
+    if (appSpot.vegan) spot.vegan = true;
+    if (appSpot.card) spot.card = true;
+    if (appSpot.wifi) spot.wifi = true;
+    if (appSpot.traditional) spot.traditional = true;
+  }
+}
+
+function convertToEnglishAddress(area, pref) {
+  const tArea = ADDRESS_TRANSLATION_MAP[area] || area;
+  const tPref = ADDRESS_TRANSLATION_MAP[pref] || pref;
+  if (tPref === 'Japan Nationwide' || tPref === 'Online' || tPref === 'Nationwide') {
+    return tPref;
+  }
+  if (tArea === tPref) {
+    return tArea;
+  }
+  return `${tArea}, ${tPref}`;
+}
+
+function getGoogleMapsUrl(spot) {
+  if (SPOT_COORDINATES[spot.id]) {
+    const { lat, lng } = SPOT_COORDINATES[spot.id];
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
+  const query = encodeURIComponent(`${spot.name} ${spot.pref || ''} ${spot.area || ''}`);
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+function renderInboundTags(s, lang) {
+  let html = '';
+  const isEn = lang === 'en';
+  if (s.vegan) {
+    html += `<span class="inbound-tag inbound-tag--vegan">${isEn ? '🌱 Vegan' : '🌱 ヴィーガン対応'}</span>`;
+  }
+  if (s.card) {
+    html += `<span class="inbound-tag inbound-tag--card">${isEn ? '💳 Card OK' : '💳 カード決済可'}</span>`;
+  }
+  if (s.wifi) {
+    html += `<span class="inbound-tag inbound-tag--wifi">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fiあり'}</span>`;
+  }
+  if (s.traditional) {
+    html += `<span class="inbound-tag inbound-tag--traditional">${isEn ? '🏯 Traditional' : '🏯 日本の伝統'}</span>`;
+  }
+  if (html) {
+    return `<div class="spot-inbound-tags">${html}</div>`;
+  }
+  return '';
+}
+
 function esc(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -435,37 +663,64 @@ function esc(value) {
     .replace(/'/g, '&#39;');
 }
 
-function metaDesc(spot) {
-  return `${spot.name}（${spot.area}）のPOPOPOリスナーおすすめメモ。${spot.memo}`.replace(/\s+/g, ' ').slice(0, 155);
+function metaDesc(spot, lang) {
+  if (lang === 'en') {
+    const spotName = SPOT_TRANSLATIONS[spot.id]?.name || spot.name;
+    const spotMemo = SPOT_TRANSLATIONS[spot.id]?.memo || spot.memo;
+    const spotArea = convertToEnglishAddress(spot.area, spot.pref);
+    return `POPOPO listener recommendation for ${spotName} in ${spotArea}. ${spotMemo}`.replace(/\s+/g, ' ').slice(0, 155);
+  } else {
+    return `${spot.name}（${spot.area}）のPOPOPOリスナーおすすめメモ。${spot.memo}`.replace(/\s+/g, ' ').slice(0, 155);
+  }
 }
 
-function pageHtml(spot) {
-  const title = `${spot.name} | POPOPO お出かけマップ`;
-  const desc = metaDesc(spot);
-  const pageUrl = `${baseUrl}/spots/${spot.id}.html`;
+function pageHtml(spot, lang) {
+  const isEn = lang === 'en';
+  const spotName = isEn ? (SPOT_TRANSLATIONS[spot.id]?.name || spot.name) : spot.name;
+  const spotMemo = isEn ? (SPOT_TRANSLATIONS[spot.id]?.memo || spot.memo) : spot.memo;
+  const spotPoint = isEn ? (EXTRA_SPOT_TRANSLATIONS[spot.id]?.point || spot.point) : spot.point;
+  const spotReview = isEn ? (EXTRA_SPOT_TRANSLATIONS[spot.id]?.review || spot.review) : spot.review;
+  const spotCatLabel = isEn ? (CAT_LABELS_EN[spot.cat] || spot.catLabel) : spot.catLabel;
+  const spotMeta = isEn ? `📍 ${convertToEnglishAddress(spot.area, spot.pref)}` : `📍 ${spot.area}${spot.pref ? `（${spot.pref}）` : ''}`;
+  
+  const title = isEn ? `${spotName} | POPOPO Outing Map` : `${spotName} | POPOPO お出かけマップ`;
+  const desc = metaDesc(spot, lang);
+  
+  const pageUrl = isEn ? `${baseUrl}/spots/en/${spot.id}.html` : `${baseUrl}/spots/${spot.id}.html`;
+  const relativeDepth = isEn ? '../..' : '..';
+  const logoUrl = isEn ? '../../index.html#hero' : '../index.html#hero';
+  
+  // Dynamic language toggle link next to nav
+  const langToggleHtml = isEn 
+    ? `<a href="../${spot.id}.html" class="lang-toggle-btn"><span class="lang-icon">🌐</span> 日本語</a>`
+    : `<a href="en/${spot.id}.html" class="lang-toggle-btn"><span class="lang-icon">🌐</span> English</a>`;
+  
+  const googleMapsUrl = getGoogleMapsUrl(spot);
+  const inboundTagsHtml = renderInboundTags(spot, lang);
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: `${spot.name}のおすすめメモ`,
+    headline: isEn ? `${spotName} Outing Recommendation` : `${spotName}のおすすめメモ`,
     description: desc,
-    inLanguage: 'ja',
+    inLanguage: isEn ? 'en' : 'ja',
     url: pageUrl,
     image: `${baseUrl}/assets/social-card-map.png`,
     about: {
       '@type': 'Place',
-      name: spot.name,
-      address: `${spot.pref} ${spot.area}`,
+      name: spotName,
+      address: isEn ? convertToEnglishAddress(spot.area, spot.pref) : `${spot.pref} ${spot.area}`,
       url: spot.url
     },
     isPartOf: {
       '@type': 'WebSite',
-      name: 'POPOPO お出かけマップ',
+      name: isEn ? 'POPOPO Outing Map' : 'POPOPO お出かけマップ',
       url: baseUrl
     }
   };
 
   return `<!DOCTYPE html>
-<html lang="ja">
+<html lang="${isEn ? 'en' : 'ja'}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -473,9 +728,15 @@ function pageHtml(spot) {
   <meta name="description" content="${esc(desc)}">
   <meta name="author" content="masa0a">
   <link rel="canonical" href="${esc(pageUrl)}">
-  <meta property="og:locale" content="ja_JP">
+  
+  <!-- Reciprocal alternate hreflang links for robust international SEO -->
+  <link rel="alternate" hreflang="ja" href="${esc(`${baseUrl}/spots/${spot.id}.html`)}">
+  <link rel="alternate" hreflang="en" href="${esc(`${baseUrl}/spots/en/${spot.id}.html`)}">
+  <link rel="alternate" hreflang="x-default" href="${esc(`${baseUrl}/spots/${spot.id}.html`)}">
+
+  <meta property="og:locale" content="${isEn ? 'en_US' : 'ja_JP'}">
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="POPOPO お出かけマップ">
+  <meta property="og:site_name" content="${isEn ? 'POPOPO Outing Map' : 'POPOPO お出かけマップ'}">
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(desc)}">
   <meta property="og:url" content="${esc(pageUrl)}">
@@ -489,24 +750,25 @@ function pageHtml(spot) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Yomogi&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" sizes="512x512" href="../assets/favicon-512.png">
-  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="../style.css?v=20260518-1">
+  <link rel="icon" type="image/png" sizes="512x512" href="${relativeDepth}/assets/favicon-512.png">
+  <link rel="apple-touch-icon" href="${relativeDepth}/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="${relativeDepth}/style.css?v=${lastmod}-1">
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 </head>
 <body class="seo-spot-page">
   <nav id="navbar">
     <div class="nav-inner">
-      <a href="../index.html#hero" class="nav-logo">
+      <a href="${logoUrl}" class="nav-logo">
         <span class="logo-main">POPOPO</span>
-        <span class="logo-sub">お出かけマップ</span>
+        <span class="logo-sub">${isEn ? 'Outing Map' : 'お出かけマップ'}</span>
       </a>
       <div class="nav-links" id="navLinks">
-        <a href="../index.html#spots" class="nav-link">📍 おすすめスポット</a>
-        <a href="../index.html#visited" class="nav-link">💬 みんなの感想</a>
-        <a href="../index.html#community" class="nav-link">💬 フリートーク掲示板</a>
-        <a href="../about.html" class="nav-link">🌿 この場所を作った理由</a>
-        <a href="../how-to.html" class="nav-link">💡 使い方</a>
+        <a href="${relativeDepth}/index.html#spots" class="nav-link">${isEn ? '📍 Recommended Spots' : '📍 おすすめスポット'}</a>
+        <a href="${relativeDepth}/index.html#visited" class="nav-link">${isEn ? '💬 Guest Reviews' : '💬 みんなの感想'}</a>
+        <a href="${relativeDepth}/index.html#community" class="nav-link">${isEn ? '💬 Free Talk' : '💬 フリートーク掲示板'}</a>
+        <a href="${relativeDepth}/about.html" class="nav-link">${isEn ? '🌿 Why This Site' : '🌿 この場所を作った理由'}</a>
+        <a href="${relativeDepth}/how-to.html" class="nav-link">${isEn ? '💡 Guide' : '💡 使い方'}</a>
+        ${langToggleHtml}
       </div>
     </div>
   </nav>
@@ -514,15 +776,17 @@ function pageHtml(spot) {
   <main>
     <section class="seo-spot-hero">
       <div class="container seo-spot-inner">
-        <a class="seo-breadcrumb" href="index.html">SEOスポット一覧</a>
-        <p class="guide-kicker">${esc(spot.emoji)} ${esc(spot.catLabel)}</p>
-        <h1 class="seo-spot-title">${esc(spot.name)}</h1>
-        <p class="seo-spot-meta">📍 ${esc(spot.area)}${spot.pref ? `（${esc(spot.pref)}）` : ''}</p>
-        <p class="seo-spot-lead">${esc(spot.memo)}</p>
-        ${spot.review ? `<blockquote class="seo-spot-review">“${esc(spot.review)}”</blockquote>` : ''}
+        <a class="seo-breadcrumb" href="${isEn ? 'index.html' : 'index.html'}">${isEn ? 'Spots Directory' : 'SEOスポット一覧'}</a>
+        <p class="guide-kicker">${esc(spot.emoji)} ${esc(spotCatLabel)}</p>
+        <h1 class="seo-spot-title">${esc(spotName)}</h1>
+        <p class="seo-spot-meta">${esc(spotMeta)}</p>
+        ${inboundTagsHtml}
+        <p class="seo-spot-lead" style="margin-top: 15px;">${esc(spotMemo)}</p>
+        ${spotReview ? `<blockquote class="seo-spot-review">“${esc(spotReview)}”</blockquote>` : ''}
         <div class="seo-spot-actions">
-          <a class="btn-primary" href="../index.html#spots">サイトで見る</a>
-          <a class="btn-outline" href="${esc(spot.url)}" target="_blank" rel="noopener">参考URLを開く</a>
+          <a class="btn-primary" href="${relativeDepth}/index.html#spots">${isEn ? 'View on Site' : 'サイトで見る'}</a>
+          <a class="btn-outline" href="${esc(spot.url)}" target="_blank" rel="noopener">${isEn ? 'Open Website' : '参考URLを開く'}</a>
+          ${googleMapsUrl ? `<a class="btn-outline btn-googlemaps" href="${esc(googleMapsUrl)}" target="_blank" rel="noopener" style="background: rgba(26, 115, 232, 0.06); border-color: rgba(26, 115, 232, 0.4); color: #1a73e8;">🗺️ ${isEn ? 'Open in Google Maps' : 'Google Mapsで開く'}</a>` : ''}
         </div>
       </div>
     </section>
@@ -531,13 +795,15 @@ function pageHtml(spot) {
       <div class="container seo-spot-content">
         <article class="guide-card seo-spot-note">
           <span class="guide-num">PO</span>
-          <h2>POPOPOリスナーのおすすめポイント</h2>
-          <p>${esc(spot.point)}</p>
+          <h2>${isEn ? "POPOPO Listener's Recommendation" : 'POPOPOリスナーのおすすめポイント'}</h2>
+          <p>${esc(spotPoint)}</p>
         </article>
         <article class="guide-card seo-spot-note">
           <span class="guide-num">MAP</span>
-          <h2>このページについて</h2>
-          <p>このページは、POPOPO お出かけマップに掲載されているおすすめスポットや感想を、検索でも見つけやすいように整理した静的ページです。最新の投稿やみんなの感想はトップページで確認できます。</p>
+          <h2>${isEn ? 'About this page' : 'このページについて'}</h2>
+          <p>${isEn 
+            ? 'This page is a search-friendly static page designed to organize recommended spots and reviews featured on POPOPO Outing Map. Check the home page for the latest updates, live chats, and community reviews.' 
+            : 'このページは、POPOPO お出かけマップに掲載されているおすすめスポットや感想を、検索でも見つけやすいように整理した静的ページです。最新の投稿やみんなの感想はトップページで確認できます。'}</p>
         </article>
       </div>
     </section>
@@ -547,10 +813,10 @@ function pageHtml(spot) {
     <div class="footer-inner">
       <div class="footer-logo">
         <span class="logo-main">POPOPO</span>
-        <span class="logo-sub">お出かけマップ</span>
+        <span class="logo-sub">${isEn ? 'Outing Map' : 'お出かけマップ'}</span>
       </div>
-      <p class="footer-desc">人から人へ伝わる、ちいさなお出かけ案内。</p>
-      <p class="footer-update">最終更新：2026年5月18日</p>
+      <p class="footer-desc">${isEn ? 'A gentle, word-of-mouth guide for little outings.' : '人から人へ伝わる、ちいさなおお出かけ案内。'}</p>
+      <p class="footer-update">${isEn ? `Last Updated: ${lastmod}` : `最終更新：2026年5月20日`}</p>
     </div>
   </footer>
 </body>
@@ -558,66 +824,98 @@ function pageHtml(spot) {
 `;
 }
 
-function indexHtml() {
-  const cards = spots.map(spot => `
-        <a class="guide-card seo-index-card" href="${esc(spot.id)}.html">
+function indexHtml(lang) {
+  const isEn = lang === 'en';
+  const relativeDepth = isEn ? '../..' : '..';
+  const logoUrl = isEn ? '../../index.html#hero' : '../index.html#hero';
+  
+  const cards = spots.map(spot => {
+    const spotName = isEn ? (SPOT_TRANSLATIONS[spot.id]?.name || spot.name) : spot.name;
+    const spotMemo = isEn ? (SPOT_TRANSLATIONS[spot.id]?.memo || spot.memo) : spot.memo;
+    const spotArea = isEn ? convertToEnglishAddress(spot.area, spot.pref) : spot.area;
+    const spotCatLabel = isEn ? (CAT_LABELS_EN[spot.cat] || spot.catLabel) : spot.catLabel;
+    const inboundTagsHtml = renderInboundTags(spot, lang);
+    const relPath = `${spot.id}.html`;
+
+    return `
+        <a class="guide-card seo-index-card" href="${relPath}">
           <span class="guide-num">${esc(spot.emoji)}</span>
-          <h2>${esc(spot.name)}</h2>
-          <p>${esc(spot.area)} / ${esc(spot.catLabel)}</p>
-          <p>${esc(spot.memo)}</p>
-        </a>`).join('');
+          <h2>${esc(spotName)}</h2>
+          <p>${esc(spotArea)} / ${esc(spotCatLabel)}</p>
+          ${inboundTagsHtml}
+          <p style="margin-top: 8px;">${esc(spotMemo)}</p>
+        </a>`;
+  }).join('');
+
+  const title = isEn ? 'Spots Directory | POPOPO Outing Map' : 'おすすめスポット一覧 | POPOPO お出かけマップ';
+  const desc = isEn 
+    ? 'A collection of recommended spots and guest reviews featured on the POPOPO Outing Map, optimized for search engines.' 
+    : 'POPOPO お出かけマップのおすすめスポットやみんなの感想を、検索でも見つけやすい静的ページとして整理した一覧です。';
+  
+  const pageUrl = isEn ? `${baseUrl}/spots/en/` : `${baseUrl}/spots/`;
+  
+  const langToggleHtml = isEn
+    ? `<a href="../index.html" class="lang-toggle-btn"><span class="lang-icon">🌐</span> 日本語</a>`
+    : `<a href="en/index.html" class="lang-toggle-btn"><span class="lang-icon">🌐</span> English</a>`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'POPOPO お出かけマップ SEOスポット一覧',
-    description: 'POPOPOリスナーのおすすめスポットや感想を検索向けに整理した一覧です。',
-    url: `${baseUrl}/spots/`,
-    inLanguage: 'ja',
+    name: title,
+    description: desc,
+    url: pageUrl,
+    inLanguage: isEn ? 'en' : 'ja',
     isPartOf: {
       '@type': 'WebSite',
-      name: 'POPOPO お出かけマップ',
+      name: isEn ? 'POPOPO Outing Map' : 'POPOPO お出かけマップ',
       url: baseUrl
     }
   };
 
   return `<!DOCTYPE html>
-<html lang="ja">
+<html lang="${isEn ? 'en' : 'ja'}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>おすすめスポット一覧 | POPOPO お出かけマップ</title>
-  <meta name="description" content="POPOPO お出かけマップのおすすめスポットやみんなの感想を、検索でも見つけやすい静的ページとして整理した一覧です。">
-  <link rel="canonical" href="${baseUrl}/spots/">
-  <meta property="og:locale" content="ja_JP">
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(desc)}">
+  <link rel="canonical" href="${pageUrl}">
+  
+  <!-- Reciprocal alternate hreflang links for sitemap root directories -->
+  <link rel="alternate" hreflang="ja" href="${esc(`${baseUrl}/spots/`)}">
+  <link rel="alternate" hreflang="en" href="${esc(`${baseUrl}/spots/en/`)}">
+  <link rel="alternate" hreflang="x-default" href="${esc(`${baseUrl}/spots/`)}">
+
+  <meta property="og:locale" content="${isEn ? 'en_US' : 'ja_JP'}">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="POPOPO お出かけマップ">
-  <meta property="og:title" content="おすすめスポット一覧 | POPOPO お出かけマップ">
-  <meta property="og:description" content="POPOPOリスナーのおすすめスポットや感想を検索向けに整理した一覧です。">
-  <meta property="og:url" content="${baseUrl}/spots/">
+  <meta property="og:site_name" content="${isEn ? 'POPOPO Outing Map' : 'POPOPO お出かけマップ'}">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(desc)}">
+  <meta property="og:url" content="${pageUrl}">
   <meta property="og:image" content="${baseUrl}/assets/social-card-map.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="${baseUrl}/assets/social-card-map.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&family=Yomogi&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" sizes="512x512" href="../assets/favicon-512.png">
-  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="../style.css?v=20260518-1">
+  <link rel="icon" type="image/png" sizes="512x512" href="${relativeDepth}/assets/favicon-512.png">
+  <link rel="apple-touch-icon" href="${relativeDepth}/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="${relativeDepth}/style.css?v=${lastmod}-1">
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 </head>
 <body class="seo-spot-page">
   <nav id="navbar">
     <div class="nav-inner">
-      <a href="../index.html#hero" class="nav-logo">
+      <a href="${logoUrl}" class="nav-logo">
         <span class="logo-main">POPOPO</span>
-        <span class="logo-sub">お出かけマップ</span>
+        <span class="logo-sub">${isEn ? 'Outing Map' : 'お出かけマップ'}</span>
       </a>
       <div class="nav-links" id="navLinks">
-        <a href="../index.html#spots" class="nav-link">📍 おすすめスポット</a>
-        <a href="../index.html#visited" class="nav-link">💬 みんなの感想</a>
-        <a href="../about.html" class="nav-link">🌿 この場所を作った理由</a>
-        <a href="../how-to.html" class="nav-link">💡 使い方</a>
+        <a href="${relativeDepth}/index.html#spots" class="nav-link">${isEn ? '📍 Recommended Spots' : '📍 おすすめスポット'}</a>
+        <a href="${relativeDepth}/index.html#visited" class="nav-link">${isEn ? '💬 Guest Reviews' : '💬 みんなの感想'}</a>
+        <a href="${relativeDepth}/about.html" class="nav-link">${isEn ? '🌿 Why This Site' : '🌿 この場所を作った理由'}</a>
+        <a href="${relativeDepth}/how-to.html" class="nav-link">${isEn ? '💡 Guide' : '💡 使い方'}</a>
+        ${langToggleHtml}
       </div>
     </div>
   </nav>
@@ -625,12 +923,14 @@ function indexHtml() {
   <main>
     <section class="guide-hero seo-index-hero">
       <div class="guide-hero-inner">
-        <span class="guide-kicker">検索向けピックアップ</span>
-        <h1 class="guide-title">おすすめスポット一覧</h1>
-        <p class="guide-lead">POPOPOリスナーのおすすめや感想の中から、場所名・地域名・体験内容が具体的なものを静的ページとして整理しています。</p>
+        <span class="guide-kicker">${isEn ? 'Pickups for Search' : '検索向けピックアップ'}</span>
+        <h1 class="guide-title">${isEn ? 'Spots Directory' : 'おすすめスポット一覧'}</h1>
+        <p class="guide-lead">${isEn 
+          ? 'We organize recommended spots and reviews from POPOPO listeners with specific place names, areas, and local experiences.' 
+          : 'POPOPOリスナーのおすすめや感想の中から、場所名・地域名・体験内容が具体的なものを静的ページとして整理しています。'}</p>
         <div class="guide-actions">
-          <a href="../index.html#spots" class="btn-primary">トップで見る</a>
-          <a href="../index.html#visited" class="btn-outline">みんなの感想へ</a>
+          <a href="${relativeDepth}/index.html#spots" class="btn-primary">${isEn ? 'Browse Map' : 'トップで見る'}</a>
+          <a href="${relativeDepth}/index.html#visited" class="btn-outline">${isEn ? 'Guest Reviews' : 'みんなの感想へ'}</a>
         </div>
       </div>
     </section>
@@ -651,7 +951,9 @@ function sitemapXml() {
     ['/how-to.html', lastmod],
     ['/about.html', lastmod],
     ['/spots/', lastmod],
-    ...spots.map(spot => [`/spots/${spot.id}.html`, lastmod])
+    ['/spots/en/', lastmod],
+    ...spots.map(spot => [`/spots/${spot.id}.html`, lastmod]),
+    ...spots.map(spot => [`/spots/en/${spot.id}.html`, lastmod])
   ];
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -665,11 +967,20 @@ ${urls.map(([loc, date]) => `  <url>
 }
 
 const spotsDir = path.join(root, 'spots');
+const spotsEnDir = path.join(spotsDir, 'en');
+
 fs.mkdirSync(spotsDir, { recursive: true });
+fs.mkdirSync(spotsEnDir, { recursive: true });
+
 for (const spot of spots) {
-  fs.writeFileSync(path.join(spotsDir, `${spot.id}.html`), pageHtml(spot));
+  fs.writeFileSync(path.join(spotsDir, `${spot.id}.html`), pageHtml(spot, 'ja'));
+  fs.writeFileSync(path.join(spotsEnDir, `${spot.id}.html`), pageHtml(spot, 'en'));
 }
-fs.writeFileSync(path.join(spotsDir, 'index.html'), indexHtml());
+fs.writeFileSync(path.join(spotsDir, 'index.html'), indexHtml('ja'));
+fs.writeFileSync(path.join(spotsEnDir, 'index.html'), indexHtml('en'));
 fs.writeFileSync(path.join(root, 'sitemap.xml'), sitemapXml());
 
-console.log(`Generated ${spots.length} spot pages plus spots/index.html`);
+console.log(`Generated ${spots.length} Japanese spot pages inside spots/`);
+console.log(`Generated ${spots.length} English spot pages inside spots/en/`);
+console.log(`Generated spots/index.html and spots/en/index.html`);
+console.log(`Generated sitemap.xml`);
