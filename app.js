@@ -179,6 +179,14 @@ const SPOTS = [
   { id: 'saryo-tsujiri-daimaru', cat: 'food', emoji: '🍵', name: '茶寮都路里 大丸東京店', area: '東京駅・大丸東京店', pref: '東京', url: 'https://www.giontsujiri.co.jp/store/tokyo-daimaru/', memo: '東京駅直結で立ち寄りやすい、抹茶や甘味の休憩スポット。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'leonards-japan', cat: 'food', emoji: '🍩', name: "Leonard's Japan", area: '横浜ワールドポーターズ', pref: '神奈川', url: 'https://leonardsjapan.com/about-2/', memo: 'ハワイのマラサダを横浜で。外はサクッと、中はもちもちの甘い寄り道候補。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'shinpachi-shokudo', cat: 'food', emoji: '🐟', name: '炭火焼干物定食 しんぱち食堂', area: '東京ほか', pref: '全国', url: 'https://www.shinpachi-shokudo.com/', memo: '焼き魚とごはん、味噌汁の定食を気軽に食べたい時に。朝・昼・夜の候補にしやすいお店。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'tokyo-mitaiwara', cat: 'food', emoji: '🍬', name: 'トウキョウ ミタイワラ', area: '西葛西', pref: '東京', url: 'https://share.google/a4XiQFxBsCeCI5B6c', memo: '不思議な甘さ of インドスイーツのお店。バルフィがおすすめとして投稿されています。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'rakusho-ramen', cat: 'food', emoji: '🍜', name: '楽勝ラーメン', area: '福岡市中央区天神', pref: '福岡', url: 'https://tabelog.com/fukuoka/A4001/A400103/40006293/', memo: '福岡市の繁華街中心部にあり、手頃な価格でラーメンを食べられるお店。カレーも美味しいとの投稿があります。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'kusamakura-cafe', cat: 'food', emoji: '☕', name: '草枕', area: '港区', pref: '東京', url: 'https://tabelog.com/tokyo/A1301/A130103/13043012/', memo: 'オフィス街にある落ち着いたカフェ。照明、丁寧な接客、本のある空間が心地よい場所として投稿されています。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'matsuya-morning', cat: 'food', emoji: '🍚', name: '松屋のモーニング', area: '全国', pref: '全国', url: 'https://www.matsuyafoods.co.jp/matsuya/menu/morning/index.html', memo: '11時まで利用できる朝ごはんメニュー。早めのランチとしても使いやすく、選べる小鉢やコスパの良さが魅力です。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'sanin-gyokai-chuka-soba', cat: 'food', emoji: '🐚', name: '山陰魚介中華蕎麦', area: '東京都練馬区', pref: '東京', url: 'https://tabelog.com/tokyo/A1321/A132102/13300394/', memo: '練馬の住宅街にあるラーメン店。大量のしじみが入った斬新な見た目と、濃厚なしじみの旨味が広がるスープが印象的です。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'frijoles-yaesu', cat: 'food', emoji: '🌯', name: 'フリホーレス 東京ミッドタウン八重洲店', area: '東京ミッドタウン八重洲', pref: '東京', url: 'https://tabelog.com/tokyo/A1302/A130201/13276542/', memo: 'ボリューム満点のブリトーで、タンパク質・野菜・炭水化物をバランスよく摂れるお店。時短と健康を両立したい時の候補です。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'oyama-milk-no-sato', cat: 'food', emoji: '🍦', name: '大山まきばのみるくの里', area: '鳥取・大山', pref: '鳥取', url: 'https://dainyu.or.jp/village-of-milk/', memo: '白バラ牛乳ブランド初の公式コンセプトショップ。白バラ商品やグッズ、ソフトクリームを楽しめる鳥取・大山のスポットです。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'ramen-otama', cat: 'food', emoji: '🍜', name: 'ラーメンおたま', area: '鳥取・米子', pref: '鳥取', url: 'https://share.google/FSaSRer3XmzgQmbAs', memo: '鳥取県米子市で牛骨ラーメンを楽しめるお店。透き通ったスープと独特の甘み、コクが特徴です。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- 食べたいもの ---
   { id: 'mohinga', cat: 'mohinga', emoji: '🍜', name: 'モヒンガー（ミャンマー料理）', area: '高田馬場など', pref: '東京', url: 'https://otonano-shumatsu.com/articles/488762', memo: 'ミャンマーの国民食！ぜひ食べたい。詳しくはリンク先から。' },
   { 
@@ -192,9 +200,16 @@ const SPOTS = [
   { id: 'nmwa', cat: 'museum', emoji: '🏛️', name: '国立西洋美術館', area: '上野', pref: '東京', url: 'https://www.nmwa.go.jp/jp/', memo: 'ル・コルビュジエ設計の世界遺産建築' },
   { id: 'edo', cat: 'museum', emoji: '🗼', name: '江戸東京博物館', area: '墨田区', pref: '東京', url: 'https://www.edo-tokyo-museum.or.jp/', memo: '江戸〜東京の歴史を体感できる' },
   { id: 'hokusai', cat: 'museum', emoji: '🌊', name: 'すみだ北斎美術館', area: '墨田区', pref: '東京', url: 'https://hokusai-museum.jp/', memo: '葛飾北斎の作品を多数展示' },
+  { id: 'ota-memorial-museum', cat: 'museum', emoji: '🖼️', name: '太田記念美術館', area: '原宿', pref: '東京', url: 'https://www.ukiyoe-ota-muse.jp/', memo: '原宿にある浮世絵専門の美術館。浮世絵をたくさん見られる場所として投稿されています。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'japan-coast-guard-museum-yokohama', cat: 'museum', emoji: '🚢', name: '海上保安資料館横浜館', area: '横浜', pref: '神奈川', url: 'https://share.google/OR8sP7aiI4xg6s26C', memo: '工作船や押収された武器などを見られる、入館無料の資料館。展示の迫力が印象的だったという投稿があります。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'queen-hiroba-yokohama-customs', cat: 'museum', emoji: '🏛️', name: 'クイーンのひろば', area: '横浜', pref: '神奈川', url: 'https://share.google/ynCJht8MwoGxLxyn2', memo: '横浜税関の博物館。入館無料で、密輸の手口などを知ることができる展示があります。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- イベント ---
   { id: 'yoyogi', cat: 'event', emoji: '🌿', name: '代々木公園 イベント', area: '代々木公園', pref: '東京', url: 'https://www.yoyogikoen.info/', memo: 'さまざまなイベントが開催される都心の公園' },
   { id: 'kagurazaka-machibutai-2026', cat: 'event', emoji: '🎭', name: '神楽坂まち舞台・大江戸めぐり2026', area: '神楽坂エリア', pref: '東京', url: 'https://kaguramachi.jp/', memo: '2026年5月16日（土）・17日（日）開催予定。神楽坂の街全体で伝統芸能を楽しめるフェスティバル。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'ikebukuro-jazz-festival', cat: 'event', emoji: '🎺', name: '池袋ジャズフェスティバル', area: '池袋', pref: '東京', url: 'https://www.ikebukurojazz.com/', memo: '池袋の街なかで音楽が聴こえてくる、無料でふらっと立ち寄れるジャズイベント。カフェ巡りや散歩の途中にも楽しめる、やさしい空気のフェスです。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'thai-festival-tokyo', cat: 'event', emoji: '🇹🇭', name: 'タイフェスティバル東京', area: '代々木公園', pref: '東京', url: 'https://thaifes.jp/', memo: '代々木公園で開催される、タイの食・音楽・文化を楽しめる人気イベント。東京にいながらタイ旅行のような気分を味わえる場所です。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'lafollejournee-tokyo-2026', cat: 'event', emoji: '🎻', name: 'ラフォルジュルネTOKYO2026', area: '東京国際フォーラム', pref: '東京', url: 'https://www.lfj.jp/lfj_2026/guide/pdf/lfj2026_timetable_0424.pdf', memo: '東京国際フォーラムで開催されるクラシック音楽祭。無料エリアやフードコートもあり、クラシック初心者でも気軽に楽しめるイベントです。', suggested: true, suggestedBy: '匿名リスナー' },
+  { id: 'niconico-chokaigi', cat: 'event', emoji: '🎪', name: 'ニコニコ超会議', area: '幕張', pref: '千葉', url: 'https://chokaigi.jp/', memo: 'ネット発のみんなで作る日本最大級の文化祭。ニコニコ動画のカルチャーをリアルに体験できるイベントです。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- 自然・よりみち ---
   { id: 'inokashira', cat: 'nature', emoji: '🌳', name: '井の頭恩賜公園', area: '武蔵野市・三鷹市', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/format/index044.html', memo: '【サンプル】散歩するだけで心が整う、緑豊かな公園。' },
   { id: 'koishikawa-korakuen', cat: 'nature', emoji: '🌿', name: '小石川後楽園', area: '文京区後楽', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/koishikawakorakuen/index.html', memo: '都内でアクセスしやすいのに、落ち着いて過ごせる庭園。リスナーさん曰く「人少なくてチル」。東京ドーム方面のライブ音が聞こえてきたこともあるそう。', suggested: true, suggestedBy: '匿名リスナー' },
@@ -204,6 +219,7 @@ const SPOTS = [
   { id: 'kakimori', cat: 'shop', emoji: '🛒', name: 'カキモリ', area: '蔵前', pref: '東京', url: 'https://kakimori.com/', memo: '【サンプル】自分だけのノートが作れる、素敵な文房具店。' },
   // --- おきにいりの景色 ---
   { id: 'shibuyasky', cat: 'view', emoji: '✨', name: 'SHIBUYA SKY', area: '渋谷', pref: '東京', url: 'https://www.shibuya-scramble-square.com/sky/', memo: '【サンプル】東京の空を広く感じられる、お気に入りの場所。' },
+  { id: 'kasai-rinkai-crystal-view', cat: 'view', emoji: '🏝️', name: '葛西臨海公園 クリスタルビュー', area: '江戸川区', pref: '東京', url: 'https://architecture-tour.com/world/japan/tokyo/crystal-view/', memo: '葛西臨海公園内にある「クリスタルビュー」。美しい建築から海を眺められる、入場無料の景色スポットです。', suggested: true, suggestedBy: '匿名リスナー' },
   // --- 癒やし・ととのう ---
   { id: 'kogane', cat: 'relax', emoji: '🛁', name: '黄金湯', area: '墨田区', pref: '東京', url: 'https://koganeyu.com/', memo: '【サンプル】モダンな雰囲気でリラックスできる、素敵な銭湯。' },
   // --- エンタメ ---
@@ -5763,7 +5779,22 @@ const SPOT_COORDINATES = {
   'tsutaya': { lat: 35.6489, lng: 139.6994 },
   'kakimori': { lat: 35.7027, lng: 139.7895 },
   'shibuyasky': { lat: 35.6585, lng: 139.7018 },
-  'kogane': { lat: 35.7001, lng: 139.8252 }
+  'kogane': { lat: 35.7001, lng: 139.8252 },
+  'ikebukuro-jazz-festival': { lat: 35.7302, lng: 139.7083 },
+  'thai-festival-tokyo': { lat: 35.6669, lng: 139.6958 },
+  'lafollejournee-tokyo-2026': { lat: 35.6769, lng: 139.7644 },
+  'niconico-chokaigi': { lat: 35.6484, lng: 140.0347 },
+  'kasai-rinkai-crystal-view': { lat: 35.6394, lng: 139.8606 },
+  'tokyo-mitaiwara': { lat: 35.6644, lng: 139.8596 },
+  'ota-memorial-museum': { lat: 35.6698, lng: 139.7048 },
+  'rakusho-ramen': { lat: 33.5916, lng: 130.3989 },
+  'kusamakura-cafe': { lat: 35.6672, lng: 139.7548 },
+  'japan-coast-guard-museum-yokohama': { lat: 35.4552, lng: 139.6428 },
+  'sanin-gyokai-chuka-soba': { lat: 35.7335, lng: 139.6543 },
+  'frijoles-yaesu': { lat: 35.6797, lng: 139.7698 },
+  'oyama-milk-no-sato': { lat: 35.3942, lng: 133.5233 },
+  'ramen-otama': { lat: 35.4385, lng: 133.3556 },
+  'queen-hiroba-yokohama-customs': { lat: 35.4492, lng: 139.6433 }
 };
 
 // 日本の47都道府県の代表点座標（ダイナミック投稿のフォールバック用）

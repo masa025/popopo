@@ -2571,43 +2571,43 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
   box-shadow: 0 0 0 4px var(--blue-light), 0 16px 48px rgba(43, 67, 120, 0.2) !important;
 }
 
-.map-watercolor-stamp {
+.map-watercolor-label {
   position: absolute;
-  bottom: 24px;
-  right: 24px;
-  background: rgba(253, 251, 247, 0.94); /* Warm watercolor paper tone */
-  border: 2px dashed rgba(79, 127, 216, 0.4);
-  border-radius: 16px;
-  padding: 8px 16px;
+  top: 17%;
+  left: 50%;
+  transform: translateX(calc(-50% - 210px)) rotate(-4deg);
+  background: rgba(253, 251, 247, 0.96); /* Warm watercolor paper tone */
+  border: 2px dashed rgba(79, 127, 216, 0.45);
+  border-radius: 12px;
+  padding: 6px 14px;
   display: flex;
   align-items: center;
   gap: 6px;
   box-shadow: 0 6px 20px rgba(43, 67, 120, 0.12);
-  transform: rotate(3deg);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   pointer-events: none; /* Let click pass through */
   z-index: 5;
 }
-.stamp-emoji {
-  font-size: 1.25rem;
+.label-emoji {
+  font-size: 1.1rem;
   display: inline-block;
   animation: stamp-wiggle-anim 3s infinite ease-in-out;
 }
-.stamp-text {
+.label-text {
   font-family: 'Yomogi', 'Noto Sans JP', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--blue);
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
 
-/* Stamp interactive reactions to parent card hover */
-.clickable-map-card:hover .map-watercolor-stamp {
-  transform: rotate(0deg) scale(1.08);
+/* Label interactive reactions to parent card hover */
+.clickable-map-card:hover .map-watercolor-label {
+  transform: translateX(calc(-50% - 210px)) rotate(0deg) scale(1.08);
   border-color: var(--blue);
   background: #ffffff;
-  box-shadow: 0 10px 28px rgba(43, 67, 120, 0.18);
+  box-shadow: 0 10px 28px rgba(220, 160, 40, 0.25); /* Elegant gold sunset glow */
 }
 .clickable-map-card:active {
   transform: translateY(-2px) scale(0.995);
@@ -2815,18 +2815,23 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
 
 /* Responsive adjustment for Mobile screens */
 @media (max-width: 768px) {
-  .map-watercolor-stamp {
-    bottom: 16px;
-    right: 16px;
-    padding: 6px 12px;
-    border-radius: 12px;
+  .map-watercolor-label {
+    top: 22%;
+    left: 50%;
+    transform: translateX(-50%) rotate(-2deg);
+    padding: 5px 12px;
+    border-radius: 10px;
     border-width: 1.5px;
   }
-  .stamp-text {
+  .label-text {
     font-size: 0.75rem;
   }
-  .stamp-emoji {
-    font-size: 1rem;
+  .label-emoji {
+    font-size: 0.95rem;
+  }
+  .clickable-map-card:hover .map-watercolor-label {
+    transform: translateX(-50%) rotate(0deg) scale(1.06);
+    box-shadow: 0 8px 24px rgba(220, 160, 40, 0.22);
   }
   .map-quick-nav {
     top: 10px;
