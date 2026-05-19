@@ -44,7 +44,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260518-1">
+  <link rel="stylesheet" href="style.css?v=20260520-1">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -229,8 +229,10 @@
         <button class="tab" data-cat="relax">🛁 癒やし・ととのう</button>
         <button class="tab" data-cat="entertainment">🎬 エンタメ</button>
       </div>
+      <div class="area-filter" id="areaFilter" aria-label="エリアで絞り込む"></div>
       <div class="spot-list-actions">
         <button type="button" class="want-list-toggle" id="wantListToggleBtn" aria-pressed="false">🔖 行きたいリスト（0）</button>
+        <button type="button" class="want-list-toggle want-add-btn" id="wantAddSpotBtn">🌱 これから行きたい場所を追加</button>
       </div>
       <div class="want-list-hint" id="wantListHint" hidden>
         <span>行ってみた場所があれば、感想を残してみませんか？</span>
@@ -497,12 +499,36 @@
       <form id="addSpotForm" class="modal-form" novalidate>
         <p class="form-assurance">同じ端末のブラウザでは、追加後に編集できます。</p>
         <div class="form-group">
+          <label class="form-label">追加する内容</label>
+          <div class="intent-segment" role="group" aria-label="追加する内容">
+            <label class="intent-option">
+              <input type="radio" name="asIntent" value="recommend" checked>
+              <span>おすすめしたい</span>
+            </label>
+            <label class="intent-option">
+              <input type="radio" name="asIntent" value="want">
+              <span>これから行きたい</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
           <label class="form-label" for="asName">スポット名 <span class="req">必須</span></label>
           <input type="text" id="asName" class="form-input" placeholder="例：○○カフェ、△△公園" maxlength="60" required>
         </div>
         <div class="form-group">
-          <label class="form-label" for="asArea">エリア・場所 <span class="req">必須</span></label>
-          <input type="text" id="asArea" class="form-input" placeholder="例：渋谷、上野、池袋" maxlength="40" required>
+          <label class="form-label" for="asPref">エリア・場所 <span class="req">必須</span></label>
+          <div class="location-picker">
+            <select id="asPref" class="form-input" required>
+              <option value="">都道府県を選択</option>
+            </select>
+            <select id="asCity" class="form-input" required disabled>
+              <option value="">市区町村を選択</option>
+            </select>
+          </div>
+          <input type="text" id="asCityCustom" class="form-input location-custom-input" placeholder="市区町村を入力" maxlength="30" hidden>
+          <input type="text" id="asAreaNote" class="form-input location-note-input" placeholder="駅名・街名・建物名など（任意） 例：道玄坂、東京駅、大丸東京店" maxlength="40">
+          <input type="hidden" id="asArea" required>
+          <p class="form-help">市区町村でまとめられるので、あとからエリアで探しやすくなります。</p>
         </div>
         <div class="form-group">
           <label class="form-label" for="asCat">カテゴリ</label>
@@ -803,6 +829,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260518-1"></script>
+  <script src="app.js?v=20260520-1"></script>
 </body>
 </html>

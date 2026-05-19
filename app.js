@@ -242,6 +242,78 @@ const VISITED = [
   }
 ];
 
+const PREFECTURE_OPTIONS = [
+  '北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島',
+  '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川',
+  '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜', '静岡', '愛知',
+  '三重', '滋賀', '京都', '大阪', '兵庫', '奈良', '和歌山',
+  '鳥取', '島根', '岡山', '広島', '山口',
+  '徳島', '香川', '愛媛', '高知',
+  '福岡', '佐賀', '長崎', '熊本', '大分', '宮崎', '鹿児島', '沖縄',
+  '全国', 'オンライン'
+];
+
+const CITY_OPTIONS_BY_PREF = {
+  東京: [
+    '千代田区', '中央区', '港区', '新宿区', '文京区', '台東区', '墨田区', '江東区', '品川区',
+    '目黒区', '大田区', '世田谷区', '渋谷区', '中野区', '杉並区', '豊島区', '北区', '荒川区',
+    '板橋区', '練馬区', '足立区', '葛飾区', '江戸川区', '八王子市', '立川市', '武蔵野市',
+    '三鷹市', '府中市', '調布市', '町田市', '小金井市', '国立市', '多摩市', '武蔵野市・三鷹市'
+  ],
+  神奈川: ['横浜市', '川崎市', '鎌倉市', '藤沢市', '横須賀市', '小田原市', '相模原市'],
+  兵庫: ['神戸市', '西宮市', '姫路市', '尼崎市', '芦屋市'],
+  千葉: ['千葉市', '浦安市', '船橋市', '市川市'],
+  広島: ['広島市', '尾道市', '廿日市市', '福山市'],
+  岡山: ['岡山市', '倉敷市'],
+  鳥取: ['鳥取市', '米子市', '大山町'],
+  大阪: ['大阪市', '堺市', '豊中市', '吹田市'],
+  京都: ['京都市', '宇治市'],
+  福岡: ['福岡市', '北九州市'],
+  全国: ['全国'],
+  オンライン: ['オンライン']
+};
+
+const AREA_ALIAS_RULES = [
+  { keywords: ['道玄坂', '渋谷', '広尾', '代官山', 'SHIBUYA', '代々木公園'], pref: '東京', city: '渋谷区' },
+  { keywords: ['百人町', '大久保', '高田馬場', '新宿', '神楽坂'], pref: '東京', city: '新宿区' },
+  { keywords: ['池袋', '東池袋'], pref: '東京', city: '豊島区' },
+  { keywords: ['芝', '港区'], pref: '東京', city: '港区' },
+  { keywords: ['浅草', '浅草ROX', '上野', '蔵前'], pref: '東京', city: '台東区' },
+  { keywords: ['人形町', '銀座', '日本橋', '八重洲', '東京ミッドタウン八重洲'], pref: '東京', city: '中央区' },
+  { keywords: ['東京駅', '大丸東京', '丸の内', '東京国際フォーラム'], pref: '東京', city: '千代田区' },
+  { keywords: ['墨田', '押上', '両国', '黄金湯', 'すみだ'], pref: '東京', city: '墨田区' },
+  { keywords: ['小石川', '後楽', '文京'], pref: '東京', city: '文京区' },
+  { keywords: ['葛西', '西葛西', '江戸川'], pref: '東京', city: '江戸川区' },
+  { keywords: ['練馬', '山陰魚介'], pref: '東京', city: '練馬区' },
+  { keywords: ['原宿', '太田記念美術館'], pref: '東京', city: '渋谷区' },
+  { keywords: ['府中'], pref: '東京', city: '府中市' },
+  { keywords: ['武蔵野', '三鷹', '井の頭'], pref: '東京', city: '武蔵野市・三鷹市' },
+  { keywords: ['幕張', 'ニコニコ超会議'], pref: '千葉', city: '千葉市' },
+  { keywords: ['横浜', 'ワールドポーターズ'], pref: '神奈川', city: '横浜市' },
+  { keywords: ['神戸', '三宮'], pref: '兵庫', city: '神戸市' },
+  { keywords: ['西宮'], pref: '兵庫', city: '西宮市' },
+  { keywords: ['広島'], pref: '広島', city: '広島市' },
+  { keywords: ['岡山'], pref: '岡山', city: '岡山市' },
+  { keywords: ['鳥取・大山', '大山まきば', 'みるくの里', '白バラ牛乳'], pref: '鳥取', city: '大山町' },
+  { keywords: ['鳥取・米子', '米子', 'ラーメンおたま', '牛骨ラーメン'], pref: '鳥取', city: '米子市' },
+  { keywords: ['鳥取'], pref: '鳥取', city: '鳥取' },
+  { keywords: ['福岡市中央区天神', '天神', '楽勝ラーメン'], pref: '福岡', city: '福岡市' },
+  { keywords: ['福岡'], pref: '福岡', city: '福岡' },
+  { keywords: ['全国'], pref: '全国', city: '全国' },
+  { keywords: ['オンライン', 'Amazon Prime', 'NHK'], pref: 'オンライン', city: 'オンライン' }
+];
+
+const AREA_REGION_BY_PREF = {
+  北海道: '北海道',
+  青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
+  茨城: '関東', 栃木: '関東', 群馬: '関東', 埼玉: '関東', 千葉: '関東', 東京: '関東', 神奈川: '関東',
+  新潟: '中部', 富山: '中部', 石川: '中部', 福井: '中部', 山梨: '中部', 長野: '中部', 岐阜: '中部', 静岡: '中部', 愛知: '中部',
+  三重: '関西', 滋賀: '関西', 京都: '関西', 大阪: '関西', 兵庫: '関西', 奈良: '関西', 和歌山: '関西',
+  鳥取: '中国', 島根: '中国', 岡山: '中国', 広島: '中国', 山口: '中国',
+  徳島: '四国', 香川: '四国', 愛媛: '四国', 高知: '四国',
+  福岡: '九州', 佐賀: '九州', 長崎: '九州', 熊本: '九州', 大分: '九州', 宮崎: '九州', 鹿児島: '九州', 沖縄: '沖縄'
+};
+
 // ============================================================
 // 4. Firebase & LocalStorage 統合
 // ============================================================
@@ -430,6 +502,8 @@ let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
 let replyingTo = null;
 let showingWantList = false;
+let activeAreaRegion = 'all';
+let activeSpotArea = 'all';
 let heroBackdropTimer = null;
 let heroBackdropVisibilityBound = false;
 let heroBackdropResizeTimer = null;
@@ -1180,6 +1254,7 @@ function getIntroStorySlides() {
 function setIntroStorySlide(index) {
   const slides = getIntroStorySlides();
   const dots = Array.from(document.querySelectorAll('[data-intro-story-dot]'));
+  const nextBtn = document.getElementById('introStoryNextBtn');
   if (!slides.length) return;
   introStoryIndex = ((index % slides.length) + slides.length) % slides.length;
   slides.forEach((slide, i) => {
@@ -1189,12 +1264,20 @@ function setIntroStorySlide(index) {
     dot.classList.toggle('is-active', i === introStoryIndex);
     dot.setAttribute('aria-current', i === introStoryIndex ? 'true' : 'false');
   });
+  if (nextBtn) nextBtn.textContent = introStoryIndex >= slides.length - 1 ? 'サイトへ' : '次へ';
 }
 
 function startIntroStoryFlow() {
-  window.clearInterval(introStoryTimer);
-  introStoryTimer = window.setInterval(() => {
+  window.clearTimeout(introStoryTimer);
+  introStoryTimer = window.setTimeout(() => {
+    const slides = getIntroStorySlides();
+    if (!slides.length) return;
+    if (introStoryIndex >= slides.length - 1) {
+      closeIntroStoryModal();
+      return;
+    }
     setIntroStorySlide(introStoryIndex + 1);
+    startIntroStoryFlow();
   }, INTRO_STORY_SLIDE_MS);
 }
 
@@ -1206,14 +1289,34 @@ function markIntroStorySeen() {
   }
 }
 
+function moveToHeroAfterIntroStory() {
+  const hero = document.getElementById('hero');
+  if (location.hash && location.hash !== '#hero') {
+    history.replaceState(null, '', `${location.pathname}${location.search}`);
+  }
+  const scrollTop = () => {
+    if (hero) {
+      hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  };
+  window.requestAnimationFrame(scrollTop);
+  window.setTimeout(scrollTop, 120);
+}
+
 function closeIntroStoryModal() {
   const modal = document.getElementById('introStoryModal');
   if (!modal) return;
-  window.clearInterval(introStoryTimer);
+  if (!modal.classList.contains('is-open')) return;
+  window.clearTimeout(introStoryTimer);
   introStoryTimer = null;
   modal.classList.remove('is-open');
   document.body.style.overflow = '';
   markIntroStorySeen();
+  moveToHeroAfterIntroStory();
 }
 
 function maybeShowIntroStory() {
@@ -1978,10 +2081,13 @@ function getSuggestedSpotItems() {
     catLabel: getCatLabel(s.cat),
     name: s.name,
     area: s.area,
-    pref: '',
+    pref: s.pref || '',
+    city: s.city || s.areaGroup || '',
+    areaNote: s.areaNote || '',
     url: s.url || '',
     resources: getSuggestionResources(s),
     memo: s.reason,
+    intent: s.intent || 'recommend',
     suggested: true,
     suggestedBy: s.nickname || '匿名リスナー',
     timestamp: s.timestamp || 0
@@ -2806,6 +2912,177 @@ function getActiveSpotCategory() {
   return document.querySelector('.tab.active')?.dataset.cat || 'all';
 }
 
+function normalizePrefValue(pref = '') {
+  const value = String(pref || '').trim();
+  if (value === '北海道') return value;
+  return value.replace(/[都府県]$/g, '') || '';
+}
+
+function normalizeCityValue(city = '') {
+  return String(city || '').trim().replace(/\s+/g, '');
+}
+
+function inferLocationMeta(spot = {}) {
+  const rawPref = normalizePrefValue(spot.pref || spot.prefecture);
+  const rawCity = normalizeCityValue(spot.city || spot.municipality || spot.areaCity || spot.areaGroup);
+  const area = String(spot.area || '').trim();
+  const text = [spot.name, area, spot.memo, spot.reason].filter(Boolean).join(' ');
+  let pref = rawPref;
+  let city = rawCity;
+
+  if (!pref && area) {
+    const prefMatch = area.match(/(北海道|東京都|京都府|大阪府|[一-龥]{2,4}県)/);
+    if (prefMatch) pref = normalizePrefValue(prefMatch[1]);
+  }
+  if (!city && area) {
+    const areaWithoutPref = pref
+      ? area
+        .replace(`${pref}県`, '')
+        .replace(`${pref}都`, '')
+        .replace(`${pref}府`, '')
+      : area;
+    const cityMatch = areaWithoutPref.match(/([一-龥ぁ-んァ-ヶ]+(?:市|区|町|村))/);
+    if (cityMatch) city = normalizeCityValue(cityMatch[1]);
+  }
+  if (pref && city) {
+    const knownCity = (CITY_OPTIONS_BY_PREF[pref] || []).find(option =>
+      city === option || city.startsWith(option) || city.includes(option)
+    );
+    if (knownCity) city = knownCity;
+  }
+
+  if (!city || !pref || city === 'エリア不明') {
+    const matched = AREA_ALIAS_RULES.find(rule => rule.keywords.some(keyword => text.includes(keyword)));
+    if (matched) {
+      const hadPref = Boolean(pref);
+      if (!pref || pref === '東京ほか') pref = matched.pref;
+      if (!city || city === 'エリア不明' || !hadPref) city = matched.city;
+    }
+  }
+
+  if (!pref && city) {
+    const optionEntry = Object.entries(CITY_OPTIONS_BY_PREF).find(([, cities]) => cities.includes(city));
+    if (optionEntry) pref = optionEntry[0];
+  }
+  if (!pref) pref = area.includes('全国') ? '全国' : area.includes('オンライン') ? 'オンライン' : '';
+  if (!city && (pref === '全国' || pref === 'オンライン')) city = pref;
+
+  return {
+    pref,
+    city,
+    area: area || city || pref || 'エリア不明',
+    label: city || pref || area || 'エリア不明'
+  };
+}
+
+function normalizeAreaGroup(area = '', spot = {}) {
+  const inferred = inferLocationMeta({ ...spot, area: area || spot.area });
+  if (inferred.label && inferred.label !== 'エリア不明') return inferred.label;
+  const value = String(area || '').trim();
+  if (!value) return 'エリア不明';
+  const cleaned = value
+    .replace(/[（）]/g, '')
+    .replace(/県|都|府/g, '')
+    .replace(/市|区|町|村/g, '')
+    .replace(/エリア|周辺|方面/g, '')
+    .replace(/\s+/g, '');
+  const first = cleaned.split(/[・、,／/｜|()（）-]/).filter(Boolean)[0] || value;
+  if (first.includes('全国') || value.includes('全国')) return '全国';
+  if (first.includes('オンライン') || value.includes('オンライン')) return 'オンライン';
+  return first.slice(0, 10);
+}
+
+function getAreaFilterLabels(spot = {}) {
+  const meta = inferLocationMeta(spot);
+  const labels = [];
+  const add = label => {
+    const value = String(label || '').trim();
+    if (!value || value === 'エリア不明' || labels.includes(value)) return;
+    labels.push(value);
+  };
+  add(meta.city || normalizeAreaGroup(spot.area || spot.pref, spot));
+  add(meta.pref);
+  add(getAreaRegionLabel(meta));
+  return labels.length ? labels : ['エリア不明'];
+}
+
+function getAreaRegionLabel(meta = {}) {
+  if (meta.pref === '全国' || meta.pref === 'オンライン') return meta.pref;
+  return AREA_REGION_BY_PREF[meta.pref] || meta.pref || '';
+}
+
+function getAreaFilterMeta(spots = [], cat = 'all') {
+  const base = cat === 'all' ? spots : spots.filter(s => s.cat === cat);
+  const regionCounts = new Map();
+  const childCountsByRegion = new Map();
+  base.forEach(spot => {
+    const meta = inferLocationMeta(spot);
+    const region = getAreaRegionLabel(meta);
+    if (!region || region === 'エリア不明') return;
+    regionCounts.set(region, (regionCounts.get(region) || 0) + 1);
+    if (!childCountsByRegion.has(region)) childCountsByRegion.set(region, new Map());
+    const childCounts = childCountsByRegion.get(region);
+    [meta.pref, meta.city].forEach(label => {
+      const value = String(label || '').trim();
+      if (!value || value === region || value === 'エリア不明') return;
+      childCounts.set(value, (childCounts.get(value) || 0) + 1);
+    });
+  });
+  return { regionCounts, childCountsByRegion };
+}
+
+function sortAreaEntries(entries, level = 'child') {
+  const regionOrder = ['関東', '関西', '中国', '九州', '中部', '東北', '四国', '北海道', '沖縄', '全国', 'オンライン'];
+  return entries.sort((a, b) => {
+    if (level === 'region') {
+      const ai = regionOrder.indexOf(a[0]);
+      const bi = regionOrder.indexOf(b[0]);
+      if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    }
+    const rank = label => PREFECTURE_OPTIONS.includes(label) ? 0 : 1;
+    return rank(a[0]) - rank(b[0]) || b[1] - a[1] || a[0].localeCompare(b[0], 'ja');
+  });
+}
+
+function renderAreaFilter(spots = [], cat = 'all') {
+  const wrap = document.getElementById('areaFilter');
+  if (!wrap) return;
+  const { regionCounts, childCountsByRegion } = getAreaFilterMeta(spots, cat);
+  const regions = sortAreaEntries(Array.from(regionCounts.entries()), 'region');
+  if (regions.length <= 1) {
+    activeAreaRegion = 'all';
+    activeSpotArea = 'all';
+    wrap.innerHTML = '';
+    wrap.hidden = true;
+    return;
+  }
+  if (activeAreaRegion !== 'all' && !regionCounts.has(activeAreaRegion)) {
+    activeAreaRegion = 'all';
+    activeSpotArea = 'all';
+  }
+  const activeChildren = activeAreaRegion === 'all'
+    ? []
+    : sortAreaEntries(Array.from(childCountsByRegion.get(activeAreaRegion)?.entries() || []), 'child');
+  if (activeSpotArea !== 'all') {
+    const valid = activeSpotArea === activeAreaRegion ||
+      regions.some(([region]) => region === activeSpotArea) ||
+      activeChildren.some(([child]) => child === activeSpotArea);
+    if (!valid) activeSpotArea = activeAreaRegion === 'all' ? 'all' : activeAreaRegion;
+  }
+  wrap.hidden = false;
+  const regionRow = [
+    `<button type="button" class="area-chip area-chip-main ${activeSpotArea === 'all' ? 'active' : ''}" data-area="all" data-region="all" data-area-level="all">すべて</button>`,
+    ...regions.map(([region, count]) => `<button type="button" class="area-chip area-chip-main ${activeAreaRegion === region ? 'active' : ''}" data-area="${escHtml(region)}" data-region="${escHtml(region)}" data-area-level="region">${escHtml(region)} <span>${count}</span></button>`)
+  ].join('');
+  const childRow = activeChildren.length
+    ? `<div class="area-filter-row area-filter-row-sub">
+        <button type="button" class="area-chip area-chip-sub ${activeSpotArea === activeAreaRegion ? 'active' : ''}" data-area="${escHtml(activeAreaRegion)}" data-region="${escHtml(activeAreaRegion)}" data-area-level="region">${escHtml(activeAreaRegion)}すべて</button>
+        ${activeChildren.map(([area, count]) => `<button type="button" class="area-chip area-chip-sub ${activeSpotArea === area ? 'active' : ''}" data-area="${escHtml(area)}" data-region="${escHtml(activeAreaRegion)}" data-area-level="child">${escHtml(area)} <span>${count}</span></button>`).join('')}
+      </div>`
+    : '';
+  wrap.innerHTML = `<div class="area-filter-row">${regionRow}</div>${childRow}`;
+}
+
 function updateWantListButton() {
   const btn = document.getElementById('wantListToggleBtn');
   if (!btn) return;
@@ -2827,6 +3104,10 @@ function renderSpotCards(cat = 'all') {
   const grid = document.getElementById('spotsGrid');
   const allSpots = getAllSpotItemsForDisplay();
   let filtered = cat === 'all' ? allSpots : allSpots.filter(s => s.cat === cat);
+  renderAreaFilter(allSpots, cat);
+  if (activeSpotArea !== 'all') {
+    filtered = filtered.filter(s => getAreaFilterLabels(s).includes(activeSpotArea));
+  }
   if (showingWantList) {
     filtered = filtered.filter(s => localLikes[s.id]);
   }
@@ -2853,7 +3134,10 @@ function renderSpotCards(cat = 'all') {
     return `
     <div class="spot-card" data-cat="${s.cat}" data-id="${s.id}">
       <div class="spot-card-top">
-        <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
+        <div class="spot-card-badges">
+          <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${s.catLabel || getCatLabel(s.cat)}</span>
+          ${s.intent === 'want' ? '<span class="spot-intent-badge">🌱 これから行きたい</span>' : ''}
+        </div>
         <div style="display:flex;gap:8px;align-items:center;">
           ${s.suggested ? renderPostActions(s, 'suggestion') : ''}
           <button class="spot-like-btn ${localLikes[s.id] ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}" aria-pressed="${localLikes[s.id] ? 'true' : 'false'}">
@@ -3156,14 +3440,101 @@ function populateModalSpotSelect(preselect = '') {
     allSpots.map(s => `<option value="${s.name}"${s.name === preselect ? ' selected' : ''}>${s.catLabel} | ${s.name}（${s.area}）</option>`).join('');
 }
 
+function populateAddSpotPrefSelect() {
+  const prefSelect = document.getElementById('asPref');
+  if (!prefSelect) return;
+  prefSelect.innerHTML = '<option value="">都道府県を選択</option>' +
+    PREFECTURE_OPTIONS.map(pref => `<option value="${escHtml(pref)}">${escHtml(pref)}</option>`).join('');
+  populateAddSpotCitySelect('');
+}
+
+function populateAddSpotCitySelect(pref = '', selectedCity = '') {
+  const citySelect = document.getElementById('asCity');
+  const customInput = document.getElementById('asCityCustom');
+  if (!citySelect) return;
+  const cities = CITY_OPTIONS_BY_PREF[pref] || [];
+  citySelect.disabled = !pref;
+  citySelect.innerHTML = '<option value="">市区町村を選択</option>' +
+    cities.map(city => `<option value="${escHtml(city)}">${escHtml(city)}</option>`).join('') +
+    (pref && pref !== '全国' && pref !== 'オンライン' ? '<option value="__custom">候補にない市区町村を入力</option>' : '');
+  if (selectedCity && cities.includes(selectedCity)) {
+    citySelect.value = selectedCity;
+  } else if (selectedCity && pref && pref !== '全国' && pref !== 'オンライン') {
+    citySelect.value = '__custom';
+    if (customInput) customInput.value = selectedCity;
+  } else if (pref === '全国' || pref === 'オンライン') {
+    citySelect.value = pref;
+  }
+  updateCustomCityVisibility();
+  syncAddSpotAreaField();
+}
+
+function updateCustomCityVisibility() {
+  const citySelect = document.getElementById('asCity');
+  const customInput = document.getElementById('asCityCustom');
+  if (!citySelect || !customInput) return;
+  const isCustom = citySelect.value === '__custom';
+  customInput.hidden = !isCustom;
+  customInput.required = isCustom;
+  if (!isCustom) customInput.value = '';
+}
+
+function getAddSpotLocationInput() {
+  const pref = normalizePrefValue(document.getElementById('asPref')?.value || '');
+  const citySelectValue = document.getElementById('asCity')?.value || '';
+  const customCity = normalizeCityValue(document.getElementById('asCityCustom')?.value || '');
+  const note = String(document.getElementById('asAreaNote')?.value || '').trim();
+  const city = citySelectValue === '__custom' ? customCity : normalizeCityValue(citySelectValue);
+  const areaCore = city || pref;
+  const area = note ? `${areaCore}・${note}` : areaCore;
+  return { pref, city, areaNote: note, area };
+}
+
+function syncAddSpotAreaField() {
+  const areaInput = document.getElementById('asArea');
+  if (!areaInput) return;
+  areaInput.value = getAddSpotLocationInput().area;
+}
+
+function setAddSpotLocationFields(spot = {}) {
+  const meta = inferLocationMeta(spot);
+  const prefSelect = document.getElementById('asPref');
+  const noteInput = document.getElementById('asAreaNote');
+  const area = String(spot.area || '').trim();
+  const savedNote = String(spot.areaNote || '').trim();
+  let inferredNote = meta.city && area.includes(meta.city)
+    ? area.replace(meta.city, '').replace(/^・|[（）()]/g, '').trim()
+    : (area && area !== meta.city && area !== meta.pref ? area : '');
+  if (inferredNote && meta.pref) {
+    inferredNote = inferredNote
+      .replace(`${meta.pref}県`, '')
+      .replace(`${meta.pref}都`, '')
+      .replace(`${meta.pref}府`, '')
+      .replace(meta.pref, '')
+      .replace(/^・|[（）()]/g, '')
+      .trim();
+  }
+  const note = savedNote || inferredNote;
+  if (prefSelect) prefSelect.value = meta.pref && PREFECTURE_OPTIONS.includes(meta.pref) ? meta.pref : '';
+  populateAddSpotCitySelect(prefSelect?.value || '', meta.city);
+  if (noteInput) noteInput.value = note && note !== meta.city && note !== meta.pref ? note : '';
+  syncAddSpotAreaField();
+}
+
 // ============================================================
 // 6. モーダル制御
 // ============================================================
 function captureAddSpotFormDraftState() {
+  syncAddSpotAreaField();
   return {
     name: document.getElementById('asName')?.value || '',
     area: document.getElementById('asArea')?.value || '',
+    pref: document.getElementById('asPref')?.value || '',
+    city: document.getElementById('asCity')?.value || '',
+    cityCustom: document.getElementById('asCityCustom')?.value || '',
+    areaNote: document.getElementById('asAreaNote')?.value || '',
     cat: document.getElementById('asCat')?.value || '',
+    intent: getAddSpotIntent(),
     reason: document.getElementById('asReason')?.value || '',
     nick: document.getElementById('asNick')?.value || '',
     kinds: [1, 2, 3].map(i => document.getElementById(`asKind${i}`)?.value || ''),
@@ -3173,7 +3544,7 @@ function captureAddSpotFormDraftState() {
 
 function addSpotDraftStateHasText(state) {
   if (!state) return false;
-  const parts = [state.name, state.area, state.reason, state.nick, ...(state.urls || [])];
+  const parts = [state.name, state.area, state.pref, state.city, state.cityCustom, state.areaNote, state.reason, state.nick, ...(state.urls || [])];
   return parts.some(p => String(p || '').trim().length > 0);
 }
 
@@ -3223,8 +3594,17 @@ function restoreAddSpotFormDraftIfAny() {
     if (el && v != null) el.value = String(v);
   };
   setVal('asName', state.name);
-  setVal('asArea', state.area);
+  if (state.pref) {
+    setVal('asPref', state.pref);
+    populateAddSpotCitySelect(state.pref, state.city === '__custom' ? state.cityCustom : state.city);
+  } else if (state.area) {
+    setAddSpotLocationFields({ area: state.area });
+  }
+  setVal('asCityCustom', state.cityCustom);
+  setVal('asAreaNote', state.areaNote);
+  syncAddSpotAreaField();
   if (state.cat) setVal('asCat', state.cat);
+  if (state.intent) setAddSpotIntent(state.intent);
   setVal('asReason', state.reason);
   setVal('asNick', state.nick);
   for (let i = 0; i < 3; i += 1) {
@@ -3236,6 +3616,37 @@ function restoreAddSpotFormDraftIfAny() {
   const reasonEl = document.getElementById('asReason');
   const charNum = document.getElementById('asCharNum');
   if (charNum && reasonEl) charNum.textContent = String((reasonEl.value || '').length);
+}
+
+function setAddSpotIntent(intent = 'recommend') {
+  const value = intent === 'want' ? 'want' : 'recommend';
+  const input = document.querySelector(`input[name="asIntent"][value="${value}"]`);
+  if (input) input.checked = true;
+  updateAddSpotIntentUI();
+}
+
+function getAddSpotIntent() {
+  return document.querySelector('input[name="asIntent"]:checked')?.value === 'want' ? 'want' : 'recommend';
+}
+
+function updateAddSpotIntentUI() {
+  const intent = getAddSpotIntent();
+  const title = document.getElementById('addSpotTitle');
+  const label = document.querySelector('label[for="asReason"]');
+  const reason = document.getElementById('asReason');
+  const submit = document.getElementById('addSpotSubmitBtn');
+  if (editingClientId) return;
+  if (intent === 'want') {
+    if (title) title.textContent = '🌱 これから行きたい場所を追加';
+    if (label) label.innerHTML = '気になっている理由 <span class="req">必須</span>';
+    if (reason) reason.placeholder = 'なぜ行きたいか、どんな場所か教えてください！（150文字以内）';
+    if (submit) submit.textContent = '行きたい場所を追加 🌱';
+  } else {
+    if (title) title.textContent = '✨ スポットを提案する';
+    if (label) label.innerHTML = 'おすすめポイント <span class="req">必須</span>';
+    if (reason) reason.placeholder = 'どんな場所か教えて下さい！（150文字以内）';
+    if (submit) submit.textContent = '提案を送る 🚀';
+  }
 }
 
 function applySuggestionResourcesToAddSpotRows(s) {
@@ -3268,6 +3679,8 @@ function openAddSpotModal(id = null, clientId = null) {
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
   document.getElementById('addSpotForm').reset();
+  populateAddSpotPrefSelect();
+  setAddSpotIntent('recommend');
   document.getElementById('asCharNum').textContent = '0';
   clearResourceValidation('spot');
 
@@ -3279,8 +3692,9 @@ function openAddSpotModal(id = null, clientId = null) {
     const s = suggs.find(item => (item.clientId || item.id) === editingClientId);
     if (s) {
       document.getElementById('asName').value = s.name || '';
-      document.getElementById('asArea').value = s.area || '';
+      setAddSpotLocationFields(s);
       document.getElementById('asCat').value = s.cat || 'food';
+      setAddSpotIntent(s.intent || 'recommend');
       document.getElementById('asReason').value = s.reason || '';
       document.getElementById('asNick').value = s.nickname || '';
       applySuggestionResourcesToAddSpotRows(s);
@@ -3289,11 +3703,16 @@ function openAddSpotModal(id = null, clientId = null) {
       if (charNum && reasonEl) charNum.textContent = String((reasonEl.value || '').length);
     }
   } else {
-    if (title) title.textContent = '✨ スポットを提案する';
-    if (btn) btn.textContent = '提案を送る 🚀';
+    updateAddSpotIntentUI();
     fillSavedNickname('asNick');
     restoreAddSpotFormDraftIfAny();
   }
+}
+
+function openWantSpotModal() {
+  openAddSpotModal();
+  setAddSpotIntent('want');
+  document.getElementById('asName')?.focus();
 }
 function closeAddSpotModal() {
   document.getElementById('addSpotModal').classList.remove('is-open');
@@ -4209,16 +4628,23 @@ function resetForm() {
 document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = document.getElementById('asName').value.trim();
-  const area = document.getElementById('asArea').value.trim();
+  syncAddSpotAreaField();
+  const location = getAddSpotLocationInput();
+  const area = location.area.trim();
   const reason = document.getElementById('asReason').value.trim();
-  if (!name || !area || !reason) { alert('必須項目を入力してください'); return; }
+  if (!name || !location.pref || !location.city || !area || !reason) { alert('スポット名、都道府県、市区町村、おすすめポイントを入力してください'); return; }
   const resources = validateResourceEntries('spot');
   if (!resources) return;
   const btn = document.getElementById('addSpotSubmitBtn');
   btn.disabled = true; btn.textContent = '送信中...';
   const data = {
     name, area,
+    pref: location.pref,
+    city: location.city,
+    areaNote: location.areaNote,
+    areaGroup: location.city || location.pref,
     cat: document.getElementById('asCat').value,
+    intent: getAddSpotIntent(),
     reason,
     nickname: document.getElementById('asNick').value.trim()
   };
@@ -4251,7 +4677,11 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     alert('エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
     btn.disabled = false;
-    btn.textContent = editingClientId ? '更新する 🚀' : '提案を送る 🚀';
+    if (editingClientId) {
+      btn.textContent = '更新する 🚀';
+    } else {
+      updateAddSpotIntentUI();
+    }
     editingId = null;
     editingClientId = null;
   }
@@ -4870,6 +5300,10 @@ function bindEvents() {
   });
   const introStoryNextBtn = document.getElementById('introStoryNextBtn');
   if (introStoryNextBtn) introStoryNextBtn.addEventListener('click', () => {
+    if (introStoryIndex >= getIntroStorySlides().length - 1) {
+      closeIntroStoryModal();
+      return;
+    }
     setIntroStorySlide(introStoryIndex + 1);
     startIntroStoryFlow();
   });
@@ -4901,6 +5335,7 @@ function bindEvents() {
   });
   // スポット追加モーダル
   document.getElementById('addSpotBtn').addEventListener('click', openAddSpotModal);
+  document.getElementById('wantAddSpotBtn')?.addEventListener('click', openWantSpotModal);
   document.getElementById('addSpotModalClose').addEventListener('click', closeAddSpotModal);
   document.getElementById('addSpotCancelBtn').addEventListener('click', closeAddSpotModal);
   const addSpotFormEl = document.getElementById('addSpotForm');
@@ -4908,6 +5343,29 @@ function bindEvents() {
     addSpotFormEl.addEventListener('input', scheduleSaveAddSpotFormDraft);
     addSpotFormEl.addEventListener('change', scheduleSaveAddSpotFormDraft);
   }
+  document.querySelectorAll('input[name="asIntent"]').forEach(input => {
+    input.addEventListener('change', updateAddSpotIntentUI);
+  });
+  const asPref = document.getElementById('asPref');
+  const asCity = document.getElementById('asCity');
+  const asCityCustom = document.getElementById('asCityCustom');
+  const asAreaNote = document.getElementById('asAreaNote');
+  if (asPref) {
+    asPref.addEventListener('change', () => {
+      populateAddSpotCitySelect(asPref.value);
+      scheduleSaveAddSpotFormDraft();
+    });
+  }
+  if (asCity) {
+    asCity.addEventListener('change', () => {
+      updateCustomCityVisibility();
+      syncAddSpotAreaField();
+      scheduleSaveAddSpotFormDraft();
+    });
+  }
+  [asCityCustom, asAreaNote].forEach(input => {
+    if (input) input.addEventListener('input', syncAddSpotAreaField);
+  });
   document.getElementById('addSpotModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('addSpotModal')) closeAddSpotModal();
   });
@@ -4934,9 +5392,38 @@ function bindEvents() {
     if (!tab) return;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
+    activeAreaRegion = 'all';
+    activeSpotArea = 'all';
     visibleSpotCount = INITIAL_SPOT_COUNT;
     renderSpotCards(tab.dataset.cat);
   });
+  const areaFilter = document.getElementById('areaFilter');
+  if (areaFilter) {
+    areaFilter.addEventListener('click', (e) => {
+      const chip = e.target.closest('.area-chip');
+      if (!chip) return;
+      const level = chip.dataset.areaLevel || 'child';
+      const area = chip.dataset.area || 'all';
+      if (level === 'all' || area === 'all') {
+        activeAreaRegion = 'all';
+        activeSpotArea = 'all';
+      } else if (level === 'region') {
+        const region = chip.dataset.region || area;
+        if (chip.classList.contains('area-chip-main') && activeAreaRegion === region) {
+          activeAreaRegion = 'all';
+          activeSpotArea = 'all';
+        } else {
+          activeAreaRegion = region;
+          activeSpotArea = area;
+        }
+      } else {
+        activeAreaRegion = chip.dataset.region || activeAreaRegion;
+        activeSpotArea = area;
+      }
+      visibleSpotCount = INITIAL_SPOT_COUNT;
+      renderSpotCards(getActiveSpotCategory());
+    });
+  }
   const wantListToggleBtn = document.getElementById('wantListToggleBtn');
   if (wantListToggleBtn) {
     wantListToggleBtn.addEventListener('click', () => {
