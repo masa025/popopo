@@ -5461,6 +5461,28 @@ function bindEvents() {
   document.getElementById('fComment').addEventListener('input', function () {
     document.getElementById('charNum').textContent = this.value.length;
   });
+
+  // お出かけマップモーダルのイベントバインド (カード全体をトリガーに)
+  const heroMapCard = document.getElementById('heroMapCard');
+  if (heroMapCard) {
+    heroMapCard.addEventListener('click', openMapModal);
+    heroMapCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openMapModal();
+      }
+    });
+  }
+  const mapModalClose = document.getElementById('mapModalClose');
+  if (mapModalClose) {
+    mapModalClose.addEventListener('click', closeMapModal);
+  }
+  const mapModal = document.getElementById('mapModal');
+  if (mapModal) {
+    mapModal.addEventListener('click', (e) => {
+      if (e.target === mapModal) closeMapModal();
+    });
+  }
 }
 
 // 選択可能な全国主要都市一覧
@@ -5705,6 +5727,336 @@ function initWeatherCityPicker() {
     showToast('都市の設定を保存しました ✓');
   });
 }
+
+// ============================================================
+// 10. POPOPO デジタルお出かけマップ (Leaflet)
+// ============================================================
+let leafletMapInstance = null;
+let leafletMarkersGroup = null;
+
+// 静的スポットの緯度経度データ (全28件)
+const SPOT_COORDINATES = {
+  'lion': { lat: 35.6596, lng: 139.6983 },
+  'beltz': { lat: 35.6517, lng: 139.7188 },
+  'torikatsu': { lat: 35.6597, lng: 139.6980 },
+  'hinto': { lat: 34.7371, lng: 135.3402 },
+  'comme-chinois': { lat: 34.6917, lng: 135.1952 },
+  'karayaki': { lat: 35.7022, lng: 139.6997 },
+  'yugi': { lat: 35.7313, lng: 139.7107 },
+  'manchs': { lat: 35.6521, lng: 139.7523 },
+  'kameju': { lat: 35.7118, lng: 139.7968 },
+  'kamado-gohan-matsushima': { lat: 35.6859, lng: 139.7828 },
+  'yamaya-ikebukuro': { lat: 35.7297, lng: 139.7153 },
+  'kura-global-flagship': { lat: 35.7135, lng: 139.7925 },
+  'saryo-tsujiri-daimaru': { lat: 35.6819, lng: 139.7681 },
+  'leonards-japan': { lat: 35.4539, lng: 139.6372 },
+  'mohinga': { lat: 35.7134, lng: 139.7042 },
+  '400do-pizza': { lat: 34.3916, lng: 132.4636 },
+  'yamatane': { lat: 35.6524, lng: 139.7143 },
+  'nmwa': { lat: 35.7154, lng: 139.7758 },
+  'edo': { lat: 35.6963, lng: 139.7958 },
+  'hokusai': { lat: 35.6974, lng: 139.7997 },
+  'yoyogi': { lat: 35.6715, lng: 139.6949 },
+  'kagurazaka-machibutai-2026': { lat: 35.7011, lng: 139.7408 },
+  'inokashira': { lat: 35.6997, lng: 139.5732 },
+  'koishikawa-korakuen': { lat: 35.7056, lng: 139.7493 },
+  'tsutaya': { lat: 35.6489, lng: 139.6994 },
+  'kakimori': { lat: 35.7027, lng: 139.7895 },
+  'shibuyasky': { lat: 35.6585, lng: 139.7018 },
+  'kogane': { lat: 35.7001, lng: 139.8252 }
+};
+
+// 日本の47都道府県の代表点座標（ダイナミック投稿のフォールバック用）
+const PREFECTURE_CENTERS = {
+  '北海道': { lat: 43.0642, lng: 141.3468 },
+  '青森': { lat: 40.8244, lng: 140.7475 },
+  '岩手': { lat: 39.7036, lng: 141.1527 },
+  '宮城': { lat: 38.2682, lng: 140.8694 },
+  '秋田': { lat: 39.7186, lng: 140.1023 },
+  '山形': { lat: 38.2554, lng: 140.3396 },
+  '福島': { lat: 37.7503, lng: 140.4676 },
+  '茨城': { lat: 36.3418, lng: 140.4468 },
+  '栃木': { lat: 36.5658, lng: 139.8836 },
+  '群馬': { lat: 36.3895, lng: 139.0634 },
+  '埼玉': { lat: 35.8570, lng: 139.6489 },
+  '千葉': { lat: 35.6051, lng: 140.1233 },
+  '東京': { lat: 35.6895, lng: 139.6917 },
+  '神奈川': { lat: 35.4478, lng: 139.6425 },
+  '新潟': { lat: 37.9022, lng: 139.0236 },
+  '富山': { lat: 36.6953, lng: 137.2113 },
+  '石川': { lat: 36.5947, lng: 136.6256 },
+  '福井': { lat: 36.0652, lng: 136.2216 },
+  '山梨': { lat: 35.6639, lng: 138.5683 },
+  '長野': { lat: 36.6513, lng: 138.1810 },
+  '岐阜': { lat: 35.4158, lng: 136.7601 },
+  '静岡': { lat: 34.9756, lng: 138.3828 },
+  '愛知': { lat: 35.1802, lng: 136.9066 },
+  '三重': { lat: 34.7303, lng: 136.5086 },
+  '滋賀': { lat: 35.0045, lng: 135.8686 },
+  '京都': { lat: 35.0116, lng: 135.7681 },
+  '大阪': { lat: 34.6863, lng: 135.5200 },
+  '兵庫': { lat: 34.6901, lng: 135.1955 },
+  '奈良': { lat: 34.6851, lng: 135.8327 },
+  '和歌山': { lat: 34.2260, lng: 135.1675 },
+  '鳥取': { lat: 35.5036, lng: 134.2383 },
+  '島根': { lat: 35.4723, lng: 133.0505 },
+  '岡山': { lat: 34.6618, lng: 133.9347 },
+  '広島': { lat: 34.3963, lng: 132.4594 },
+  '山口': { lat: 34.1860, lng: 131.4705 },
+  '徳島': { lat: 34.0710, lng: 134.5593 },
+  '香川': { lat: 34.3402, lng: 134.0434 },
+  '愛媛': { lat: 33.8416, lng: 132.7657 },
+  '高知': { lat: 33.5597, lng: 133.5311 },
+  '福岡': { lat: 33.6064, lng: 130.4182 },
+  '佐賀': { lat: 33.2635, lng: 130.3009 },
+  '長崎': { lat: 32.7501, lng: 129.8773 },
+  '熊本': { lat: 32.7898, lng: 130.7417 },
+  '大分': { lat: 33.2382, lng: 131.6126 },
+  '宮崎': { lat: 31.9077, lng: 131.4201 },
+  '鹿児島': { lat: 31.5966, lng: 130.5578 },
+  '沖縄': { lat: 26.2124, lng: 127.6809 }
+};
+
+// カテゴリ別カラーパレット (style.cssのバッジ色と調和)
+function getMarkerBorderColor(cat) {
+  const colors = {
+    food: '#ff7e8e',         // 飲食店 (ソフトピンク)
+    mohinga: '#ffb31a',      // 食べたいもの (ゴールド)
+    museum: '#7b2cbf',       // 美術館・博物館 (パープル)
+    event: '#00db8b',        // イベント (グリーン)
+    nature: '#48cae4',       // 自然・よりみち (スカイブルー)
+    book: '#9e2a2b',         // 本・しらべもの (レンガブラウン)
+    shop: '#fb8500',         // くらし・雑貨 (オレンジ)
+    view: '#8338ec',         // おきにいりの景色 (バイオレット)
+    relax: '#4cc9f0',        // 癒やし・ととのう (ライトブルー)
+    entertainment: '#ff006e' // エンタメ (マゼンタ)
+  };
+  return colors[cat] || '#5b8dee';
+}
+
+function openMapModal() {
+  const modal = document.getElementById('mapModal');
+  if (!modal) return;
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+
+  // 初回表示時にマップを初期化
+  if (!leafletMapInstance) {
+    initLeafletMap();
+  } else {
+    // 2回目以降は表示サイズ更新＆マーカーの再読み込み
+    setTimeout(() => {
+      leafletMapInstance.invalidateSize();
+      loadMapMarkers();
+    }, 150);
+  }
+}
+
+function closeMapModal() {
+  const modal = document.getElementById('mapModal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
+function initLeafletMap() {
+  const container = document.getElementById('leafletMap');
+  if (!container) return;
+
+  // クイックナビゲーションバーを動的に追加 (すでにない場合)
+  let quickNav = container.parentNode.querySelector('.map-quick-nav');
+  if (!quickNav) {
+    quickNav = document.createElement('div');
+    quickNav.className = 'map-quick-nav';
+    quickNav.innerHTML = `
+      <button type="button" class="map-nav-btn" data-nav="tokyo">🗼 東京</button>
+      <button type="button" class="map-nav-btn" data-nav="kansai">🐙 関西</button>
+      <button type="button" class="map-nav-btn" data-nav="hiroshima">🍋 広島</button>
+      <button type="button" class="map-nav-btn" data-nav="all">🗺️ 全体</button>
+    `;
+    container.parentNode.appendChild(quickNav);
+
+    quickNav.querySelectorAll('.map-nav-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dest = btn.dataset.nav;
+        if (!leafletMapInstance) return;
+        if (dest === 'tokyo') {
+          leafletMapInstance.setView([35.6895, 139.6917], 12);
+        } else if (dest === 'kansai') {
+          leafletMapInstance.setView([34.6937, 135.5023], 10);
+        } else if (dest === 'hiroshima') {
+          leafletMapInstance.setView([34.3963, 132.4594], 12);
+        } else if (dest === 'all') {
+          if (leafletMarkersGroup && leafletMarkersGroup.getLayers().length > 0) {
+            leafletMapInstance.fitBounds(leafletMarkersGroup.getBounds(), { padding: [40, 40] });
+          }
+        }
+      });
+    });
+  }
+
+  // レンダリング保証のための遅延実行
+  setTimeout(() => {
+    leafletMapInstance = L.map('leafletMap', {
+      center: [35.6895, 139.6917],
+      zoom: 11,
+      zoomControl: true
+    });
+
+    // CartoDB Voyager レイヤーをロード ( watercolor / 手描き風によく調和する )
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(leafletMapInstance);
+
+    leafletMarkersGroup = L.featureGroup().addTo(leafletMapInstance);
+
+    loadMapMarkers();
+  }, 100);
+}
+
+function loadMapMarkers() {
+  if (!leafletMapInstance || !leafletMarkersGroup) return;
+
+  leafletMarkersGroup.clearLayers();
+  const allSpots = getAllSpotItemsForDisplay();
+
+  allSpots.forEach(spot => {
+    // オンライン・全国は地図ピン対象外
+    if (spot.pref === '全国' || spot.pref === 'オンライン') return;
+    if (spot.cat === 'entertainment' && (spot.id === 'hazbin' || spot.id === 'doc72')) return;
+
+    let coords = null;
+
+    // 1. 静的定義されているスポット
+    if (SPOT_COORDINATES[spot.id]) {
+      coords = SPOT_COORDINATES[spot.id];
+    } 
+    // 2. 動的提案スポットかつ都道府県の代表点がある場合
+    else if (spot.pref && PREFECTURE_CENTERS[spot.pref]) {
+      const center = PREFECTURE_CENTERS[spot.pref];
+      // 同一都道府県に複数登録された場合に重ならないよう適度な揺らぎ(jitter)を追加
+      const jitterLat = (Math.random() - 0.5) * 0.04;
+      const jitterLng = (Math.random() - 0.5) * 0.04;
+      coords = {
+        lat: center.lat + jitterLat,
+        lng: center.lng + jitterLng
+      };
+    } 
+    // 3. フォールバック (東京中心の広範囲ランダム揺らぎ)
+    else {
+      const center = PREFECTURE_CENTERS['東京'];
+      const jitterLat = (Math.random() - 0.5) * 0.08;
+      const jitterLng = (Math.random() - 0.5) * 0.08;
+      coords = {
+        lat: center.lat + jitterLat,
+        lng: center.lng + jitterLng
+      };
+    }
+
+    if (coords) {
+      const iconHtml = `
+        <div class="custom-marker" style="--border-color: ${getMarkerBorderColor(spot.cat)};" title="${spot.name}">
+          <span>${spot.emoji || '📍'}</span>
+        </div>
+      `;
+
+      const markerIcon = L.divIcon({
+        html: iconHtml,
+        className: 'custom-leaflet-marker',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+        popupAnchor: [0, -18]
+      });
+
+      const marker = L.marker([coords.lat, coords.lng], { icon: markerIcon });
+
+      const catLabel = spot.catLabel || getCatLabel(spot.cat) || '';
+      const areaText = `📍 ${spot.area || ''}${spot.pref && spot.pref !== '東京' ? '（' + spot.pref + '）' : ''}`;
+      const memoText = spot.memo || spot.reason || '';
+      const uniqueId = spot.id || spot.clientId || 'temp-' + Math.random().toString(36).substr(2, 9);
+
+      const popupHtml = `
+        <div class="map-popup-card">
+          <span class="map-popup-cat" style="background: ${getMarkerBorderColor(spot.cat)}1A; color: ${getMarkerBorderColor(spot.cat)};">${catLabel}</span>
+          <div class="map-popup-title">${spot.name}</div>
+          <div class="map-popup-area">${areaText}</div>
+          ${memoText ? `<div class="map-popup-memo">${memoText.replace(/\n/g, '<br>')}</div>` : ''}
+          <div class="map-popup-actions">
+            <button type="button" class="map-popup-btn map-popup-btn--primary" id="popup-btn-details-${uniqueId}">📍 詳細をみる</button>
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml);
+
+      // ポップアップが開いたときに詳細をみるボタンにイベントを結びつける
+      marker.on('popupopen', () => {
+        const btn = document.getElementById(`popup-btn-details-${uniqueId}`);
+        if (btn) {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            jumpToSpotCard(spot);
+          });
+        }
+      });
+
+      leafletMarkersGroup.addLayer(marker);
+    }
+  });
+
+  // 初期表示範囲を調整
+  if (leafletMarkersGroup.getLayers().length > 0) {
+    leafletMapInstance.fitBounds(leafletMarkersGroup.getBounds(), { padding: [50, 50], maxZoom: 14 });
+  } else {
+    leafletMapInstance.setView([35.6895, 139.6917], 11);
+  }
+}
+
+// マップから一覧のカードへ滑らかにスクロール＆ハイライト移動する
+function jumpToSpotCard(spot) {
+  closeMapModal();
+
+  // フィルタの完全初期化 (すべて表示状態へ)
+  activeSpotArea = 'all';
+  showingWantList = false;
+  setActiveSpotCategory('all');
+
+  const allSpots = getAllSpotItemsForDisplay();
+  const spotIndex = allSpots.findIndex(s => {
+    return (s.id && spot.id && s.id === spot.id) || (s.name && spot.name && s.name === spot.name);
+  });
+
+  // ページネーション枠を展開
+  if (spotIndex >= 0) {
+    visibleSpotCount = Math.max(INITIAL_SPOT_COUNT, Math.ceil((spotIndex + 1) / INITIAL_SPOT_COUNT) * INITIAL_SPOT_COUNT);
+  } else {
+    visibleSpotCount = Math.max(INITIAL_SPOT_COUNT, allSpots.length);
+  }
+
+  // 一覧の再描画
+  renderSpotCards('all');
+
+  // スムーススクロール＆ハイライト
+  setTimeout(() => {
+    const cards = Array.from(document.querySelectorAll('.spot-card'));
+    const target = cards.find(card => {
+      const name = card.querySelector('.spot-name')?.textContent || '';
+      return card.dataset.id === spot.id || name === spot.name;
+    });
+
+    if (target) {
+      highlightDiscoveryElement(target);
+    } else {
+      const spotsEl = document.getElementById('spots');
+      if (spotsEl) spotsEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 120);
+}
+
 
 // ============================================================
 // 11. 初期化

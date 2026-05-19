@@ -44,7 +44,10 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="style.css?v=20260520-1">
+  <!-- Leaflet.js for interactive mapping -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="style.css?v=20260520-2">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -129,8 +132,13 @@
         <span style="font-size:0.8rem; opacity:0.7;">→</span>
       </a>
       <div class="hero-map-stage">
-        <figure class="hero-map-visual" aria-label="POPOPO お出かけマップのイメージ">
+        <figure class="hero-map-visual clickable-map-card" id="heroMapCard" role="button" tabindex="0" aria-label="POPOPO デジタルお出かけマップを開く" style="position: relative; cursor: pointer;">
           <img src="assets/popopo-map-visual-20260518.png" alt="人から人へ伝わる小さな発見を描いたPOPOPO お出かけマップの水彩イラスト">
+          <!-- Elegant watercolor postage stamp style badge in the bottom-right corner -->
+          <div class="map-watercolor-stamp">
+            <span class="stamp-emoji">🗺️</span>
+            <span class="stamp-text">デジタル地図を開く</span>
+          </div>
         </figure>
         <div class="hero-map-overlay hero-map-overlay--top">
           <div class="hero-gallery-band" aria-label="配信で届いた作品">
@@ -809,6 +817,19 @@
     </div>
   </div>
 
+  <!-- お出かけマップモーダル -->
+  <div id="mapModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle">
+    <div class="modal-box modal-box-large" style="max-width: 1080px; width: 95%; height: 82vh; display: flex; flex-direction: column;">
+      <div class="modal-head">
+        <h3 id="mapModalTitle" class="modal-title">🗺️ POPOPO デジタルお出かけマップ</h3>
+        <button class="modal-close" id="mapModalClose" aria-label="閉じる">✕</button>
+      </div>
+      <div class="map-modal-body" style="flex: 1; position: relative; background: #fdfdfd; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 0 28px 24px;">
+        <div id="leafletMap" style="width: 100%; height: 100%; z-index: 10;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- スマホ用 Bottom Navigation Bar -->
   <nav class="bottom-nav" id="bottomNav" aria-label="メインナビゲーション">
     <a href="#spots" class="bottom-nav-item" data-section="spots">
@@ -829,6 +850,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260520-1"></script>
+  <script src="app.js?v=20260520-2"></script>
 </body>
 </html>
