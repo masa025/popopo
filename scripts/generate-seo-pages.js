@@ -768,6 +768,8 @@ function pageHtml(spot, lang) {
         <a href="${relativeDepth}/index.html#community" class="nav-link">${isEn ? '💬 Free Talk' : '💬 フリートーク掲示板'}</a>
         <a href="${relativeDepth}/about.html" class="nav-link">${isEn ? '🌿 Why This Site' : '🌿 この場所を作った理由'}</a>
         <a href="${relativeDepth}/how-to.html" class="nav-link">${isEn ? '💡 Guide' : '💡 使い方'}</a>
+      </div>
+      <div class="nav-actions">
         ${langToggleHtml}
       </div>
     </div>
@@ -915,6 +917,8 @@ function indexHtml(lang) {
         <a href="${relativeDepth}/index.html#visited" class="nav-link">${isEn ? '💬 Guest Reviews' : '💬 みんなの感想'}</a>
         <a href="${relativeDepth}/about.html" class="nav-link">${isEn ? '🌿 Why This Site' : '🌿 この場所を作った理由'}</a>
         <a href="${relativeDepth}/how-to.html" class="nav-link">${isEn ? '💡 Guide' : '💡 使い方'}</a>
+      </div>
+      <div class="nav-actions">
         ${langToggleHtml}
       </div>
     </div>

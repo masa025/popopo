@@ -107,6 +107,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;}
 .nav-links{display:flex;gap:4px;margin-left:auto;}
 .nav-link{padding:8px 10px;border-radius:999px;color:var(--text-muted);font-size:0.84rem;transition:all .2s;white-space:nowrap;}
 .nav-link:hover{color:var(--blue);background:var(--blue-light);}
+.nav-actions{display:flex;align-items:center;gap:12px;}
 .hamburger{display:none;flex-direction:column;gap:5px;padding:6px;border-radius:var(--r-sm);}
 .hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s;}
 .nav-mobile{display:none;flex-direction:column;gap:4px;padding:12px 24px 16px;border-top:1px solid var(--border);background:var(--paper);}
@@ -719,6 +720,7 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   .hero-quick-link--gacha{padding:6px 12px;}
   .hero-btns{flex-direction:column;align-items:center;gap:10px;}
   .nav-links,.btn-post-nav{display:none;}
+  .nav-actions{margin-left:auto;}
   .footer-admin{max-width:100%;justify-content:flex-start;padding:12px;border-radius:18px;}
   .footer-admin-avatar{width:64px;height:64px;border-radius:18px;}
   .hamburger{display:flex;}
@@ -802,7 +804,8 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 }
 @media(min-width:769px) and (max-width:1120px){
   .nav-links{display:none;}
-  .hamburger{display:flex;margin-left:auto;}
+  .nav-actions{margin-left:auto;}
+  .hamburger{display:flex;}
 }
 @media(min-width:769px) and (max-width:1024px){
   .hero-showcase{display:none;}
@@ -2920,33 +2923,40 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
 
 /* 言語切り替えトグル（デスクトップ） */
 .lang-toggle-btn {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1.5px solid #dcdde1;
-  border-radius: 20px;
-  padding: 5px 12px;
-  color: var(--text-dark);
+  background: rgba(255, 254, 250, 0.92);
+  border: 1.5px solid rgba(79, 127, 216, 0.22);
+  border-radius: 20px 16px 22px 18px; /* ぬくもりのある手書き風バブル形状 */
+  padding: 6px 14px;
+  color: var(--blue);
   font-family: 'Yomogi', cursive, sans-serif;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 1px 1px 3px rgba(0,0,0,0.06);
-  margin-left: 12px;
+  box-shadow: 0 4px 10px rgba(43, 67, 120, 0.05);
+  backdrop-filter: blur(8px);
+  text-decoration: none; /* 静的スポットページの<a>タグ用 */
+  white-space: nowrap;
 }
 .lang-toggle-btn:hover {
   background: #fff;
-  border-color: var(--text-dim);
-  transform: translateY(-1px);
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+  border-color: rgba(42, 157, 143, 0.45); /* 優しい水彩風グリーン */
+  color: var(--hero-accent, #2a9d8f);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 14px rgba(43, 67, 120, 0.12);
 }
 .lang-toggle-btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
 }
 .lang-toggle-btn .lang-icon {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  transition: transform 0.3s ease;
+}
+.lang-toggle-btn:hover .lang-icon {
+  transform: rotate(15deg) scale(1.1);
 }
 
 /* 言語切り替え（モバイル） */
