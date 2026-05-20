@@ -172,8 +172,8 @@ const SPOT_TRANSLATIONS = {
     memo: 'A highly popular bakery in Kobe offering a vast variety of delicious pastries and bread. Morning croissants are absolutely heavenly!'
   },
   'karayaki': {
-    name: 'Kamayaki Latorato',
-    memo: 'A cozy kamado-baked pizza and Italian dining spot.'
+    name: 'Kamado-Baked Cuisine Rato Mato (Latorato)',
+    memo: 'A cozy kamado-baked cuisine and dining spot.'
   },
   'yugi': {
     name: 'Yugi Shouten',
@@ -363,7 +363,7 @@ const ADDRESS_TRANSLATION_MAP = {
   '渋谷・広尾': 'Shibuya / Hiroo',
   '兵庫県西宮市': 'Nishinomiya, Hyogo',
   '神戸・三宮': 'Sannomiya, Kobe',
-  '渋谷区百人町': 'Hyakunincho, Shibuya',
+  '新宿区百人町': 'Hyakunincho, Shinjuku-ku',
   '池袋': 'Ikebukuro',
   '全国': 'Nationwide',
   '港区芝': 'Shiba, Minato-ku',
@@ -414,9 +414,18 @@ function convertToEnglishAddress(area, pref) {
 }
 
 function getGoogleMapsUrl(s) {
+  let coords = null;
   if (SPOT_COORDINATES[s.id]) {
-    const { lat, lng } = SPOT_COORDINATES[s.id];
-    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    coords = SPOT_COORDINATES[s.id];
+  } else {
+    const matchedStaticSpot = findStaticSpotByName(s.name);
+    if (matchedStaticSpot && SPOT_COORDINATES[matchedStaticSpot.id]) {
+      coords = SPOT_COORDINATES[matchedStaticSpot.id];
+    }
+  }
+
+  if (coords) {
+    return `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
   }
   const query = encodeURIComponent(`${s.name} ${s.pref || ''} ${s.area || ''}`);
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
@@ -597,7 +606,7 @@ const SPOTS = [
     suggested: true, suggestedBy: 'パンダ🐼',
     vegan: true, card: true
   },
-  { id: 'karayaki', cat: 'food', emoji: '🍕', name: '釜焼きラトマト', area: '渋谷区百人町', pref: '東京', url: 'https://tabelog.com/tokyo/A1304/A130404/13263740/', memo: '' },
+  { id: 'karayaki', cat: 'food', emoji: '🍕', name: '窯焼き料理 Rato Mato（ラトマト）', area: '新宿区百人町', pref: '東京', url: 'https://tabelog.com/tokyo/A1304/A130404/13263740/', memo: '' },
   {
     id: 'yugi', cat: 'food', emoji: '🥟', name: '友誼商店', area: '池袋', pref: '東京',
     url: 'https://tabelog.com/tokyo/A1305/A130501/13235881/',
@@ -660,6 +669,50 @@ const SPOTS = [
   { id: 'hazbin', cat: 'entertainment', emoji: '🎬', name: 'ハズビン・ホテル', area: 'Amazon Prime Video', pref: 'オンライン', url: 'https://www.amazon.co.jp/gp/video/detail/B0CLM8CW52/ref=atv_dp_share_cu_r', memo: 'おすすめアニメ。大人向けミュージカルアニメ。' },
   { id: 'doc72', cat: 'entertainment', emoji: '📺', name: 'ドキュメント72時間', area: 'NHK', pref: 'オンライン', url: 'https://www.nhk.jp/g/ts/W3W8WRN8M3/', memo: 'おすすめドキュメンタリー番組（NHK）' },
 ];
+
+// Utility functions for name-based exact/partial matching of spots
+function normalizeString(str) {
+  if (!str) return '';
+  return str.toLowerCase()
+    .replace(/[\s\(\)（）\-\_\・\.\,\!\?]/g, '')
+    .replace(/[ぁ-ん]/g, s => String.fromCharCode(s.charCodeAt(0) + 0x60)) // Hiragana to Katakana
+    .trim();
+}
+
+function findStaticSpotByName(name) {
+  if (!name) return null;
+  const cleanInput = normalizeString(name);
+  
+  // 1. Exact match (normalized)
+  for (const s of SPOTS) {
+    if (normalizeString(s.name) === cleanInput) return s;
+  }
+  for (const [key, value] of Object.entries(SPOT_TRANSLATIONS)) {
+    if (value.name && normalizeString(value.name) === cleanInput) {
+      const matched = SPOTS.find(s => s.id === key);
+      if (matched) return matched;
+    }
+  }
+
+  // 2. Partial match (normalized)
+  for (const s of SPOTS) {
+    const cleanSpotName = normalizeString(s.name);
+    if (cleanSpotName.includes(cleanInput) || cleanInput.includes(cleanSpotName)) {
+      return s;
+    }
+  }
+  for (const [key, value] of Object.entries(SPOT_TRANSLATIONS)) {
+    if (value.name) {
+      const cleanTransName = normalizeString(value.name);
+      if (cleanTransName.includes(cleanInput) || cleanInput.includes(cleanTransName)) {
+        const matched = SPOTS.find(s => s.id === key);
+        if (matched) return matched;
+      }
+    }
+  }
+  
+  return null;
+}
 
 // ============================================================
 // 3. 行った場所データ
@@ -6529,49 +6582,49 @@ let leafletMarkersGroup = null;
 // 静的スポットの緯度経度データ (全28件)
 const SPOT_COORDINATES = {
   'lion': { lat: 35.6596, lng: 139.6983 },
-  'beltz': { lat: 35.6517, lng: 139.7188 },
-  'torikatsu': { lat: 35.6597, lng: 139.6980 },
-  'hinto': { lat: 34.7371, lng: 135.3402 },
-  'comme-chinois': { lat: 34.6917, lng: 135.1952 },
-  'karayaki': { lat: 35.7022, lng: 139.6997 },
+  'beltz': { lat: 35.651444, lng: 139.713033 },
+  'torikatsu': { lat: 35.658615, lng: 139.696684 },
+  'hinto': { lat: 34.7246, lng: 135.3685 },
+  'comme-chinois': { lat: 34.69276, lng: 135.196312 },
+  'karayaki': { lat: 35.701486, lng: 139.698134 },
   'yugi': { lat: 35.7313, lng: 139.7107 },
-  'manchs': { lat: 35.6521, lng: 139.7523 },
-  'kameju': { lat: 35.7118, lng: 139.7968 },
-  'kamado-gohan-matsushima': { lat: 35.6859, lng: 139.7828 },
-  'yamaya-ikebukuro': { lat: 35.7297, lng: 139.7153 },
-  'kura-global-flagship': { lat: 35.7135, lng: 139.7925 },
-  'saryo-tsujiri-daimaru': { lat: 35.6819, lng: 139.7681 },
-  'leonards-japan': { lat: 35.4539, lng: 139.6372 },
+  'manchs': { lat: 35.651014, lng: 139.751718 },
+  'kameju': { lat: 35.710685, lng: 139.796749 },
+  'kamado-gohan-matsushima': { lat: 35.6835, lng: 139.7825 },
+  'yamaya-ikebukuro': { lat: 35.72566, lng: 139.71700 },
+  'kura-global-flagship': { lat: 35.71291, lng: 139.792845 },
+  'saryo-tsujiri-daimaru': { lat: 35.68166, lng: 139.76901 },
+  'leonards-japan': { lat: 35.454207, lng: 139.63847 },
   'mohinga': { lat: 35.7134, lng: 139.7042 },
-  '400do-pizza': { lat: 34.3916, lng: 132.4636 },
-  'yamatane': { lat: 35.6524, lng: 139.7143 },
-  'nmwa': { lat: 35.7154, lng: 139.7758 },
-  'edo': { lat: 35.6963, lng: 139.7958 },
-  'hokusai': { lat: 35.6974, lng: 139.7997 },
+  '400do-pizza': { lat: 34.3917, lng: 132.4536 },
+  'yamatane': { lat: 35.65317, lng: 139.7137 },
+  'nmwa': { lat: 35.71556, lng: 139.77583 },
+  'edo': { lat: 35.696403, lng: 139.796103 },
+  'hokusai': { lat: 35.696398, lng: 139.800457 },
   'yoyogi': { lat: 35.6715, lng: 139.6949 },
-  'kagurazaka-machibutai-2026': { lat: 35.7011, lng: 139.7408 },
+  'kagurazaka-machibutai-2026': { lat: 35.701504, lng: 139.739539 },
   'inokashira': { lat: 35.6997, lng: 139.5732 },
   'koishikawa-korakuen': { lat: 35.7056, lng: 139.7493 },
   'tsutaya': { lat: 35.6489, lng: 139.6994 },
   'kakimori': { lat: 35.7027, lng: 139.7895 },
   'shibuyasky': { lat: 35.6585, lng: 139.7018 },
   'kogane': { lat: 35.7001, lng: 139.8252 },
-  'ikebukuro-jazz-festival': { lat: 35.7302, lng: 139.7083 },
+  'ikebukuro-jazz-festival': { lat: 35.730223, lng: 139.709228 },
   'thai-festival-tokyo': { lat: 35.6669, lng: 139.6958 },
   'lafollejournee-tokyo-2026': { lat: 35.6769, lng: 139.7644 },
   'niconico-chokaigi': { lat: 35.6484, lng: 140.0347 },
-  'kasai-rinkai-crystal-view': { lat: 35.6394, lng: 139.8606 },
-  'tokyo-mitaiwara': { lat: 35.6644, lng: 139.8596 },
-  'ota-memorial-museum': { lat: 35.6698, lng: 139.7048 },
-  'rakusho-ramen': { lat: 33.5916, lng: 130.3989 },
-  'kusamakura-cafe': { lat: 35.6672, lng: 139.7548 },
-  'japan-coast-guard-museum-yokohama': { lat: 35.4552, lng: 139.6428 },
-  'sanin-gyokai-chuka-soba': { lat: 35.7335, lng: 139.6543 },
-  'frijoles-yaesu': { lat: 35.6797, lng: 139.7698 },
-  'oyama-milk-no-sato': { lat: 35.3942, lng: 133.5233 },
-  'ramen-otama': { lat: 35.4385, lng: 133.3556 },
-  'queen-hiroba-yokohama-customs': { lat: 35.4492, lng: 139.6433 },
-  'aagan': { lat: 35.7018, lng: 139.7027 },
+  'kasai-rinkai-crystal-view': { lat: 35.6406, lng: 139.8595 },
+  'tokyo-mitaiwara': { lat: 35.6635, lng: 139.8604 },
+  'ota-memorial-museum': { lat: 35.669417, lng: 139.704889 },
+  'rakusho-ramen': { lat: 33.589739, lng: 130.397435 },
+  'kusamakura-cafe': { lat: 35.669001, lng: 139.752824 },
+  'japan-coast-guard-museum-yokohama': { lat: 35.454794, lng: 139.64406 },
+  'sanin-gyokai-chuka-soba': { lat: 35.741553, lng: 139.655676 },
+  'frijoles-yaesu': { lat: 35.679421, lng: 139.768907 },
+  'oyama-milk-no-sato': { lat: 35.377324, lng: 133.509937 },
+  'ramen-otama': { lat: 35.4325, lng: 133.3444 },
+  'queen-hiroba-yokohama-customs': { lat: 35.448951, lng: 139.642525 },
+  'aagan': { lat: 35.701513, lng: 139.702466 },
   'rosetsu': { lat: 35.6789, lng: 139.4922 }
 };
 
@@ -6624,6 +6677,41 @@ const PREFECTURE_CENTERS = {
   '宮崎': { lat: 31.9077, lng: 131.4201 },
   '鹿児島': { lat: 31.5966, lng: 130.5578 },
   '沖縄': { lat: 26.2124, lng: 127.6809 }
+};
+
+// 主要都市・地域の詳細座標 (ダイナミック投稿の近隣フォールバック用)
+const CITY_CENTERS = {
+  '渋谷': { lat: 35.6580, lng: 139.7016 },
+  '道玄坂': { lat: 35.6580, lng: 139.7016 },
+  '広尾': { lat: 35.6514, lng: 139.7130 },
+  '新宿': { lat: 35.6909, lng: 139.7003 },
+  '大久保': { lat: 35.7015, lng: 139.7024 },
+  '百人町': { lat: 35.7014, lng: 139.6981 },
+  '池袋': { lat: 35.7295, lng: 139.7109 },
+  '芝': { lat: 35.6510, lng: 139.7517 },
+  '港区': { lat: 35.6580, lng: 139.7517 },
+  '浅草': { lat: 35.7120, lng: 139.7960 },
+  '上野': { lat: 35.7155, lng: 139.7758 },
+  '人形町': { lat: 35.6830, lng: 139.7750 },
+  '日本橋': { lat: 35.6830, lng: 139.7750 },
+  '銀座': { lat: 35.6720, lng: 139.7640 },
+  '八重洲': { lat: 35.6794, lng: 139.7689 },
+  '東京駅': { lat: 35.6816, lng: 139.7690 },
+  '両国': { lat: 35.6964, lng: 139.7961 },
+  '神楽坂': { lat: 35.7015, lng: 139.7395 },
+  '後楽': { lat: 35.7056, lng: 139.7493 },
+  '葛西': { lat: 35.6635, lng: 139.8604 },
+  '江戸川': { lat: 35.6635, lng: 139.8604 },
+  '練馬': { lat: 35.7350, lng: 139.6500 },
+  '原宿': { lat: 35.6700, lng: 139.7020 },
+  '三鷹': { lat: 35.7030, lng: 139.5800 },
+  '武蔵野': { lat: 35.7030, lng: 139.5800 },
+  '横浜': { lat: 35.4540, lng: 139.6380 },
+  '三宮': { lat: 34.6920, lng: 135.1950 },
+  '西宮': { lat: 34.7370, lng: 135.3400 },
+  '天神': { lat: 33.5900, lng: 130.4000 },
+  '大山': { lat: 35.3773, lng: 133.5100 },
+  '米子': { lat: 35.4325, lng: 133.3444 }
 };
 
 // カテゴリ別カラーパレット (style.cssのバッジ色と調和)
@@ -6747,20 +6835,51 @@ function loadMapMarkers() {
     // 1. 静的定義されているスポット
     if (SPOT_COORDINATES[spot.id]) {
       coords = SPOT_COORDINATES[spot.id];
-    } 
-    // 2. 動的提案スポットかつ都道府県の代表点がある場合
-    else if (normPref && PREFECTURE_CENTERS[normPref]) {
+    }
+    // 1b. 動的提案スポットだが、静的定義されているスポット名と一致する場合
+    else {
+      const matchedStaticSpot = findStaticSpotByName(spot.name);
+      if (matchedStaticSpot && SPOT_COORDINATES[matchedStaticSpot.id]) {
+        coords = SPOT_COORDINATES[matchedStaticSpot.id];
+      }
+    }
+
+    // 2. 静的スポットとマッチしなかった場合、CITY_CENTERSでエリア・スポット名マッチを試みる
+    if (!coords) {
+      let matchedCityKey = null;
+      const combinedText = ((spot.area || '') + ' ' + (spot.name || '')).toLowerCase();
+      for (const key of Object.keys(CITY_CENTERS)) {
+        if (combinedText.includes(key.toLowerCase())) {
+          matchedCityKey = key;
+          break;
+        }
+      }
+
+      if (matchedCityKey) {
+        const center = CITY_CENTERS[matchedCityKey];
+        // 近隣レベルでの小さな揺らぎ(±0.005度)を追加
+        const jitterLat = (Math.random() - 0.5) * 0.01;
+        const jitterLng = (Math.random() - 0.5) * 0.01;
+        coords = {
+          lat: center.lat + jitterLat,
+          lng: center.lng + jitterLng
+        };
+      }
+    }
+
+    // 3. 都道府県の代表点がある場合
+    if (!coords && normPref && PREFECTURE_CENTERS[normPref]) {
       const center = PREFECTURE_CENTERS[normPref];
-      // 同一都道府県に複数登録された場合に重ならないよう適度な揺らぎ(jitter)を追加
       const jitterLat = (Math.random() - 0.5) * 0.04;
       const jitterLng = (Math.random() - 0.5) * 0.04;
       coords = {
         lat: center.lat + jitterLat,
         lng: center.lng + jitterLng
       };
-    } 
-    // 3. フォールバック (東京中心の広範囲ランダム揺らぎ)
-    else {
+    }
+
+    // 4. 完全なフォールバック
+    if (!coords) {
       const center = PREFECTURE_CENTERS['東京'];
       const jitterLat = (Math.random() - 0.5) * 0.08;
       const jitterLng = (Math.random() - 0.5) * 0.08;
