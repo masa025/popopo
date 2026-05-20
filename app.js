@@ -346,6 +346,10 @@ const SPOT_TRANSLATIONS = {
   'rosetsu': {
     name: 'Fuchu Art Museum — Nagasawa Rosetsu Exhibition',
     memo: 'An exhibition showing the cute origin of Japanese art and the dynamic brushstrokes of Nagasawa Rosetsu.'
+  },
+  'tokin': {
+    name: 'Yakitori Tokin',
+    memo: 'A casual izakaya specializing in charcoal-grilled Yakitori using premium Date chickens, open until 5 AM.'
   }
 };
 
@@ -624,6 +628,18 @@ const SPOTS = [
   { id: 'shinpachi-shokudo', cat: 'food', emoji: '🐟', name: '炭火焼干物定食 しんぱち食堂', area: '東京ほか', pref: '全国', url: 'https://www.shinpachi-shokudo.com/', memo: '焼き魚とごはん、味噌汁の定食を気軽に食べたい時に。朝・昼・夜の候補にしやすいお店。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'tokyo-mitaiwara', cat: 'food', emoji: '🍬', name: 'トウキョウ ミタイワラ', area: '西葛西', pref: '東京', url: 'https://share.google/a4XiQFxBsCeCI5B6c', memo: '不思議な甘さ of インドスイーツのお店。バルフィがおすすめとして投稿されています。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'rakusho-ramen', cat: 'food', emoji: '🍜', name: '楽勝ラーメン', area: '福岡市中央区天神', pref: '福岡', url: 'https://tabelog.com/fukuoka/A4001/A400103/40006293/', memo: '福岡市の繁華街中心部にあり、手頃な価格でラーメンを食べられるお店。カレーも美味しいとの投稿があります。', suggested: true, suggestedBy: '匿名リスナー' },
+  {
+    id: 'tokin',
+    cat: 'food',
+    emoji: '🍗',
+    name: '焼鳥 と金',
+    area: '福岡・今泉',
+    pref: '福岡',
+    url: 'https://tabelog.com/fukuoka/A4001/A400103/40045437/',
+    memo: '銘柄鶏「伊達鶏」を使用した炭火焼き鳥が楽しめる大衆酒場。朝5時まで営業しています。',
+    suggested: true,
+    suggestedBy: '匿名リスナー'
+  },
   { id: 'kusamakura-cafe', cat: 'food', emoji: '☕', name: '草枕', area: '港区', pref: '東京', url: 'https://tabelog.com/tokyo/A1301/A130103/13043012/', memo: 'オフィス街にある落ち着いたカフェ。照明、丁寧な接客、本のある空間が心地よい場所として投稿されています。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'matsuya-morning', cat: 'food', emoji: '🍚', name: '松屋のモーニング', area: '全国', pref: '全国', url: 'https://www.matsuyafoods.co.jp/matsuya/menu/morning/index.html', memo: '11時まで利用できる朝ごはんメニュー。早めのランチとしても使いやすく、選べる小鉢やコスパの良さが魅力です。', suggested: true, suggestedBy: '匿名リスナー' },
   { id: 'sanin-gyokai-chuka-soba', cat: 'food', emoji: '🐚', name: '山陰魚介中華蕎麦', area: '東京都練馬区', pref: '東京', url: 'https://tabelog.com/tokyo/A1321/A132102/13300394/', memo: '練馬の住宅街にあるラーメン店。大量のしじみが入った斬新な見た目と、濃厚なしじみの旨味が広がるスープが印象的です。', suggested: true, suggestedBy: '匿名リスナー' },
@@ -6578,6 +6594,7 @@ function initWeatherCityPicker() {
 // ============================================================
 let leafletMapInstance = null;
 let leafletMarkersGroup = null;
+let activeMapPanelTab = 'online';
 
 // 静的スポットの緯度経度データ (全28件)
 const SPOT_COORDINATES = {
@@ -6617,6 +6634,7 @@ const SPOT_COORDINATES = {
   'tokyo-mitaiwara': { lat: 35.6635, lng: 139.8604 },
   'ota-memorial-museum': { lat: 35.669417, lng: 139.704889 },
   'rakusho-ramen': { lat: 33.589739, lng: 130.397435 },
+  'tokin': { lat: 33.586002, lng: 130.397373 },
   'kusamakura-cafe': { lat: 35.669001, lng: 139.752824 },
   'japan-coast-guard-museum-yokohama': { lat: 35.454794, lng: 139.64406 },
   'sanin-gyokai-chuka-soba': { lat: 35.741553, lng: 139.655676 },
@@ -6710,6 +6728,7 @@ const CITY_CENTERS = {
   '三宮': { lat: 34.6920, lng: 135.1950 },
   '西宮': { lat: 34.7370, lng: 135.3400 },
   '天神': { lat: 33.5900, lng: 130.4000 },
+  '今泉': { lat: 33.5860, lng: 130.3974 },
   '大山': { lat: 35.3773, lng: 133.5100 },
   '米子': { lat: 35.4325, lng: 133.3444 }
 };
@@ -6997,21 +7016,31 @@ function renderMapOnlinePanel() {
   listContainer.innerHTML = '';
   const isEn = currentLanguage === 'en';
 
-  // Translate online panel title
   const panelTitle = document.querySelector('.map-online-title');
+  const panelIcon = document.querySelector('.map-online-icon');
   if (panelTitle) {
-    panelTitle.textContent = isEn ? 'Online Recoms' : 'オンラインおすすめ';
+    if (activeMapPanelTab === 'online') {
+      panelTitle.textContent = isEn ? 'Online Recoms' : 'オンラインおすすめ';
+      if (panelIcon) panelIcon.textContent = '🌐';
+    } else {
+      panelTitle.textContent = isEn ? 'Nationwide Spots' : '全国で楽しめるスポット';
+      if (panelIcon) panelIcon.textContent = '🇯🇵';
+    }
   }
 
   const allSpots = getAllSpotItemsForDisplay();
-  const onlineSpots = allSpots.filter(spot => normalizePrefValue(spot.pref) === 'オンライン');
+  const targetPref = activeMapPanelTab === 'online' ? 'オンライン' : '全国';
+  const filteredSpots = allSpots.filter(spot => normalizePrefValue(spot.pref) === targetPref);
 
-  if (onlineSpots.length === 0) {
-    listContainer.innerHTML = `<div class="map-online-empty">${isEn ? 'No online spots' : 'オンラインスポットはありません'}</div>`;
+  if (filteredSpots.length === 0) {
+    const emptyText = isEn 
+      ? (activeMapPanelTab === 'online' ? 'No online spots' : 'No nationwide spots')
+      : (activeMapPanelTab === 'online' ? 'オンラインスポットはありません' : '全国スポットはありません');
+    listContainer.innerHTML = `<div class="map-online-empty">${emptyText}</div>`;
     return;
   }
 
-  onlineSpots.forEach(spot => {
+  filteredSpots.forEach(spot => {
     const spotTrans = SPOT_TRANSLATIONS[spot.id] || {};
     const name = isEn && spotTrans.name ? spotTrans.name : spot.name;
     const memo = isEn && spotTrans.memo ? spotTrans.memo : (spot.memo || spot.reason || '');
@@ -7022,7 +7051,7 @@ function renderMapOnlinePanel() {
     card.type = 'button';
     card.className = `map-online-card category-${spot.cat}`;
     card.innerHTML = `
-      <div class="map-online-card-emoji">${spot.emoji || '🌐'}</div>
+      <div class="map-online-card-emoji">${spot.emoji || (activeMapPanelTab === 'online' ? '🌐' : '🇯🇵')}</div>
       <div class="map-online-card-content">
         <div class="map-online-card-meta">
           <span class="map-online-card-cat" style="color: ${getMarkerBorderColor(spot.cat)}">${catLabel}</span>
@@ -7050,6 +7079,15 @@ function renderMapOnlinePanel() {
 // ============================================================
 function init() {
   initFirebase();
+  
+  document.querySelectorAll('.map-panel-tab').forEach(tabBtn => {
+    tabBtn.addEventListener('click', () => {
+      document.querySelectorAll('.map-panel-tab').forEach(btn => btn.classList.remove('active'));
+      tabBtn.classList.add('active');
+      activeMapPanelTab = tabBtn.dataset.tab;
+      renderMapOnlinePanel();
+    });
+  });
   
   // スポット追加をリッスン
   listenSuggestions(suggestions => {

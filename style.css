@@ -3127,8 +3127,47 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
   transition: all 0.3s ease;
 }
 
+.map-panel-tabs {
+  display: flex;
+  padding: 12px 16px 0;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.map-panel-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 12px 12px 0 0;
+  font-family: 'Yomogi', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  border-bottom: none;
+  text-align: center;
+}
+
+.map-panel-tab:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text);
+}
+
+.map-panel-tab.active {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--primary);
+  border-color: rgba(79, 127, 216, 0.2);
+  box-shadow: 0 -2px 8px rgba(79, 127, 216, 0.05);
+}
+
 .map-online-header {
-  padding: 16px 20px;
+  padding: 12px 20px;
+  border-bottom: 1px dashed var(--border);
+  flex-shrink: 0;
   border-bottom: 1px dashed var(--border);
   display: flex;
   align-items: center;
@@ -3280,10 +3319,19 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
   
   .map-online-panel {
     width: 100% !important;
-    height: 145px !important;
+    height: 180px !important;
     border-left: none !important;
     border-top: 1.5px solid var(--border);
     background: rgba(255, 255, 255, 0.7);
+  }
+  
+  .map-panel-tabs {
+    padding: 8px 12px 0 !important;
+  }
+  
+  .map-panel-tab {
+    font-size: 0.85rem !important;
+    padding: 6px 8px !important;
   }
   
   .map-online-header {

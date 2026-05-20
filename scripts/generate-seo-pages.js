@@ -136,8 +136,20 @@ const spots = [
     area: '広島・岡山',
     pref: '広島',
     url: 'https://400do-pizza.com/',
-    memo: 'YouTube「よにのちゃんねる」で紹介された超人気ピザ店。広島にもオープンした話題のスポットです。',
+    memo: 'YouTube「よにのちゃんねる」で紹介された超人気ピザ店。広島にもオープンした話題のスポットです！',
     point: '広島・岡山のピザ店、話題店として検索されやすい固有名詞があります。'
+  },
+  {
+    id: 'tokin',
+    cat: 'food',
+    catLabel: 'カフェ・ごはん',
+    emoji: '🍗',
+    name: '焼鳥 と金',
+    area: '福岡・今泉',
+    pref: '福岡',
+    url: 'https://tabelog.com/fukuoka/A4001/A400103/40045437/',
+    memo: '銘柄鶏「伊達鶏」を使用した炭火焼き鳥が楽しめる大衆酒場。朝5時まで営業しています。',
+    point: '福岡、今泉、焼き鳥、深夜営業などのキーワードで検索需要が見込めます。'
   },
   {
     id: 'yamatane',
@@ -519,6 +531,9 @@ const EXTRA_SPOT_TRANSLATIONS = {
   },
   '400do-pizza': {
     point: 'Contains popular proper nouns highly searched as famous pizza spots in Hiroshima and Okayama.'
+  },
+  'tokin': {
+    point: 'Expected search demand around Fukuoka, Imaizumi, Yakitori, and late-night dining keywords.'
   },
   'yamatane': {
     point: 'Clear museum name and area name, making it suitable for cultural outing searches.'
