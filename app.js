@@ -6697,6 +6697,12 @@ const PREFECTURE_CENTERS = {
   '沖縄': { lat: 26.2124, lng: 127.6809 }
 };
 
+// 有名ランドマークは都道府県・市区町村フォールバックより先に固定座標へ寄せる
+const LANDMARK_CENTERS = {
+  '奈良公園': { lat: 34.6850, lng: 135.8430 },
+  'Nara Park': { lat: 34.6850, lng: 135.8430 }
+};
+
 // 主要都市・地域の詳細座標 (ダイナミック投稿の近隣フォールバック用)
 const CITY_CENTERS = {
   '渋谷': { lat: 35.6580, lng: 139.7016 },
@@ -6732,6 +6738,27 @@ const CITY_CENTERS = {
   '大山': { lat: 35.3773, lng: 133.5100 },
   '米子': { lat: 35.4325, lng: 133.3444 }
 };
+
+function isOnlineOnlySpot(spot = {}) {
+  const normPref = normalizePrefValue(spot.pref);
+  const areaStr = String(spot.area || '');
+  const nameKey = normalizeString(spot.name || '');
+  const combined = `${spot.id || ''} ${spot.name || ''} ${spot.area || ''} ${spot.pref || ''} ${spot.url || ''}`.toLowerCase();
+
+  if (normPref === 'オンライン' || areaStr.includes('オンライン')) return true;
+  if (nameKey.includes('ハズビンホテル') || nameKey.includes('ドキュメント72時間')) return true;
+  if (spot.cat === 'entertainment' && (
+    combined.includes('amazon prime') ||
+    combined.includes('prime video') ||
+    combined.includes('amazon.co.jp/gp/video') ||
+    combined.includes('nhk.jp') ||
+    areaStr.includes('Amazon Prime Video') ||
+    areaStr.includes('NHK')
+  )) {
+    return true;
+  }
+  return false;
+}
 
 // カテゴリ別カラーパレット (style.cssのバッジ色と調和)
 function getMarkerBorderColor(cat) {
@@ -6848,7 +6875,7 @@ function loadMapMarkers() {
 
     // オンライン・全国は地図ピン対象外
     if (normPref === '全国' || normPref === 'オンライン' || areaStr.includes('全国') || areaStr.includes('オンライン')) return;
-    if (spot.cat === 'entertainment' && (spot.id === 'hazbin' || spot.id === 'doc72')) return;
+    if (isOnlineOnlySpot(spot)) return;
 
     let coords = null;
 
@@ -6861,6 +6888,15 @@ function loadMapMarkers() {
       const matchedStaticSpot = findStaticSpotByName(spot.name);
       if (matchedStaticSpot && SPOT_COORDINATES[matchedStaticSpot.id]) {
         coords = SPOT_COORDINATES[matchedStaticSpot.id];
+      }
+    }
+
+    // 1c. 有名ランドマーク名が含まれる場合は固定座標を優先する
+    if (!coords) {
+      const combinedTextForLandmark = `${spot.area || ''} ${spot.name || ''}`;
+      const matchedLandmarkKey = Object.keys(LANDMARK_CENTERS).find(key => combinedTextForLandmark.includes(key));
+      if (matchedLandmarkKey) {
+        coords = LANDMARK_CENTERS[matchedLandmarkKey];
       }
     }
 
@@ -7031,7 +7067,10 @@ function renderMapOnlinePanel() {
 
   const allSpots = getAllSpotItemsForDisplay();
   const targetPref = activeMapPanelTab === 'online' ? 'オンライン' : '全国';
-  const filteredSpots = allSpots.filter(spot => normalizePrefValue(spot.pref) === targetPref);
+  const filteredSpots = allSpots.filter(spot => {
+    if (normalizePrefValue(spot.pref) !== targetPref) return false;
+    return activeMapPanelTab === 'online' ? !isOnlineOnlySpot(spot) : true;
+  });
 
   if (filteredSpots.length === 0) {
     const emptyText = isEn 
