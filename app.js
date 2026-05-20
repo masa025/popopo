@@ -148,138 +148,7 @@ const GALLERY_ITEMS = [
   }
 ];
 
-let currentLanguage = localStorage.getItem('popopo_language') || 'jp';
-
-const TRANSLATIONS = {
-  jp: {
-    logo_sub: "お出かけマップ",
-    nav_spots: "📍 おすすめスポット",
-    nav_visited: "💬 みんなの感想",
-    nav_talk: "💬 フリートーク掲示板",
-    nav_about: "🌿 この場所を作った理由",
-    nav_howto: "💡 使い方",
-    nav_howto_mobile: "💡 使い方を見る",
-    hero_view_map: "地図を見る",
-    hero_view_gallery: "🖼️ すべての作品・辞典を見る",
-    hero_quick_spots: "📍 おすすめスポットを見る",
-    hero_quick_visited: "💬 みんなの感想を見る",
-    hero_gacha_full: "✨ ポポッと選ぶ",
-    hero_gacha_compact: "✨ ポポッと",
-    hero_game_full: "🎮 POPOOSHIで遊ぶ",
-    hero_game_compact: "🎮 ゲーム",
-    loading: "読み込み中",
-    stats_spots: "スポット",
-    stats_posts: "つぶやき",
-    stats_visited: "感想",
-    stats_views: "👀 訪問",
-    sec_spots: "🗺️ おすすめスポット",
-    sec_spots_sub: "『これ良かったよ』の気持ちをみんなでシェア。あなたの好きも、ぜひ教えてください。",
-    btn_add_spot: "スポットを追加する",
-    add_spot_hint: "「ここ気になる」「行ってみたい」そんな一言からで大丈夫！",
-    weather_hint: "🌤️ 今日のお出かけヒント",
-    weather_loading: "天気を取得中...",
-    tab_all: "すべて",
-    tab_food: "🍴 飲食店",
-    tab_mohinga: "🍜 食べたいもの",
-    tab_museum: "🎨 美術館・博物館",
-    tab_event: "🌿 イベント",
-    tab_nature: "🌳 自然・よりみち",
-    tab_book: "📚 本・しらべもの",
-    tab_shop: "🛒 くらし・雑貨",
-    tab_view: "✨ おきにいりの景色",
-    tab_relax: "🛁 癒やし・ととのう",
-    tab_entertainment: "🎬 エンタメ",
-    btn_want_list: "🔖 行きたいリスト（0）",
-    btn_add_want: "🌱 これから行きたい場所を追加",
-    want_hint_text: "行ってみた場所があれば、感想を残してみませんか？",
-    btn_post_review: "感想を投稿する",
-    btn_more: "もっと見る",
-    sec_visited: "💬 みんなの感想",
-    sec_visited_sub: "実際に訪れたスポットの感想を集めています",
-    sec_talk: "💬 フリートーク掲示板",
-    sec_talk_sub: "お出かけの予定、POPOPOの感想、サイトへのご意見など自由に語り合いましょう！",
-    btn_post_chat: "✏️ つぶやく",
-    prompt_kicker: "今日のお題",
-    prompt_default: "最近気になっている場所はありますか？",
-    btn_prompt_post: "このお題でつぶやく",
-    btn_prompt_gacha: "🎲 ガチャを回す",
-    btn_prompt_view_all: "みんなの提案を見る",
-    prompt_candidates_lead: "みんなが提案してくれたお題を順番に「今日のお題」として表示しています。<br>心が動いたお題や共感したものには、ぜひ ♡ を押して応援してみてください✨",
-    btn_prompt_suggest: "お題を提案する",
-    prompt_suggest_hint: "ふと思いついた問いかけで大丈夫。だれかの一日にそっと届きます。",
-    prompt_empty: "まだ提案はありません。最初のひとつ目、書いてみませんか？",
-    footer_desc: "POPOPOで紹介された場所を、みんなで楽しもう。",
-    footer_update: "最終更新：2026年5月11日",
-    footer_spots_link: "スポット一覧",
-    footer_admin: "お手入れ係",
-    footer_contact: "🦋 masa0a へ連絡する / Bluesky",
-    upload_disclaimer: "※画像は自動的に最適化（縮小・圧縮）して保存されます。"
-  },
-  en: {
-    logo_sub: "Outing Map",
-    nav_spots: "📍 Recommended Spots",
-    nav_visited: "💬 Guest Reviews",
-    nav_talk: "💬 Free Talk Board",
-    nav_about: "🌿 Why We Built This",
-    nav_howto: "💡 Guide",
-    nav_howto_mobile: "💡 Open Guide",
-    hero_view_map: "View Map",
-    hero_view_gallery: "🖼️ View Art & Dictionary",
-    hero_quick_spots: "📍 Browse Spots",
-    hero_quick_visited: "💬 Read Reviews",
-    hero_gacha_full: "✨ Pop & Pick!",
-    hero_gacha_compact: "✨ Pop Pick",
-    hero_game_full: "🎮 Play POPOOSHI",
-    hero_game_compact: "🎮 Game",
-    loading: "Loading...",
-    stats_spots: "Spots",
-    stats_posts: "Chats",
-    stats_visited: "Reviews",
-    stats_views: "👀 Visits",
-    sec_spots: "🗺️ Recommended Spots",
-    sec_spots_sub: "Share your 'I loved this place' moments with everyone. Tell us your favorites!",
-    btn_add_spot: "Add a Spot",
-    add_spot_hint: "Just a small recommendation or 'I want to go here' is perfect!",
-    weather_hint: "🌤️ Today's Outing Hint",
-    weather_loading: "Fetching weather...",
-    tab_all: "All",
-    tab_food: "🍴 Food & Cafe",
-    tab_mohinga: "🍜 Must-Try",
-    tab_museum: "🎨 Art & Museum",
-    tab_event: "🌿 Events",
-    tab_nature: "🌳 Nature & Walk",
-    tab_book: "📚 Book & Study",
-    tab_shop: "🛒 Lifestyle & Goods",
-    tab_view: "✨ Lovely Views",
-    tab_relax: "🛁 Relax & Bath",
-    tab_entertainment: "🎬 Fun & Media",
-    btn_want_list: "🔖 Want to Go (0)",
-    btn_add_want: "🌱 Add a Spot You Want to Visit",
-    want_hint_text: "Visited some spots? Share your impressions!",
-    btn_post_review: "Write a Review",
-    btn_more: "See More",
-    sec_visited: "💬 Guest Reviews",
-    sec_visited_sub: "Real reviews and impressions from guests who visited the spots",
-    sec_talk: "💬 Free Talk Board",
-    sec_talk_sub: "Feel free to talk about your plans, thoughts on POPOPO, feedback, or anything!",
-    btn_post_chat: "✏️ Post Chat",
-    prompt_kicker: "Today's Topic",
-    prompt_default: "Are there any places you are curious about lately?",
-    btn_prompt_post: "Chat on This Topic",
-    btn_prompt_gacha: "🎲 Roll Topic Gacha",
-    btn_prompt_view_all: "View All Topics",
-    prompt_candidates_lead: "We show topics suggested by everyone as 'Today\'s Topic' in turn.<br>Press ♡ to support topics that touch your heart or make you relate✨",
-    btn_prompt_suggest: "Suggest a Topic",
-    prompt_suggest_hint: "Any casual question is fine! It will reach someone's day gently.",
-    prompt_empty: "No suggestions yet. Why not write the first one?",
-    footer_desc: "Let's explore and enjoy spots introduced in POPOPO together.",
-    footer_update: "Last Updated: May 11, 2026",
-    footer_spots_link: "Spots Directory",
-    footer_admin: "Curator",
-    footer_contact: "🦋 Contact masa0a / Bluesky",
-    upload_disclaimer: "*Images will be optimized (shrunk/compressed) and saved automatically."
-  }
-};
+// currentLanguage and TRANSLATIONS are now managed in scripts/i18n.js
 
 const SPOT_TRANSLATIONS = {
   'lion': {
@@ -572,13 +441,28 @@ function renderInboundTags(s, lang) {
 }
 
 async function fetchTranslation(text, targetLang = 'en') {
+  const sourceText = String(text || '').trim();
+  if (!sourceText) return '';
+  const cacheKey = `popopo_translation_${targetLang}_${hashString(sourceText)}`;
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return cached;
+  } catch (e) {
+    // localStorageが使えない環境ではキャッシュなしで続行
+  }
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(sourceText)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Translation failed');
     const data = await res.json();
     if (data && data[0]) {
-      return data[0].map(s => s[0]).join('');
+      const translated = data[0].map(s => s[0]).join('');
+      try {
+        localStorage.setItem(cacheKey, translated);
+      } catch (e) {
+        // ignore
+      }
+      return translated;
     }
     throw new Error('Invalid translation format');
   } catch (err) {
@@ -588,13 +472,13 @@ async function fetchTranslation(text, targetLang = 'en') {
 }
 
 window.toggleTranslation = async function(btn) {
-  const container = btn.closest('.visited-card-body, .spot-review-card, .chat-content');
+  const container = btn.closest('.visited-card-body, .spot-review-card, .chat-content, .spot-card-info');
   if (!container) return;
 
   let translatedBox = container.querySelector('.translated-box');
   if (translatedBox) {
     translatedBox.remove();
-    btn.innerHTML = `🌐 ${currentLanguage === 'en' ? 'Japanese' : 'English'}`;
+    btn.innerHTML = `🌐 ${currentLanguage === 'en' ? 'English' : '翻訳する'}`;
     return;
   }
 
@@ -605,7 +489,7 @@ window.toggleTranslation = async function(btn) {
   const originalLabel = btn.innerHTML;
   btn.innerHTML = `<span class="translation-loading"></span> ${currentLanguage === 'en' ? 'Translating...' : '翻訳中...'}`;
 
-  const targetLang = currentLanguage === 'en' ? 'ja' : 'en';
+  const targetLang = currentLanguage;
   const translated = await fetchTranslation(originalText, targetLang);
 
   btn.disabled = false;
@@ -623,13 +507,15 @@ window.toggleTranslation = async function(btn) {
     btn.innerHTML = `🌐 ${currentLanguage === 'en' ? 'Show Original' : '原文を表示'}`;
   } else {
     btn.innerHTML = originalLabel;
-    alert(currentLanguage === 'en' ? 'Translation failed. Please try again.' : '翻訳に失敗しました。もう一度お試しください。');
+    if (btn.dataset.autoTranslate !== 'true') {
+      alert(currentLanguage === 'en' ? 'Translation failed. Please try again.' : '翻訳に失敗しました。もう一度お試しください。');
+    }
   }
 };
 
 function renderTranslationButton(text) {
   if (!text) return '';
-  const label = currentLanguage === 'en' ? '🌐 English' : '🌐 日本語';
+  const label = currentLanguage === 'en' ? '🌐 Show English' : '🌐 翻訳する';
   return `
     <div class="translate-btn-container">
       <button class="translate-btn" data-translate-text="${escHtml(text)}" onclick="toggleTranslation(this)">
@@ -639,31 +525,37 @@ function renderTranslationButton(text) {
   `;
 }
 
-function applyLanguage(lang) {
-  currentLanguage = lang;
-  localStorage.setItem('popopo_language', lang);
-  document.documentElement.lang = lang === 'en' ? 'en' : 'ja';
+let autoTranslateTimer = null;
+let autoTranslationRunning = false;
 
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
-      if (TRANSLATIONS[lang][key].includes('<') && TRANSLATIONS[lang][key].includes('>')) {
-        el.innerHTML = TRANSLATIONS[lang][key];
-      } else {
-        el.textContent = TRANSLATIONS[lang][key];
-      }
-    }
-  });
+function queueAutoTranslateVisibleContent() {
+  if (currentLanguage !== 'en') return;
+  window.clearTimeout(autoTranslateTimer);
+  autoTranslateTimer = window.setTimeout(autoTranslateVisibleContent, 220);
+}
 
-  const toggleBtnLabel = document.querySelector('#langToggleBtn .lang-label');
-  if (toggleBtnLabel) {
-    toggleBtnLabel.textContent = lang === 'en' ? 'EN' : 'JP';
+async function autoTranslateVisibleContent() {
+  if (currentLanguage !== 'en' || autoTranslationRunning) return;
+  autoTranslationRunning = true;
+  const btns = Array.from(document.querySelectorAll('.translate-btn'))
+    .filter(btn => {
+      const container = btn.closest('.visited-card-body, .spot-review-card, .chat-content, .spot-card-info');
+      return container && !container.querySelector('.translated-box');
+    })
+    .slice(0, 24);
+
+  for (const btn of btns) {
+    btn.dataset.autoTranslate = 'true';
+    await toggleTranslation(btn);
+    delete btn.dataset.autoTranslate;
+    await new Promise(r => setTimeout(r, 120));
   }
-  const toggleBtnMobileLabel = document.querySelector('#langToggleBtnMobile .lang-label-mobile');
-  if (toggleBtnMobileLabel) {
-    toggleBtnMobileLabel.textContent = lang === 'en' ? 'EN' : 'JP';
-  }
+  autoTranslationRunning = false;
+}
 
+document.addEventListener('languageChanged', (e) => {
+  const lang = e.detail.lang;
+  
   const chatInput = document.getElementById('chatInput');
   if (chatInput) {
     chatInput.placeholder = lang === 'en' 
@@ -682,7 +574,11 @@ function applyLanguage(lang) {
   if (typeof allPosts !== 'undefined') {
     renderVisited(allPosts);
   }
-}
+
+  if (lang === 'en') {
+    queueAutoTranslateVisibleContent();
+  }
+});
 
 // ============================================================
 // 3. スポットデータ
@@ -1504,7 +1400,7 @@ function updateChatsView(chats = null) {
       // 初回表示（アニメーションなし）
       ticker.style.transition = 'opacity 0.3s ease';
       const firstChat = displayChats[0];
-      ticker.textContent = `${firstChat.nickname || '匿名リスナー'}：${firstChat.message}`;
+      ticker.textContent = `${firstChat.nickname || (currentLanguage === 'en' ? 'Anonymous Listener' : '匿名リスナー')}：${firstChat.message}`;
       ticker.style.opacity = '1';
       currentTickerIndex = 1 % displayChats.length;
       
@@ -1512,7 +1408,7 @@ function updateChatsView(chats = null) {
         tickerInterval = setInterval(updateTickerText, 4000); // 4秒ごとに切り替え
       }
     } else {
-      ticker.textContent = '最初のつぶやきを待っています...';
+      ticker.textContent = currentLanguage === 'en' ? 'Waiting for the first chat...' : '最初のつぶやきを待っています...';
       ticker.style.opacity = '1';
     }
   }
@@ -1617,9 +1513,11 @@ function renderPostActions(entity, type) {
   if (!isMyEntity(entity, type)) return '';
   const id = entity.id || '';
   const clientId = entity.clientId || '';
+  const editLabel = currentLanguage === 'en' ? '✏️ Edit' : '✏️ 編集';
+  const editTitle = currentLanguage === 'en' ? 'Edit' : '編集';
   return `
     <div class="post-actions" data-id="${id}" data-client-id="${clientId}">
-      <button class="btn-post-action is-edit" onclick="startEditEntity('${id}', '${clientId}', '${type}')" title="編集">✏️ 編集</button>
+      <button class="btn-post-action is-edit" onclick="startEditEntity('${id}', '${clientId}', '${type}')" title="${editTitle}">${editLabel}</button>
     </div>
   `;
 }
@@ -3176,10 +3074,32 @@ function getCatAccent(cat) {
 }
 
 function getResourceKindLabel(kind, context = 'spot') {
+  const isEn = currentLanguage === 'en';
+  if (isEn) {
+    const postLabels = { photo: 'Photo', post: 'Post', info: 'Info' };
+    const spotLabels = { reference: 'Reference', photo: 'Photo', info: 'Info' };
+    return context === 'post'
+      ? (postLabels[kind] || postLabels.info)
+      : (spotLabels[kind] || spotLabels.reference);
+  }
   if (context === 'post') {
     return POST_RESOURCE_KIND_LABELS[kind] || POST_RESOURCE_KIND_LABELS.info;
   }
   return SPOT_RESOURCE_KIND_LABELS[kind] || SPOT_RESOURCE_KIND_LABELS.reference;
+}
+
+function translateResourceLabel(label, context = 'spot') {
+  if (currentLanguage !== 'en') return label;
+  const map = {
+    参考URL: 'Reference',
+    写真: 'Photo',
+    情報: 'Info',
+    投稿URL: 'Post',
+    投稿: 'Post',
+    公式サイト: 'Official Site',
+    食べログ: 'Review Site'
+  };
+  return map[label] || label || getResourceKindLabel('', context);
 }
 
 function getResourceIcon(kind) {
@@ -3238,7 +3158,7 @@ function getResourcePreviewImage(resources = []) {
 function renderResourceLinks(resources = [], context = 'spot', className = 'spot-link') {
   if (!resources.length) return '';
   return resources.map((resource, i) => {
-    const label = resource.label || getResourceKindLabel(resource.kind, context);
+    const label = translateResourceLabel(resource.label || getResourceKindLabel(resource.kind, context), context);
     const suffix = resources.length > 1 ? i + 1 : '';
     return `<a href="${escHtml(resource.url)}" target="_blank" rel="noopener" class="${className} ${className}--${escHtml(resource.kind || '')}">${getResourceIcon(resource.kind)} ${escHtml(label + suffix)}</a>`;
   }).join('');
@@ -3439,16 +3359,17 @@ function startHeroBackdropRotation() {
 function updateMoreButton(id, total, visible, initialCount) {
   const btn = document.getElementById(id);
   if (!btn) return;
+  const isEn = currentLanguage === 'en';
   if (total <= initialCount) {
     btn.style.display = 'none';
     return;
   }
   btn.style.display = 'inline-flex';
   if (visible >= total) {
-    btn.textContent = '表示を少なくする';
+    btn.textContent = isEn ? 'Show Less' : '表示を少なくする';
     btn.dataset.mode = 'collapse';
   } else {
-    btn.textContent = `もっと見る（残り${total - visible}件）`;
+    btn.textContent = isEn ? `See More (${total - visible} left)` : `もっと見る（残り${total - visible}件）`;
     btn.dataset.mode = 'more';
   }
 }
@@ -3651,11 +3572,12 @@ function updateWantListButton() {
   const btn = document.getElementById('wantListToggleBtn');
   if (!btn) return;
   const count = getSavedSpotIds().length;
+  const isEn = currentLanguage === 'en';
   btn.classList.toggle('active', showingWantList);
   btn.setAttribute('aria-pressed', showingWantList ? 'true' : 'false');
   btn.textContent = showingWantList
-    ? `すべてのスポットに戻る（${count}）`
-    : `🔖 行きたいリスト（${count}）`;
+    ? (isEn ? `Back to All Spots (${count})` : `すべてのスポットに戻る（${count}）`)
+    : (isEn ? `🔖 Want to Go (${count})` : `🔖 行きたいリスト（${count}）`);
 }
 
 function updateWantListHint(visibleSavedCount = 0) {
@@ -3737,14 +3659,17 @@ function renderSpotCards(cat = 'all') {
         </div>
       </div>
       ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
-      <div class="spot-name">${escHtml(displayName)}</div>
-      <div class="spot-area"><span>📍 ${escHtml(displayArea)}</span></div>
-      ${inboundTagsHtml}
-      <a href="${gmapsUrl}" target="_blank" rel="noopener" class="spot-gmaps-btn">
-        ${gmapsText}
-      </a>
-      ${displayMemo ? `<div class="spot-memo">${escHtml(displayMemo)}</div>` : ''}
-      ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">${escHtml(suggestedByText)}</div>` : ''}
+      <div class="spot-card-info">
+        <div class="spot-name">${escHtml(displayName)}</div>
+        <div class="spot-area"><span>📍 ${escHtml(displayArea)}</span></div>
+        ${inboundTagsHtml}
+        <a href="${gmapsUrl}" target="_blank" rel="noopener" class="spot-gmaps-btn">
+          ${gmapsText}
+        </a>
+        ${displayMemo ? `<div class="spot-memo">${escHtml(displayMemo)}</div>` : ''}
+        ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">${escHtml(suggestedByText)}</div>` : ''}
+        ${isEn && !spotTrans.name && !spotTrans.memo ? renderTranslationButton(`【${s.name}】\n${s.memo || s.reason || ''}`) : ''}
+      </div>
       ${resources.length ? `<div class="spot-resources">${renderResourceLinks(resources, 'spot', 'spot-link')}</div>` : ''}
       ${latestReviewText ? `
         <button type="button" class="spot-latest-review" data-spotname="${escHtml(s.name)}" aria-label="${escHtml(displayName)}のみんなの感想を見る">
@@ -3786,6 +3711,7 @@ function renderSpotCards(cat = 'all') {
 
   setStatText('statSpots', allSpots.length);
   updateMoreButton('spotsMoreBtn', filtered.length, Math.min(visibleSpotCount, filtered.length), INITIAL_SPOT_COUNT);
+  queueAutoTranslateVisibleContent();
 }
 
 function getCatLabel(cat) {
@@ -3799,7 +3725,7 @@ function getCatLabel(cat) {
     book: isEn ? '📚 Book & Study' : '📚 本・しらべもの',
     shop: isEn ? '🛒 Lifestyle & Goods' : '🛒 くらし・雑貨',
     view: isEn ? '✨ Lovely Views' : '✨ おきにいりの景色',
-    relax: isEn ? '🛁 Relax & Bath' : '🛁 癒やし・とをととのう',
+    relax: isEn ? '🛁 Relax & Bath' : '🛁 癒やし・ととのう',
     entertainment: isEn ? '🎬 Fun & Media' : '🎬 エンタメ' 
   }[cat] || (isEn ? '📍 Spot' : '📍 スポット');
 }
@@ -3846,7 +3772,7 @@ function renderListenerReviewCard(p) {
   const media = getPostMedia(p);
   const previewImage = getResourcePreviewImage(media);
   const reviewSeenId = getReviewReactionId(p, 'listener');
-  const translationHtml = renderTranslationButton(p.comment);
+  const translationHtml = renderTranslationButton([p.spotName, p.comment].filter(Boolean).join('\n'));
   return `
     <div class="visited-card">
       <div class="visited-card-body">
@@ -3868,20 +3794,23 @@ function renderListenerReviewCard(p) {
 function renderOfficialReviewCard(v) {
   const reviewSeenId = getReviewReactionId(v, 'official');
   const isEn = currentLanguage === 'en';
+  const spotTrans = SPOT_TRANSLATIONS[v.id] || {};
+  const displayName = isEn && spotTrans.name ? spotTrans.name : v.name;
+  const displayReview = isEn && spotTrans.memo ? spotTrans.memo : v.review;
   const displayArea = isEn ? (ADDRESS_TRANSLATION_MAP[v.area] || v.area) : v.area;
-  const translationHtml = renderTranslationButton(v.review);
+  const translationHtml = isEn && spotTrans.memo ? '' : renderTranslationButton(v.review);
   return `
     <div class="visited-card">
       <div class="visited-card-body">
         <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);">${getCatLabel(v.cat)}</span>
-        <div class="visited-name">${v.name}</div>
+        <div class="visited-name">${escHtml(displayName)}</div>
         <div class="visited-area">📍 ${displayArea}</div>
         <div class="visited-rating">${renderStars(v.rating)}</div>
-        <div class="visited-review">"${v.review}"</div>
+        <div class="visited-review">"${escHtml(displayReview)}"</div>
         ${translationHtml}
         <div class="visited-photos">
-          ${v.photos.map(p => `<a href="${p.url}" target="_blank" rel="noopener" class="visited-photo-link">${p.label}</a>`).join('')}
-          ${v.url ? `<a href="${v.url}" target="_blank" rel="noopener" class="visited-photo-link">🔗 食べログ</a>` : ''}
+          ${v.photos.map((p, i) => `<a href="${p.url}" target="_blank" rel="noopener" class="visited-photo-link">${isEn ? `📷 Photo ${i + 1}` : p.label}</a>`).join('')}
+          ${v.url ? `<a href="${v.url}" target="_blank" rel="noopener" class="visited-photo-link">${isEn ? '🔗 Link' : '🔗 食べログ'}</a>` : ''}
         </div>
         ${v.book ? `
           <div class="visited-book">
@@ -3910,6 +3839,7 @@ function renderVisited(posts = []) {
   grid.innerHTML = allCards.slice(0, visibleReviewCount).join('');
   setStatText('statVisited', allCards.length);
   updateMoreButton('visitedMoreBtn', allCards.length, Math.min(visibleReviewCount, allCards.length), INITIAL_REVIEW_COUNT);
+  queueAutoTranslateVisibleContent();
 }
 
 function renderChats(chats) {
@@ -4011,7 +3941,7 @@ function renderChats(chats) {
     const children = childMap.get(key) || [];
     const repliesHtml = children.length > 0
       ? `<div class="chat-replies" data-depth="${Math.min(depth + 1, 3)}">
-          <div class="chat-replies-label">返信 ${children.length}件</div>
+          <div class="chat-replies-label">${currentLanguage === 'en' ? `${children.length} replies` : `返信 ${children.length}件`}</div>
           ${children.map(child => renderChatBranch(child, depth + 1)).join('')}
         </div>`
       : '';
@@ -4027,6 +3957,7 @@ function renderChats(chats) {
   grid.innerHTML = visibleTopLevel.map(chat => renderChatBranch(chat, 0)).join('');
 
   updateMoreButton('chatsMoreBtn', topLevel.length, Math.min(visibleChatCount, topLevel.length), INITIAL_CHAT_COUNT);
+  queueAutoTranslateVisibleContent();
 }
 
 window.initiateReply = function(chatId) {
@@ -4049,19 +3980,21 @@ window.initiateReply = function(chatId) {
 
 function populateModalSpotSelect(preselect = '') {
   const sel = document.getElementById('fSpot');
+  const isEn = currentLanguage === 'en';
   const allSpots = [
     ...SPOTS.map(s => ({ ...s, catLabel: getCatLabel(s.cat) })),
     ...localSuggestions.map(s => ({ name: s.name, area: s.area, catLabel: getCatLabel(s.cat) }))
   ];
-  sel.innerHTML = '<option value="">-- スポットを選択 --</option>' +
+  sel.innerHTML = `<option value="">${isEn ? '-- Select a spot --' : '-- スポットを選択 --'}</option>` +
     allSpots.map(s => `<option value="${s.name}"${s.name === preselect ? ' selected' : ''}>${s.catLabel} | ${s.name}（${s.area}）</option>`).join('');
 }
 
 function populateAddSpotPrefSelect() {
   const prefSelect = document.getElementById('asPref');
   if (!prefSelect) return;
-  prefSelect.innerHTML = '<option value="">都道府県を選択</option>' +
-    PREFECTURE_OPTIONS.map(pref => `<option value="${escHtml(pref)}">${escHtml(pref)}</option>`).join('');
+  const isEn = currentLanguage === 'en';
+  prefSelect.innerHTML = `<option value="">${isEn ? 'Select prefecture / region' : '都道府県を選択'}</option>` +
+    PREFECTURE_OPTIONS.map(pref => `<option value="${escHtml(pref)}">${escHtml(isEn ? (ADDRESS_TRANSLATION_MAP[pref] || pref) : pref)}</option>`).join('');
   populateAddSpotCitySelect('');
 }
 
@@ -4070,10 +4003,11 @@ function populateAddSpotCitySelect(pref = '', selectedCity = '') {
   const customInput = document.getElementById('asCityCustom');
   if (!citySelect) return;
   const cities = CITY_OPTIONS_BY_PREF[pref] || [];
+  const isEn = currentLanguage === 'en';
   citySelect.disabled = !pref;
-  citySelect.innerHTML = '<option value="">市区町村を選択</option>' +
-    cities.map(city => `<option value="${escHtml(city)}">${escHtml(city)}</option>`).join('') +
-    (pref && pref !== '全国' && pref !== 'オンライン' ? '<option value="__custom">候補にない市区町村を入力</option>' : '');
+  citySelect.innerHTML = `<option value="">${isEn ? 'Select city / ward' : '市区町村を選択'}</option>` +
+    cities.map(city => `<option value="${escHtml(city)}">${escHtml(isEn ? (ADDRESS_TRANSLATION_MAP[city] || city) : city)}</option>`).join('') +
+    (pref && pref !== '全国' && pref !== 'オンライン' ? `<option value="__custom">${isEn ? 'Enter a city not listed' : '候補にない市区町村を入力'}</option>` : '');
   if (selectedCity && cities.includes(selectedCity)) {
     citySelect.value = selectedCity;
   } else if (selectedCity && pref && pref !== '全国' && pref !== 'オンライン') {
@@ -4252,17 +4186,18 @@ function updateAddSpotIntentUI() {
   const label = document.querySelector('label[for="asReason"]');
   const reason = document.getElementById('asReason');
   const submit = document.getElementById('addSpotSubmitBtn');
+  const isEn = currentLanguage === 'en';
   if (editingClientId) return;
   if (intent === 'want') {
-    if (title) title.textContent = '🌱 これから行きたい場所を追加';
-    if (label) label.innerHTML = '気になっている理由 <span class="req">必須</span>';
-    if (reason) reason.placeholder = 'なぜ行きたいか、どんな場所か教えてください！（150文字以内）';
-    if (submit) submit.textContent = '行きたい場所を追加 🌱';
+    if (title) title.textContent = isEn ? '🌱 Add a Place You Want to Visit' : '🌱 これから行きたい場所を追加';
+    if (label) label.innerHTML = isEn ? 'Why are you curious? <span class="req">Required</span>' : '気になっている理由 <span class="req">必須</span>';
+    if (reason) reason.placeholder = isEn ? 'Tell us why you want to go or what kind of place it is! (up to 150 characters)' : 'なぜ行きたいか、どんな場所か教えてください！（150文字以内）';
+    if (submit) submit.textContent = isEn ? 'Add Want-to-Go Spot 🌱' : '行きたい場所を追加 🌱';
   } else {
-    if (title) title.textContent = '✨ スポットを提案する';
-    if (label) label.innerHTML = 'おすすめポイント <span class="req">必須</span>';
-    if (reason) reason.placeholder = 'どんな場所か教えて下さい！（150文字以内）';
-    if (submit) submit.textContent = '提案を送る 🚀';
+    if (title) title.textContent = isEn ? '✨ Suggest a Spot' : '✨ スポットを提案する';
+    if (label) label.innerHTML = isEn ? 'Recommendation Point <span class="req">Required</span>' : 'おすすめポイント <span class="req">必須</span>';
+    if (reason) reason.placeholder = isEn ? 'Tell us what kind of place it is! (up to 150 characters)' : 'どんな場所か教えて下さい！（150文字以内）';
+    if (submit) submit.textContent = isEn ? 'Send Suggestion 🚀' : '提案を送る 🚀';
   }
 }
 
@@ -4328,8 +4263,8 @@ function openAddSpotModal(id = null, clientId = null) {
   clearResourceValidation('spot');
 
   if (editingClientId) {
-    if (title) title.textContent = '✨ スポット情報を編集';
-    if (btn) btn.textContent = '更新する 🚀';
+    if (title) title.textContent = currentLanguage === 'en' ? '✨ Edit Spot' : '✨ スポット情報を編集';
+    if (btn) btn.textContent = currentLanguage === 'en' ? 'Update 🚀' : '更新する 🚀';
 
     const suggs = getAllSpotItemsForDisplay().filter(s => s.suggested);
     const s = suggs.find(item => (item.clientId || item.id) === editingClientId);
@@ -4386,8 +4321,8 @@ function openChatModal(prefill = '', id = null, clientId = null) {
     replyingTo = null;
     const info = document.getElementById('chatReplyInfo');
     if (info) info.style.display = 'none';
-    if (title) title.textContent = '💬 つぶやきを編集';
-    if (btn) btn.textContent = '更新する 🚀';
+    if (title) title.textContent = currentLanguage === 'en' ? '💬 Edit Chat' : '💬 つぶやきを編集';
+    if (btn) btn.textContent = currentLanguage === 'en' ? 'Update 🚀' : '更新する 🚀';
     
     const chat = allChats.find(c => getChatKey(c) === editingClientId);
     if (chat) {
@@ -4396,11 +4331,11 @@ function openChatModal(prefill = '', id = null, clientId = null) {
     }
   } else {
     if (replyingTo) {
-      if (title) title.textContent = '💬 返信する';
-      if (btn) btn.textContent = '返信する 🚀';
+      if (title) title.textContent = currentLanguage === 'en' ? '💬 Reply' : '💬 返信する';
+      if (btn) btn.textContent = currentLanguage === 'en' ? 'Reply 🚀' : '返信する 🚀';
     } else {
-      if (title) title.textContent = '💬 つぶやく';
-      if (btn) btn.textContent = '投稿する 🚀';
+      if (title) title.textContent = currentLanguage === 'en' ? '💬 Post a Chat' : '💬 つぶやく';
+      if (btn) btn.textContent = currentLanguage === 'en' ? 'Post 🚀' : '投稿する 🚀';
       const info = document.getElementById('chatReplyInfo');
       if (info) info.style.display = 'none';
     }
@@ -5226,8 +5161,8 @@ function openModal(preselect = '', id = null, clientId = null) {
   populateModalSpotSelect(preselect);
   
   if (editingClientId) {
-    if (title) title.textContent = '🗺️ 感想を編集する';
-    if (btn) btn.textContent = '更新する 🚀';
+    if (title) title.textContent = currentLanguage === 'en' ? '🗺️ Edit Review' : '🗺️ 感想を編集する';
+    if (btn) btn.textContent = currentLanguage === 'en' ? 'Update 🚀' : '更新する 🚀';
     
     // 既存データを検索して埋める
     const post = allPosts.find(p => (p.clientId || p.id) === editingClientId);
@@ -5271,8 +5206,8 @@ function openModal(preselect = '', id = null, clientId = null) {
       }
     }
   } else {
-    if (title) title.textContent = '🗺️ 行った場所を共有';
-    if (btn) btn.textContent = '投稿する 🚀';
+    if (title) title.textContent = currentLanguage === 'en' ? '🗺️ Share a Place You Visited' : '🗺️ 行った場所を共有';
+    if (btn) btn.textContent = currentLanguage === 'en' ? 'Post 🚀' : '投稿する 🚀';
     fillSavedNickname('fNick');
   }
 }
@@ -5327,14 +5262,17 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
   const location = getAddSpotLocationInput();
   const area = location.area.trim();
   const reason = document.getElementById('asReason').value.trim();
-  if (!name || !location.pref || !location.city || !area || !reason) { alert('スポット名、都道府県、市区町村、おすすめポイントを入力してください'); return; }
+  if (!name || !location.pref || !location.city || !area || !reason) {
+    alert(currentLanguage === 'en' ? 'Please enter the spot name, prefecture, city/ward, and recommendation point.' : 'スポット名、都道府県、市区町村、おすすめポイントを入力してください');
+    return;
+  }
   const resources = validateResourceEntries('spot');
   if (!resources) return;
   if (uploadedSpotImageBase64) {
     resources.unshift({ kind: 'photo', label: '写真', url: uploadedSpotImageBase64 });
   }
   const btn = document.getElementById('addSpotSubmitBtn');
-  btn.disabled = true; btn.textContent = '送信中...';
+  btn.disabled = true; btn.textContent = currentLanguage === 'en' ? 'Sending...' : '送信中...';
   const data = {
     name, area,
     pref: location.pref,
@@ -5359,10 +5297,10 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
   try {
     if (editingClientId) {
       await updateSuggestionRecord(editingId, editingClientId, data);
-      showToast('スポット情報を更新しました！');
+      showToast(currentLanguage === 'en' ? 'Spot updated!' : 'スポット情報を更新しました！');
     } else {
       await saveSpotSuggestion(data);
-      showToast('スポットを提案しました！誰かの次の休日のヒントになります。');
+      showToast(currentLanguage === 'en' ? 'Spot suggested! It may inspire someone’s next outing.' : 'スポットを提案しました！誰かの次の休日のヒントになります。');
       clearAddSpotFormDraft();
     }
     saveNickname(data.nickname);
@@ -5372,11 +5310,11 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     renderWeeklyDiscovery();
   } catch(err) {
     console.error('Submit failed:', err);
-    alert('エラーが発生しました。時間を置いて再度お試しください。');
+    alert(currentLanguage === 'en' ? 'Something went wrong. Please try again later.' : 'エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
     btn.disabled = false;
     if (editingClientId) {
-      btn.textContent = '更新する 🚀';
+      btn.textContent = currentLanguage === 'en' ? 'Update 🚀' : '更新する 🚀';
     } else {
       updateAddSpotIntentUI();
     }
@@ -5405,19 +5343,21 @@ document.getElementById('chatForm').addEventListener('submit', async (e) => {
   const nickname = document.getElementById('cNick').value.trim() || '匿名リスナー';
   const message = document.getElementById('cMsg').value.trim();
 
-  if (!message) { alert('メッセージを入力してください'); return; }
+  if (!message) { alert(currentLanguage === 'en' ? 'Please enter a message.' : 'メッセージを入力してください'); return; }
 
   const btn = document.getElementById('chatSubmitBtn');
-  btn.disabled = true; btn.textContent = '送信中...';
+  btn.disabled = true; btn.textContent = currentLanguage === 'en' ? 'Sending...' : '送信中...';
 
   try {
     if (editingClientId) {
       await updateChatRecord(editingId, editingClientId, { nickname, message });
-      showToast('つぶやきを更新しました！');
+      showToast(currentLanguage === 'en' ? 'Chat updated!' : 'つぶやきを更新しました！');
     } else {
       const isReply = Boolean(replyingTo);
       await saveChat({ nickname, message });
-      showToast(isReply ? '返信しました！会話がつながりました。' : '投稿しました！あなたの一言が、会話のきっかけになります。');
+      showToast(isReply
+        ? (currentLanguage === 'en' ? 'Reply posted!' : '返信しました！会話がつながりました。')
+        : (currentLanguage === 'en' ? 'Chat posted! Your words may start a conversation.' : '投稿しました！あなたの一言が、会話のきっかけになります。'));
     }
     saveNickname(nickname);
     updateChatsView();
@@ -5425,10 +5365,12 @@ document.getElementById('chatForm').addEventListener('submit', async (e) => {
     document.getElementById('chatForm').reset();
   } catch(err) {
     console.error('Submit failed:', err);
-    alert('エラーが発生しました。時間を置いて再度お試しください。');
+    alert(currentLanguage === 'en' ? 'Something went wrong. Please try again later.' : 'エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
     btn.disabled = false;
-    btn.textContent = editingClientId ? '更新する 🚀' : '投稿する 🚀';
+    btn.textContent = editingClientId
+      ? (currentLanguage === 'en' ? 'Update 🚀' : '更新する 🚀')
+      : (currentLanguage === 'en' ? 'Post 🚀' : '投稿する 🚀');
     editingId = null;
     editingClientId = null;
   }
@@ -5455,9 +5397,9 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   const spotFree = document.getElementById('fSpotFree').value.trim();
   const spotName = spotFree || spotSel;
 
-  if (!spotName) { alert('スポット名を選択または入力してください'); return; }
+  if (!spotName) { alert(currentLanguage === 'en' ? 'Please select or enter a spot name.' : 'スポット名を選択または入力してください'); return; }
   const comment = document.getElementById('fComment').value.trim();
-  if (!comment) { alert('コメントを入力してください'); return; }
+  if (!comment) { alert(currentLanguage === 'en' ? 'Please enter a comment.' : 'コメントを入力してください'); return; }
   const media = validateResourceEntries('post');
   if (!media) return;
   if (uploadedPostImageBase64) {
@@ -5465,7 +5407,7 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   }
 
   const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = '送信中...';
+  btn.disabled = true; btn.textContent = currentLanguage === 'en' ? 'Sending...' : '送信中...';
 
   const nickname = document.getElementById('fNick').value.trim() || '匿名リスナー';
   
@@ -5514,10 +5456,10 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   try {
     if (editingClientId) {
       await updatePostRecord(editingId, editingClientId, postData);
-      showToast('感想を更新しました！');
+      showToast(currentLanguage === 'en' ? 'Review updated!' : '感想を更新しました！');
     } else {
       await savePost(postData);
-      showToast('感想を投稿しました！あなたの体験が、誰かの背中を押します。');
+      showToast(currentLanguage === 'en' ? 'Review posted! Your experience may encourage someone else.' : '感想を投稿しました！あなたの体験が、誰かの背中を押します。');
     }
     saveNickname(nickname);
     allPosts = mergePosts(latestRemotePosts);
@@ -5528,10 +5470,12 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
     closeModal();
   } catch (err) {
     console.error('Submit failed:', err);
-    alert('エラーが発生しました。時間を置いて再度お試しください。');
+    alert(currentLanguage === 'en' ? 'Something went wrong. Please try again later.' : 'エラーが発生しました。時間を置いて再度お試しください。');
   } finally {
     btn.disabled = false;
-    btn.textContent = editingClientId ? '更新する 🚀' : '投稿する 🚀';
+    btn.textContent = editingClientId
+      ? (currentLanguage === 'en' ? 'Update 🚀' : '更新する 🚀')
+      : (currentLanguage === 'en' ? 'Post 🚀' : '投稿する 🚀');
     editingId = null;
     editingClientId = null;
   }
@@ -5805,21 +5749,7 @@ function bindEvents() {
     l.addEventListener('click', () => document.getElementById('navMobile').classList.remove('open'));
   });
   
-  // 言語切り替えトグルのバインド
-  const langToggleBtn = document.getElementById('langToggleBtn');
-  if (langToggleBtn) {
-    langToggleBtn.addEventListener('click', () => {
-      const nextLang = currentLanguage === 'en' ? 'jp' : 'en';
-      applyLanguage(nextLang);
-    });
-  }
-  const langToggleBtnMobile = document.getElementById('langToggleBtnMobile');
-  if (langToggleBtnMobile) {
-    langToggleBtnMobile.addEventListener('click', () => {
-      const nextLang = currentLanguage === 'en' ? 'jp' : 'en';
-      applyLanguage(nextLang);
-    });
-  }
+  // 言語切り替えトグルのバインドは i18n.js で一括処理されるため削除
   ['heroPostBtn','emptyPostBtn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', () => openModal());
@@ -6941,8 +6871,10 @@ function init() {
   initWeatherCityPicker();
   maybeShowIntroStory();
 
-  // 初期言語の設定を適用
-  applyLanguage(currentLanguage);
+  // 初期言語適用は i18n.js で処理されるため削除
+  window.addEventListener('languageChanged', () => {
+    renderWeeklyDiscovery();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

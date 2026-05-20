@@ -27,7 +27,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css?v=20260518-1">
+  <link rel="stylesheet" href="style.css?v=20260520-5">
+  <script src="scripts/i18n.js?v=1.3"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -54,32 +55,42 @@
     <div class="nav-inner">
       <a href="index.html#hero" class="nav-logo">
         <span class="logo-main">POPOPO</span>
-        <span class="logo-sub">お出かけマップ</span>
+        <span class="logo-sub" data-i18n="logo_sub">お出かけマップ</span>
       </a>
       <div class="nav-links" id="navLinks">
-        <a href="index.html#spots" class="nav-link">📍 おすすめスポット</a>
-        <a href="index.html#visited" class="nav-link">💬 みんなの感想</a>
-        <a href="index.html#community" class="nav-link">💬 フリートーク掲示板</a>
-        <a href="how-to.html" class="nav-link">💡 使い方</a>
+        <a href="index.html#spots" class="nav-link" data-i18n="nav_spots">📍 おすすめスポット</a>
+        <a href="index.html#visited" class="nav-link" data-i18n="nav_visited">💬 みんなの感想</a>
+        <a href="index.html#community" class="nav-link" data-i18n="nav_talk">💬 フリートーク掲示板</a>
+        <a href="how-to.html" class="nav-link" data-i18n="nav_howto">💡 使い方</a>
       </div>
-      <button class="hamburger" id="hamburger" aria-label="メニュー">
-        <span></span><span></span><span></span>
-      </button>
+      <div class="nav-actions">
+        <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Switch Language / 言語切替">
+          <span class="lang-icon">🌐</span> <span class="lang-label">JP</span>
+        </button>
+        <button class="hamburger" id="hamburger" aria-label="メニュー">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
     <div class="nav-mobile" id="navMobile">
-      <a href="index.html#spots" class="nav-mobile-link">📍 おすすめスポット</a>
-      <a href="index.html#visited" class="nav-mobile-link">💬 みんなの感想</a>
-      <a href="index.html#community" class="nav-mobile-link">💬 フリートーク掲示板</a>
-      <a href="how-to.html" class="nav-mobile-link">💡 使い方を見る</a>
+      <a href="index.html#spots" class="nav-mobile-link" data-i18n="nav_spots">📍 おすすめスポット</a>
+      <a href="index.html#visited" class="nav-mobile-link" data-i18n="nav_visited">💬 みんなの感想</a>
+      <a href="index.html#community" class="nav-mobile-link" data-i18n="nav_talk">💬 フリートーク掲示板</a>
+      <a href="how-to.html" class="nav-mobile-link" data-i18n="nav_howto_mobile">💡 使い方を見る</a>
+      <div class="nav-mobile-actions">
+        <button id="langToggleBtnMobile" class="lang-toggle-btn-mobile">
+          <span class="lang-icon">🌐</span> 言語切替 / <span class="lang-label-mobile">JP</span>
+        </button>
+      </div>
     </div>
   </nav>
 
   <main class="about-page">
     <section class="about-hero about-hero-luxury">
       <div class="about-hero-inner">
-        <span class="about-luxury-label">STORY</span>
-        <h1 class="about-luxury-title">人から人へ伝わる、<br>ちいさな発見を<br class="about-title-mobile-break">集める場所。</h1>
-        <p class="about-luxury-lead">
+        <span class="about-luxury-label" data-i18n="about_story">STORY</span>
+        <h1 class="about-luxury-title" data-i18n="about_h1">人から人へ伝わる、<br>ちいさな発見を<br class="about-title-mobile-break">集める場所。</h1>
+        <p class="about-luxury-lead" data-i18n="about_lead">
           POPOPO お出かけマップは、アルゴリズムから少し離れて、リスナーから生まれるおすすめや感想を残していくための場所です。<br>
           詳しいレビューだけでなく、「ここ気になる」「行ってみたい」そんな一言から。あなたの小さな発見を、誰かの休日のきっかけに。
         </p>
@@ -94,8 +105,8 @@
             <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><path d="M8 5v14l11-7z"/></svg>
           </div>
           <div class="about-video-thumb-text">
-            <span class="about-video-label">STORY FILM</span>
-            <span class="about-video-title">人から人へ — 30秒のストーリー</span>
+            <span class="about-video-label" data-i18n="about_video_label">STORY FILM</span>
+            <span class="about-video-title" data-i18n="about_video_title">人から人へ — 30秒のストーリー</span>
           </div>
         </div>
       </button>
@@ -104,44 +115,44 @@
     <section class="about-story-section">
       <div class="container">
         <div class="about-story-heading">
-          <span class="about-story-eyebrow">A HUMAN ROUTE</span>
-          <p>検索でもAIでもなく、誰かの言葉から始まった場所。</p>
+          <span class="about-story-eyebrow" data-i18n="about_eyebrow">A HUMAN ROUTE</span>
+          <p data-i18n="about_eyebrow_desc">検索でもAIでもなく、誰かの言葉から始まった場所。</p>
         </div>
         <article class="about-story-card about-story-editorial">
           <section class="about-story-chapter">
             <span class="about-chapter-number">01</span>
             <div class="about-chapter-copy">
-              <h2>会話が連れていった場所</h2>
-              <p>検索やAIでは見つからなかった場所に、POPOPOリスナーとの会話が連れていってくれました。</p>
+              <h2 data-i18n="about_ch1_title">会話が連れていった場所</h2>
+              <p data-i18n="about_ch1_desc">検索やAIでは見つからなかった場所に、POPOPOリスナーとの会話が連れていってくれました。</p>
               <p lang="en">Conversations with POPOPO listeners have taken me to places I never would have found through search or AI.</p>
             </div>
           </section>
           <section class="about-story-chapter">
             <span class="about-chapter-number">02</span>
             <div class="about-chapter-copy">
-              <h2>情報以上の感動</h2>
-              <p>人から人へ伝えられるおすすめには、情報だけでは生まれない感動があります。誰かが実際に見て、感じて、話してくれたからこそ、行ってみたくなる。そんな体験に、私は本当に心を動かされました。</p>
+              <h2 data-i18n="about_ch2_title">情報以上の感動</h2>
+              <p data-i18n="about_ch2_desc">人から人へ伝えられるおすすめには、情報だけでは生まれない感動があります。誰かが実際に見て、感じて、話してくれたからこそ、行ってみたくなる。そんな体験に、私は本当に心を動かされました。</p>
               <p lang="en">Recommendations shared from person to person can move us in ways information alone cannot. They carry someone’s experience, curiosity, and feeling. That moved me more than I expected.</p>
             </div>
           </section>
           <section class="about-story-chapter">
             <span class="about-chapter-number">03</span>
             <div class="about-chapter-copy">
-              <h2>アルゴリズムから少し離れて</h2>
-              <p>このサイトは、アルゴリズムから少し離れて、人と人のあいだで生まれる発見を集めるための場所です。POPOPOを聴いている人たちが、気軽におすすめや感想を持ち寄れる、コミュニティでありたいと思っています。</p>
+              <h2 data-i18n="about_ch3_title">アルゴリズムから少し離れて</h2>
+              <p data-i18n="about_ch3_desc">このサイトは、アルゴリズムから少し離れて、人と人のあいだで生まれる発見を集めるための場所です。POPOPOを聴いている人たちが、気軽におすすめや感想を持ち寄れる、コミュニティでありたいと思っています。</p>
               <p lang="en">This site was created as a place to step away from algorithms for a while, and to gather the discoveries that happen between people. I hope it becomes a genuine human-to-human community where POPOPO listeners can share places, memories, and impressions freely.</p>
             </div>
           </section>
           <section class="about-story-chapter about-story-finale">
             <span class="about-chapter-number">04</span>
             <div class="about-chapter-copy">
-              <h2>もっと多くの人へ</h2>
-              <p>もっと多くの人に、その感覚を味わってほしい。そんな思いで、このコミュニティサイトを作りました。</p>
+              <h2 data-i18n="about_ch4_title">もっと多くの人へ</h2>
+              <p data-i18n="about_ch4_desc">もっと多くの人に、その感覚を味わってほしい。そんな思いで、このコミュニティサイトを作りました。</p>
               <p lang="en">I want more people to experience that feeling. That is why I created this community site.</p>
             </div>
           </section>
         </article>
-        <p class="about-story-closing about-story-closing-luxury">人から人へ。小さな発見が、次の休日を少し楽しくしてくれますように。</p>
+        <p class="about-story-closing about-story-closing-luxury" data-i18n="about_closing">人から人へ。小さな発見が、次の休日を少し楽しくしてくれますように。</p>
       </div>
     </section>
   </main>
@@ -167,16 +178,15 @@
     <div class="footer-inner">
       <div class="footer-logo">
         <span class="logo-main">POPOPO</span>
-        <span class="logo-sub">お出かけマップ</span>
+        <span class="logo-sub" data-i18n="logo_sub">お出かけマップ</span>
       </div>
-      <p class="footer-desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
-      <p class="footer-update">最終更新：2026年5月11日</p>
+      <p class="footer-desc" data-i18n="footer_desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
       <p class="footer-credit">With gratitude to all POPOPO members for their ideas, and to you for visiting.</p>
       <div class="footer-admin">
         <img class="footer-admin-avatar" src="assets/admin-profile.jpg" alt="お手入れ係 masa0a のプロフィール画像" width="96" height="96" loading="lazy">
         <div class="footer-admin-body">
-          <p class="footer-admin-label">お手入れ係</p>
-          <a class="footer-admin-link" href="https://bsky.app/profile/masa0a.bsky.social" target="_blank" rel="noopener">
+          <p class="footer-admin-label" data-i18n="footer_admin">お手入れ係</p>
+          <a class="footer-admin-link" href="https://bsky.app/profile/masa0a.bsky.social" target="_blank" rel="noopener" data-i18n="footer_contact">
             🦋 masa0a へ連絡する / Bluesky
           </a>
         </div>

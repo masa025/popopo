@@ -753,6 +753,7 @@ function pageHtml(spot, lang) {
   <link rel="icon" type="image/png" sizes="512x512" href="${relativeDepth}/assets/favicon-512.png">
   <link rel="apple-touch-icon" href="${relativeDepth}/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="${relativeDepth}/style.css?v=${lastmod}-1">
+  <script src="${relativeDepth}/scripts/i18n.js"></script>
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 </head>
 <body class="seo-spot-page">
@@ -818,7 +819,6 @@ function pageHtml(spot, lang) {
         <span class="logo-sub">${isEn ? 'Outing Map' : 'お出かけマップ'}</span>
       </div>
       <p class="footer-desc">${isEn ? 'A gentle, word-of-mouth guide for little outings.' : '人から人へ伝わる、ちいさなおお出かけ案内。'}</p>
-      <p class="footer-update">${isEn ? `Last Updated: ${lastmod}` : `最終更新：2026年5月20日`}</p>
     </div>
   </footer>
 </body>
@@ -903,6 +903,7 @@ function indexHtml(lang) {
   <link rel="icon" type="image/png" sizes="512x512" href="${relativeDepth}/assets/favicon-512.png">
   <link rel="apple-touch-icon" href="${relativeDepth}/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="${relativeDepth}/style.css?v=${lastmod}-1">
+  <script src="${relativeDepth}/scripts/i18n.js"></script>
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 </head>
 <body class="seo-spot-page">

@@ -50,7 +50,8 @@
   <!-- Leaflet.js for interactive mapping -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <link rel="stylesheet" href="style.css?v=20260520-2">
+  <link rel="stylesheet" href="style.css?v=20260520-5">
+  <script src="scripts/i18n.js?v=1.3"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -125,7 +126,7 @@
           <span class="nav-gacha-btn-label nav-gacha-btn-label--full">✨ ポポッと選ぶ</span>
           <span class="nav-gacha-btn-label nav-gacha-btn-label--compact" aria-hidden="true">✨</span>
         </button>
-        <a href="https://popooshi.vercel.app/" target="_blank" rel="noopener noreferrer" class="nav-gacha-btn" style="text-decoration:none; background:linear-gradient(135deg, #6eb0ff, #5b8dee); border-color:rgba(255,255,255,0.2); color:#fff;" title="POPOOSHIで遊ぶ"><span class="nav-gacha-btn-label nav-gacha-btn-label--full">🎮 POPOOSHI</span><span class="nav-gacha-btn-label nav-gacha-btn-label--compact" aria-hidden="true">🎮</span></a>
+        <a href="https://popooshi.vercel.app/" target="_blank" rel="noopener noreferrer" class="nav-gacha-btn" title="POPOOSHIで遊ぶ"><span class="nav-gacha-btn-label nav-gacha-btn-label--full">🎮 POPOOSHI</span><span class="nav-gacha-btn-label nav-gacha-btn-label--compact" aria-hidden="true">🎮</span></a>
       </div>
     </div>
   </nav>
@@ -146,7 +147,9 @@
       </a>
       <div class="hero-map-stage">
         <figure class="hero-map-visual clickable-map-card" id="heroMapCard" role="button" tabindex="0" aria-label="POPOPOお出かけマップを開く" style="position: relative; cursor: pointer;">
-          <img src="assets/popopo-map-visual-20260518.png" alt="人から人へ伝わる小さな発見を描いたPOPOPO お出かけマップの水彩イラスト">
+          <div class="hero-image-box">
+            <img id="heroImage" src="assets/popopo-map-visual-20260518.png" alt="人から人へ伝わる小さな発見を描いたPOPOPO お出かけマップの水彩イラスト">
+          </div>
           <!-- Elegant watercolor sticker style badge overlaying near the top-center text -->
           <div class="map-watercolor-label">
             <span class="label-emoji">🗺️</span>
@@ -344,7 +347,6 @@
         <span class="logo-sub" data-i18n="logo_sub">お出かけマップ</span>
       </div>
       <p class="footer-desc" data-i18n="footer_desc">POPOPOで紹介された場所を、みんなで楽しもう。</p>
-      <p class="footer-update" data-i18n="footer_update">最終更新：2026年5月11日</p>
       <p class="footer-credit">With gratitude to all POPOPO members for their ideas, and to you for visiting. <a href="spots/" data-i18n="footer_spots_link">スポット一覧</a></p>
       <div class="footer-admin">
         <img class="footer-admin-avatar" src="assets/admin-profile.jpg" alt="お手入れ係 masa0a のプロフィール画像" width="96" height="96" loading="lazy">
@@ -893,6 +895,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260520-2"></script>
+  <script src="app.js?v=20260520-5"></script>
 </body>
 </html>
