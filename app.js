@@ -354,22 +354,160 @@ const SPOT_TRANSLATIONS = {
 };
 
 const ADDRESS_TRANSLATION_MAP = {
-  '東京': 'Tokyo',
-  '兵庫': 'Hyogo',
-  '神奈川': 'Kanagawa',
-  '福岡': 'Fukuoka',
-  '鳥取': 'Tottori',
-  '広島': 'Hiroshima',
+  // Regions
+  '関東': 'Kanto',
+  '関西': 'Kansai',
+  '中国': 'Chugoku',
+  '九州': 'Kyushu',
+  '中部': 'Chubu',
+  '東北': 'Tohoku',
+  '四国': 'Shikoku',
+  '北海道': 'Hokkaido',
+  '沖縄': 'Okinawa',
+
+  // Prefectures & Areas
+  '青森': 'Aomori',
+  '岩手': 'Iwate',
+  '宮城': 'Miyagi',
+  '秋田': 'Akita',
+  '山形': 'Yamagata',
+  '福島': 'Fukushima',
+  '茨城': 'Ibaraki',
+  '栃木': 'Tochigi',
+  '群馬': 'Gunma',
+  '埼玉': 'Saitama',
   '千葉': 'Chiba',
+  '東京': 'Tokyo',
+  '神奈川': 'Kanagawa',
+  '新潟': 'Niigata',
+  '富山': 'Toyama',
+  '石川': 'Ishikawa',
+  '福井': 'Fukui',
+  '山梨': 'Yamanashi',
+  '長野': 'Nagano',
+  '岐阜': 'Gifu',
+  '静岡': 'Shizuoka',
+  '愛知': 'Aichi',
+  '三重': 'Mie',
+  '滋賀': 'Shiga',
+  '京都': 'Kyoto',
+  '大阪': 'Osaka',
+  '兵庫': 'Hyogo',
+  '奈良': 'Nara',
+  '和歌山': 'Wakayama',
+  '鳥取': 'Tottori',
+  '島根': 'Shimane',
+  '岡山': 'Okayama',
+  '広島': 'Hiroshima',
+  '山口': 'Yamaguchi',
+  '徳島': 'Tokushima',
+  '香川': 'Kagawa',
+  '愛媛': 'Ehime',
+  '高知': 'Kochi',
+  '福岡': 'Fukuoka',
+  '佐賀': 'Saga',
+  '長崎': 'Nagasaki',
+  '熊本': 'Kumamoto',
+  '大分': 'Oita',
+  '宮崎': 'Miyazaki',
+  '鹿児島': 'Kagoshima',
   '全国': 'Japan Nationwide',
   'オンライン': 'Online',
+
+  // Weather Specific Cities (that might differ or are specific names)
+  '札幌': 'Sapporo',
+  '仙台': 'Sendai',
+  '水戸': 'Mito',
+  '宇都宮': 'Utsunomiya',
+  '前橋': 'Maebashi',
+  'さいたま': 'Saitama',
+  '横浜': 'Yokohama',
+  '金沢': 'Kanazawa',
+  '甲府': 'Kofu',
+  '名古屋': 'Nagoya',
+  '津': 'Tsu',
+  '大津': 'Otsu',
+  '神戸': 'Kobe',
+  '松江': 'Matsue',
+  '高松': 'Takamatsu',
+  '松山': 'Matsuyama',
+  '那覇': 'Naha',
+
+  // Sub-regions / Wards / Cities
+  '千代田区': 'Chiyoda-ku',
+  '中央区': 'Chuo-ku',
+  '港区': 'Minato-ku',
+  '新宿区': 'Shinjuku-ku',
+  '文京区': 'Bunkyo-ku',
+  '台東区': 'Taito-ku',
+  '墨田区': 'Sumida-ku',
+  '江東区': 'Koto-ku',
+  '品川区': 'Shinagawa-ku',
+  '目黒区': 'Meguro-ku',
+  '大田区': 'Ota-ku',
+  '世田谷区': 'Setagaya-ku',
+  '渋谷区': 'Shibuya-ku',
+  '中野区': 'Nakano-ku',
+  '杉並区': 'Suginami-ku',
+  '豊島区': 'Toshima-ku',
+  '北区': 'Kita-ku',
+  '荒川区': 'Arakawa-ku',
+  '板橋区': 'Itabashi-ku',
+  '練馬区': 'Nerima-ku',
+  '足立区': 'Adachi-ku',
+  '葛飾区': 'Katsushika-ku',
+  '江戸川区': 'Edogawa-ku',
+  '八王子市': 'Hachioji',
+  '立川市': 'Tachikawa',
+  '武蔵野市': 'Musashino',
+  '三鷹市': 'Mitaka',
+  '府中市': 'Fuchu',
+  '調布市': 'Chofu',
+  '町田市': 'Machida',
+  '小金井市': 'Koganei',
+  '国立市': 'Kunitachi',
+  '多摩市': 'Tama',
+  '横浜市': 'Yokohama',
+  '川崎市': 'Kawasaki',
+  '鎌倉市': 'Kamakura',
+  '藤沢市': 'Fujisawa',
+  '横須賀市': 'Yokosuka',
+  '小田原市': 'Odawara',
+  '相模原市': 'Sagamihara',
+  '神戸市': 'Kobe',
+  '西宮市': 'Nishinomiya',
+  '姫路市': 'Himeji',
+  '尼崎市': 'Amagasaki',
+  '芦屋市': 'Ashiya',
+  '千葉市': 'Chiba',
+  '浦安市': 'Urayasu',
+  '船橋市': 'Funabashi',
+  '市川市': 'Ichikawa',
+  '広島市': 'Hiroshima',
+  '尾道市': 'Onomichi',
+  '廿日市市': 'Hatsukaichi',
+  '福山市': 'Fukuyama',
+  '岡山市': 'Okayama',
+  '倉敷市': 'Kurashiki',
+  '鳥取市': 'Tottori',
+  '米子市': 'Yonago',
+  '大山町': 'Daisen',
+  '大阪市': 'Osaka',
+  '堺市': 'Sakai',
+  '豊中市': 'Toyonaka',
+  '吹田市': 'Suita',
+  '京都市': 'Kyoto',
+  '宇治市': 'Uji',
+  '福岡市': 'Fukuoka',
+  '北九州市': 'Kitakyushu',
+
+  // Custom static spot sub-regions
   '道玄坂': 'Dogenzaka, Shibuya',
   '渋谷・広尾': 'Shibuya / Hiroo',
   '兵庫県西宮市': 'Nishinomiya, Hyogo',
   '神戸・三宮': 'Sannomiya, Kobe',
   '新宿区百人町': 'Hyakunincho, Shinjuku-ku',
   '池袋': 'Ikebukuro',
-  '全国': 'Nationwide',
   '港区芝': 'Shiba, Minato-ku',
   '浅草': 'Asakusa',
   '人形町': 'Ningyocho',
@@ -380,16 +518,13 @@ const ADDRESS_TRANSLATION_MAP = {
   '東京ほか': 'Tokyo and others',
   '西葛西': 'Nishi-Kasai',
   '福岡市中央区天神': 'Tenjin, Chuo-ku, Fukuoka',
-  '港区': 'Minato-ku',
   '東京都練馬区': 'Nerima-ku, Tokyo',
   '東京ミッドタウン八重洲': 'Tokyo Midtown Yaesu',
   '鳥取・大山': 'Daisen, Tottori',
   '鳥取・米子': 'Yonago, Tottori',
   '高田馬場など': 'Takadanobaba and others',
   '広島・岡山': 'Hiroshima / Okayama',
-  '墨田区': 'Sumida-ku',
   '原宿': 'Harajuku',
-  '横浜': 'Yokohama',
   '代々木公園': 'Yoyogi Park',
   '神楽坂エリア': 'Kagurazaka Area',
   '東京国際フォーラム': 'Tokyo International Forum',
@@ -399,7 +534,6 @@ const ADDRESS_TRANSLATION_MAP = {
   '代官山': 'Daikanyama',
   '蔵前': 'Kuramae',
   '渋谷': 'Shibuya',
-  '江戸川区': 'Edogawa-ku',
   'Amazon Prime Video': 'Amazon Prime Video',
   'NHK': 'NHK',
   '新宿区大久保': 'Okubo, Shinjuku'
@@ -596,6 +730,15 @@ document.addEventListener('languageChanged', (e) => {
     queueAutoTranslateVisibleContent();
   }
   renderMapOnlinePanel();
+
+  // Clear weather cache and re-render weather immediately
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const key = sessionStorage.key(i);
+    if (key && key.startsWith('popopo_weather_cache_')) {
+      sessionStorage.removeItem(key);
+    }
+  }
+  renderWeather();
 });
 
 // ============================================================
@@ -3668,14 +3811,21 @@ function renderAreaFilter(spots = [], cat = 'all') {
     if (!valid) activeSpotArea = activeAreaRegion === 'all' ? 'all' : activeAreaRegion;
   }
   wrap.hidden = false;
+  const isEn = currentLanguage === 'en';
   const regionRow = [
-    `<button type="button" class="area-chip area-chip-main ${activeSpotArea === 'all' ? 'active' : ''}" data-area="all" data-region="all" data-area-level="all">すべて</button>`,
-    ...regions.map(([region, count]) => `<button type="button" class="area-chip area-chip-main ${activeAreaRegion === region ? 'active' : ''}" data-area="${escHtml(region)}" data-region="${escHtml(region)}" data-area-level="region">${escHtml(region)} <span>${count}</span></button>`)
+    `<button type="button" class="area-chip area-chip-main ${activeSpotArea === 'all' ? 'active' : ''}" data-area="all" data-region="all" data-area-level="all">${isEn ? 'All' : 'すべて'}</button>`,
+    ...regions.map(([region, count]) => {
+      const displayRegion = isEn ? (ADDRESS_TRANSLATION_MAP[region] || region) : region;
+      return `<button type="button" class="area-chip area-chip-main ${activeAreaRegion === region ? 'active' : ''}" data-area="${escHtml(region)}" data-region="${escHtml(region)}" data-area-level="region">${escHtml(displayRegion)} <span>${count}</span></button>`;
+    })
   ].join('');
   const childRow = activeChildren.length
     ? `<div class="area-filter-row area-filter-row-sub">
-        <button type="button" class="area-chip area-chip-sub ${activeSpotArea === activeAreaRegion ? 'active' : ''}" data-area="${escHtml(activeAreaRegion)}" data-region="${escHtml(activeAreaRegion)}" data-area-level="region">${escHtml(activeAreaRegion)}すべて</button>
-        ${activeChildren.map(([area, count]) => `<button type="button" class="area-chip area-chip-sub ${activeSpotArea === area ? 'active' : ''}" data-area="${escHtml(area)}" data-region="${escHtml(activeAreaRegion)}" data-area-level="child">${escHtml(area)} <span>${count}</span></button>`).join('')}
+        <button type="button" class="area-chip area-chip-sub ${activeSpotArea === activeAreaRegion ? 'active' : ''}" data-area="${escHtml(activeAreaRegion)}" data-region="${escHtml(activeAreaRegion)}" data-area-level="region">${isEn ? `All ${ADDRESS_TRANSLATION_MAP[activeAreaRegion] || activeAreaRegion}` : `${escHtml(activeAreaRegion)}すべて`}</button>
+        ${activeChildren.map(([area, count]) => {
+          const displayArea = isEn ? (ADDRESS_TRANSLATION_MAP[area] || area) : area;
+          return `<button type="button" class="area-chip area-chip-sub ${activeSpotArea === area ? 'active' : ''}" data-area="${escHtml(area)}" data-region="${escHtml(activeAreaRegion)}" data-area-level="child">${escHtml(displayArea)} <span>${count}</span></button>`;
+        }).join('')}
       </div>`
     : '';
   wrap.innerHTML = `<div class="area-filter-row">${regionRow}</div>${childRow}`;
@@ -6448,9 +6598,12 @@ async function fetchCityWeather(city) {
     if (validPop) pop = validPop;
   } catch(e) {}
 
+  const isEn = currentLanguage === 'en';
+  const cityName = isEn ? (ADDRESS_TRANSLATION_MAP[city.name] || city.name) : city.name;
+
   return `
     <div class="weather-item">
-      <span class="w-name">📍${city.name}</span>
+      <span class="w-name">📍${cityName}</span>
       <span class="w-icon">${icon}</span>
       ${maxTemp ? `<span class="w-temp">${maxTemp}℃</span>` : ''}
       ${pop ? `<span class="w-pop">☂️${pop}%</span>` : ''}
@@ -6516,8 +6669,9 @@ async function renderWeather() {
   if (!container) return;
 
   const cities = getSelectedWeatherCities();
+  const isEn = currentLanguage === 'en';
 
-  const cacheKey = `popopo_weather_cache_${cities.map(c => c.id).join('_')}`;
+  const cacheKey = `popopo_weather_cache_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
   const cached = sessionStorage.getItem(cacheKey);
   if (cached) {
     container.innerHTML = cached + cached + cached;
@@ -6526,7 +6680,7 @@ async function renderWeather() {
     return;
   }
 
-  container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">天気を取得中...</span>';
+  container.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem;">${isEn ? 'Fetching weather...' : '天気を取得中...'}</span>`;
 
   try {
     const results = await Promise.all(cities.map(fetchCityWeather));
@@ -6537,7 +6691,7 @@ async function renderWeather() {
     setTimeout(startWeatherMarquee, 100);
   } catch (error) {
     console.error('Weather fetch failed:', error);
-    container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">一時的に取得できません</span>';
+    container.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem;">${isEn ? 'Temporarily unavailable' : '一時的に取得できません'}</span>`;
   }
 }
 
@@ -6553,13 +6707,17 @@ function initWeatherCityPicker() {
 
   const openModal = () => {
     const savedIds = getSelectedWeatherCities().map(c => c.id);
-    grid.innerHTML = ALL_WEATHER_CITIES.map(city => `
-      <button type="button"
-        class="weather-city-chip ${savedIds.includes(city.id) ? 'is-selected' : ''}"
-        data-city-id="${city.id}">
-        <span class="chip-check">✓</span>${city.name}
-      </button>
-    `).join('');
+    const isEn = currentLanguage === 'en';
+    grid.innerHTML = ALL_WEATHER_CITIES.map(city => {
+      const displayName = isEn ? (ADDRESS_TRANSLATION_MAP[city.name] || city.name) : city.name;
+      return `
+        <button type="button"
+          class="weather-city-chip ${savedIds.includes(city.id) ? 'is-selected' : ''}"
+          data-city-id="${city.id}">
+          <span class="chip-check">✓</span>${displayName}
+        </button>
+      `;
+    }).join('');
 
     grid.querySelectorAll('.weather-city-chip').forEach(chip => {
       chip.addEventListener('click', () => chip.classList.toggle('is-selected'));
@@ -6582,15 +6740,24 @@ function initWeatherCityPicker() {
   saveBtn?.addEventListener('click', () => {
     const selected = Array.from(grid.querySelectorAll('.weather-city-chip.is-selected'))
       .map(c => c.dataset.cityId);
+    const isEn = currentLanguage === 'en';
     if (selected.length === 0) {
-      showToast('1つ以上の都市を選択してください');
+      showToast(isEn ? 'Please select at least one city' : '1つ以上の都市を選択してください');
       return;
     }
     localStorage.setItem(WEATHER_CITY_STORAGE_KEY, JSON.stringify(selected));
-    sessionStorage.clear(); // 天気キャッシュをリセット
+    
+    // Clear only weather cache keys
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith('popopo_weather_cache_')) {
+        sessionStorage.removeItem(key);
+      }
+    }
+
     closeModal();
     renderWeather(); // 再取得して表示更新
-    showToast('都市の設定を保存しました ✓');
+    showToast(isEn ? 'Saved city settings ✓' : '都市の設定を保存しました ✓');
   });
 }
 

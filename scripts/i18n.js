@@ -222,6 +222,8 @@ const TRANSLATIONS = {
 const STATIC_TEXT_TRANSLATIONS = [
   ['キャンセル', 'Cancel'],
   ['保存する ✓', 'Save ✓'],
+  ['🌤️ 表示する都市を選択', '🌤️ Select Cities to Display'],
+  ['選んだ都市の天気が「今日のお出かけヒント」に表示されます（次回も記憶します）', 'Weather of selected cities will show in "Today\'s Outing Hint" (remembered)'],
   ['閉じる', 'Close'],
   ['投稿する 🚀', 'Post 🚀'],
   ['更新する 🚀', 'Update 🚀'],
