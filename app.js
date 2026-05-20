@@ -428,6 +428,10 @@ function getGoogleMapsUrl(s) {
     }
   }
 
+  if (!coords) {
+    coords = getLandmarkCoordsForSpot(s);
+  }
+
   if (coords) {
     return `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
   }
@@ -6700,7 +6704,10 @@ const PREFECTURE_CENTERS = {
 // 有名ランドマークは都道府県・市区町村フォールバックより先に固定座標へ寄せる
 const LANDMARK_CENTERS = {
   '奈良公園': { lat: 34.6850, lng: 135.8430 },
-  'Nara Park': { lat: 34.6850, lng: 135.8430 }
+  'Nara Park': { lat: 34.6850, lng: 135.8430 },
+  '吉野家有楽町店': { lat: 35.67470, lng: 139.76344 },
+  '吉野家 有楽町店': { lat: 35.67470, lng: 139.76344 },
+  'Yoshinoya Yurakucho': { lat: 35.67470, lng: 139.76344 }
 };
 
 // 主要都市・地域の詳細座標 (ダイナミック投稿の近隣フォールバック用)
@@ -6719,6 +6726,7 @@ const CITY_CENTERS = {
   '人形町': { lat: 35.6830, lng: 139.7750 },
   '日本橋': { lat: 35.6830, lng: 139.7750 },
   '銀座': { lat: 35.6720, lng: 139.7640 },
+  '有楽町': { lat: 35.67470, lng: 139.76344 },
   '八重洲': { lat: 35.6794, lng: 139.7689 },
   '東京駅': { lat: 35.6816, lng: 139.7690 },
   '両国': { lat: 35.6964, lng: 139.7961 },
@@ -6758,6 +6766,18 @@ function isOnlineOnlySpot(spot = {}) {
     return true;
   }
   return false;
+}
+
+function getLandmarkCoordsForSpot(spot = {}) {
+  const combinedText = `${spot.area || ''} ${spot.name || ''}`;
+  const normalizedCombined = normalizeString(combinedText);
+  if (normalizedCombined.includes('吉野家') && normalizedCombined.includes('有楽町')) {
+    return LANDMARK_CENTERS['吉野家有楽町店'];
+  }
+  const matchedLandmarkKey = Object.keys(LANDMARK_CENTERS).find(key => {
+    return combinedText.includes(key) || normalizedCombined.includes(normalizeString(key));
+  });
+  return matchedLandmarkKey ? LANDMARK_CENTERS[matchedLandmarkKey] : null;
 }
 
 // カテゴリ別カラーパレット (style.cssのバッジ色と調和)
@@ -6893,11 +6913,7 @@ function loadMapMarkers() {
 
     // 1c. 有名ランドマーク名が含まれる場合は固定座標を優先する
     if (!coords) {
-      const combinedTextForLandmark = `${spot.area || ''} ${spot.name || ''}`;
-      const matchedLandmarkKey = Object.keys(LANDMARK_CENTERS).find(key => combinedTextForLandmark.includes(key));
-      if (matchedLandmarkKey) {
-        coords = LANDMARK_CENTERS[matchedLandmarkKey];
-      }
+      coords = getLandmarkCoordsForSpot(spot);
     }
 
     // 2. 静的スポットとマッチしなかった場合、CITY_CENTERSでエリア・スポット名マッチを試みる
@@ -7067,10 +7083,7 @@ function renderMapOnlinePanel() {
 
   const allSpots = getAllSpotItemsForDisplay();
   const targetPref = activeMapPanelTab === 'online' ? 'オンライン' : '全国';
-  const filteredSpots = allSpots.filter(spot => {
-    if (normalizePrefValue(spot.pref) !== targetPref) return false;
-    return activeMapPanelTab === 'online' ? !isOnlineOnlySpot(spot) : true;
-  });
+  const filteredSpots = allSpots.filter(spot => normalizePrefValue(spot.pref) === targetPref);
 
   if (filteredSpots.length === 0) {
     const emptyText = isEn 
