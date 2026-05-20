@@ -578,6 +578,7 @@ document.addEventListener('languageChanged', (e) => {
   if (lang === 'en') {
     queueAutoTranslateVisibleContent();
   }
+  renderMapOnlinePanel();
 });
 
 // ============================================================
@@ -2449,6 +2450,7 @@ function updateDiscoveryDom(item) {
   link.dataset.discoveryCategory = item.cat || '';
   link.dataset.discoverySpot = item.spotName || item.title;
   link.setAttribute('aria-label', `${sourceLabel}、${titleLabel}を開く`);
+  if (typeof adjustHeroPadding === 'function') adjustHeroPadding();
 }
 
 function showDiscoveryItem(item, animate = false) {
@@ -3398,9 +3400,46 @@ function getActiveSpotCategory() {
 }
 
 function normalizePrefValue(pref = '') {
-  const value = String(pref || '').trim();
-  if (value === '北海道') return value;
-  return value.replace(/[都府県]$/g, '') || '';
+  let value = String(pref || '').trim();
+  if (!value) return '';
+
+  // 1. Strip English suffixes first (e.g. "Fukuoka Prefecture" -> "Fukuoka")
+  value = value.replace(/\s+(prefecture|pref)$/i, '');
+
+  // 2. Translate case-insensitive English to Japanese key
+  const lowerVal = value.toLowerCase();
+  for (const [jpKey, enVal] of Object.entries(ADDRESS_TRANSLATION_MAP)) {
+    if (enVal && enVal.toLowerCase() === lowerVal) {
+      value = jpKey;
+      break;
+    }
+  }
+
+  // 3. Strip Japanese suffixes
+  if (value !== '北海道') {
+    value = value.replace(/[都府県]$/g, '');
+  }
+
+  const knownPrefs = [
+    '北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島', '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川',
+    '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜', '静岡', '愛知', '三重', '滋賀', '京都', '大阪', '兵庫',
+    '奈良', '和歌山', '鳥取', '島根', '岡山', '広島', '山口', '徳島', '香川', '愛媛', '高知', '福岡', '佐賀', '長崎',
+    '熊本', '大分', '宮崎', '鹿児島', '沖縄'
+  ];
+
+  // 4. Double check against known prefectures
+  if (knownPrefs.includes(value)) {
+    return value;
+  }
+
+  // Fallback: check if any key in knownPrefs is included in value
+  for (const key of knownPrefs) {
+    if (value.includes(key)) {
+      return key;
+    }
+  }
+
+  return value;
 }
 
 function normalizeCityValue(city = '') {
@@ -6531,7 +6570,9 @@ const SPOT_COORDINATES = {
   'frijoles-yaesu': { lat: 35.6797, lng: 139.7698 },
   'oyama-milk-no-sato': { lat: 35.3942, lng: 133.5233 },
   'ramen-otama': { lat: 35.4385, lng: 133.3556 },
-  'queen-hiroba-yokohama-customs': { lat: 35.4492, lng: 139.6433 }
+  'queen-hiroba-yokohama-customs': { lat: 35.4492, lng: 139.6433 },
+  'aagan': { lat: 35.7018, lng: 139.7027 },
+  'rosetsu': { lat: 35.6789, lng: 139.4922 }
 };
 
 // 日本の47都道府県の代表点座標（ダイナミック投稿のフォールバック用）
@@ -6691,9 +6732,14 @@ function loadMapMarkers() {
   leafletMarkersGroup.clearLayers();
   const allSpots = getAllSpotItemsForDisplay();
 
+  // オンラインおすすめパネルをレンダリング
+  renderMapOnlinePanel();
+
   allSpots.forEach(spot => {
+    const normPref = normalizePrefValue(spot.pref);
+
     // オンライン・全国は地図ピン対象外
-    if (spot.pref === '全国' || spot.pref === 'オンライン') return;
+    if (normPref === '全国' || normPref === 'オンライン') return;
     if (spot.cat === 'entertainment' && (spot.id === 'hazbin' || spot.id === 'doc72')) return;
 
     let coords = null;
@@ -6703,8 +6749,8 @@ function loadMapMarkers() {
       coords = SPOT_COORDINATES[spot.id];
     } 
     // 2. 動的提案スポットかつ都道府県の代表点がある場合
-    else if (spot.pref && PREFECTURE_CENTERS[spot.pref]) {
-      const center = PREFECTURE_CENTERS[spot.pref];
+    else if (normPref && PREFECTURE_CENTERS[normPref]) {
+      const center = PREFECTURE_CENTERS[normPref];
       // 同一都道府県に複数登録された場合に重ならないよう適度な揺らぎ(jitter)を追加
       const jitterLat = (Math.random() - 0.5) * 0.04;
       const jitterLng = (Math.random() - 0.5) * 0.04;
@@ -6825,6 +6871,60 @@ function jumpToSpotCard(spot) {
   }, 120);
 }
 
+function renderMapOnlinePanel() {
+  const listContainer = document.getElementById('mapOnlineList');
+  if (!listContainer) return;
+
+  listContainer.innerHTML = '';
+  const isEn = currentLanguage === 'en';
+
+  // Translate online panel title
+  const panelTitle = document.querySelector('.map-online-title');
+  if (panelTitle) {
+    panelTitle.textContent = isEn ? 'Online Recoms' : 'オンラインおすすめ';
+  }
+
+  const allSpots = getAllSpotItemsForDisplay();
+  const onlineSpots = allSpots.filter(spot => normalizePrefValue(spot.pref) === 'オンライン');
+
+  if (onlineSpots.length === 0) {
+    listContainer.innerHTML = `<div class="map-online-empty">${isEn ? 'No online spots' : 'オンラインスポットはありません'}</div>`;
+    return;
+  }
+
+  onlineSpots.forEach(spot => {
+    const spotTrans = SPOT_TRANSLATIONS[spot.id] || {};
+    const name = isEn && spotTrans.name ? spotTrans.name : spot.name;
+    const memo = isEn && spotTrans.memo ? spotTrans.memo : (spot.memo || spot.reason || '');
+    const area = isEn ? (ADDRESS_TRANSLATION_MAP[spot.area] || spot.area) : spot.area;
+    const catLabel = spot.catLabel || getCatLabel(spot.cat) || '';
+
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = `map-online-card category-${spot.cat}`;
+    card.innerHTML = `
+      <div class="map-online-card-emoji">${spot.emoji || '🌐'}</div>
+      <div class="map-online-card-content">
+        <div class="map-online-card-meta">
+          <span class="map-online-card-cat" style="color: ${getMarkerBorderColor(spot.cat)}">${catLabel}</span>
+          <span class="map-online-card-area">📍 ${area}</span>
+        </div>
+        <div class="map-online-card-name">${name}</div>
+        ${memo ? `<div class="map-online-card-memo">${memo}</div>` : ''}
+      </div>
+    `;
+
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      jumpToSpotCard(spot);
+    });
+
+    listContainer.appendChild(card);
+  });
+}
+
+
 
 // ============================================================
 // 11. 初期化
@@ -6874,7 +6974,29 @@ function init() {
   // 初期言語適用は i18n.js で処理されるため削除
   window.addEventListener('languageChanged', () => {
     renderWeeklyDiscovery();
+    adjustHeroPadding();
   });
+
+  // 初期ロードとウィンドウリサイズ時にヒーローのpaddingを動的に調整
+  adjustHeroPadding();
+  window.addEventListener('resize', adjustHeroPadding);
+  window.addEventListener('load', adjustHeroPadding);
+}
+
+// ヒーローの上部余白をナビゲーションバーの実際の高さに合わせて動的に調整する
+function adjustHeroPadding() {
+  const navInner = document.querySelector('.nav-inner');
+  const navDiscovery = document.getElementById('weeklyDiscoveryCard');
+  const hero = document.getElementById('hero');
+  if (hero) {
+    let totalHeight = 0;
+    if (navInner) totalHeight += navInner.offsetHeight;
+    if (navDiscovery && window.getComputedStyle(navDiscovery).display !== 'none') {
+      totalHeight += navDiscovery.offsetHeight;
+    }
+    const finalPadding = Math.max(80, totalHeight + 16);
+    hero.style.paddingTop = `${finalPadding}px`;
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

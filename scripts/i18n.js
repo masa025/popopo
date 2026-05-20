@@ -7,7 +7,7 @@ let currentLanguage = localStorage.getItem('popopo_language') || 'jp';
 
 const HERO_IMAGE_BY_LANG = {
   jp: 'assets/popopo-map-visual-20260518.png',
-  en: 'assets/popopo-map-visual-en.png'
+  en: 'assets/popopo-map-visual-en.jpg'
 };
 
 const TRANSLATIONS = {

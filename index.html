@@ -50,8 +50,8 @@
   <!-- Leaflet.js for interactive mapping -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <link rel="stylesheet" href="style.css?v=20260520-5">
-  <script src="scripts/i18n.js?v=1.3"></script>
+  <link rel="stylesheet" href="style.css?v=20260520-10">
+  <script src="scripts/i18n.js?v=1.4"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -140,10 +140,11 @@
     </div>
     <div class="hero-showcase" id="heroShowcase" aria-hidden="true"></div>
     <div class="hero-content">
-      <a href="#community" class="hero-badge" id="chatTicker" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; cursor:pointer; padding:6px 18px; transition:border-color 0.3s, background 0.3s;" aria-label="フリートーク掲示板へ">
-        <span style="font-size:0.85rem;">💬</span>
-        <span class="ticker-content" id="tickerContent" style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🎙️ POPOPO リスナーコミュニティ</span>
-        <span style="font-size:0.8rem; opacity:0.7;">→</span>
+      <!-- chatTicker: hero-map-stageの外に配置してz-index/overflow問題を解消 -->
+      <a href="#community" class="hero-badge hero-chat-ticker" id="chatTicker" aria-label="フリートーク掲示板へ">
+        <span class="hero-chat-icon">💬</span>
+        <span class="ticker-content" id="tickerContent">🎙️ POPOPO リスナーコミュニティ</span>
+        <span class="hero-chat-arrow">→</span>
       </a>
       <div class="hero-map-stage">
         <figure class="hero-map-visual clickable-map-card" id="heroMapCard" role="button" tabindex="0" aria-label="POPOPOお出かけマップを開く" style="position: relative; cursor: pointer;">
@@ -870,7 +871,18 @@
         <button class="modal-close" id="mapModalClose" aria-label="閉じる">✕</button>
       </div>
       <div class="map-modal-body" style="flex: 1; position: relative; background: #fdfdfd; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 0 28px 24px;">
-        <div id="leafletMap" style="width: 100%; height: 100%; z-index: 10;"></div>
+        <div class="map-modal-content-wrapper" style="flex: 1; display: flex; flex-direction: row; height: 100%; overflow: hidden; position: relative; width: 100%;">
+          <div id="leafletMap" style="flex: 1; height: 100%; z-index: 10; position: relative;"></div>
+          <div class="map-online-panel">
+            <div class="map-online-header">
+              <span class="map-online-icon">🌐</span>
+              <h4 class="map-online-title" data-ja="オンラインおすすめ" data-en="Online Recommendations">オンラインおすすめ</h4>
+            </div>
+            <div class="map-online-list" id="mapOnlineList">
+              <!-- Online cards will be dynamically rendered here -->
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -895,6 +907,6 @@
     </a>
   </nav>
 
-  <script src="app.js?v=20260520-5"></script>
+  <script src="app.js?v=20260520-6"></script>
 </body>
 </html>
