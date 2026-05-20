@@ -6844,9 +6844,10 @@ function loadMapMarkers() {
 
   allSpots.forEach(spot => {
     const normPref = normalizePrefValue(spot.pref);
+    const areaStr = String(spot.area || '');
 
     // オンライン・全国は地図ピン対象外
-    if (normPref === '全国' || normPref === 'オンライン') return;
+    if (normPref === '全国' || normPref === 'オンライン' || areaStr.includes('全国') || areaStr.includes('オンライン')) return;
     if (spot.cat === 'entertainment' && (spot.id === 'hazbin' || spot.id === 'doc72')) return;
 
     let coords = null;
