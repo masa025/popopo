@@ -803,6 +803,7 @@ const AREA_ALIAS_RULES = [
   { keywords: ['芝', '港区'], pref: '東京', city: '港区' },
   { keywords: ['浅草', '浅草ROX', '上野', '蔵前'], pref: '東京', city: '台東区' },
   { keywords: ['人形町', '銀座', '日本橋', '八重洲', '東京ミッドタウン八重洲'], pref: '東京', city: '中央区' },
+  { keywords: ['東京ビッグサイト', 'ビッグサイト', '有明', '国際展示場', 'デザインフェスタ', 'デザフェス', 'Design Festa'], pref: '東京', city: '江東区' },
   { keywords: ['東京駅', '大丸東京', '丸の内', '東京国際フォーラム'], pref: '東京', city: '千代田区' },
   { keywords: ['墨田', '押上', '両国', '黄金湯', 'すみだ'], pref: '東京', city: '墨田区' },
   { keywords: ['小石川', '後楽', '文京'], pref: '東京', city: '文京区' },
@@ -6705,6 +6706,13 @@ const PREFECTURE_CENTERS = {
 const LANDMARK_CENTERS = {
   '奈良公園': { lat: 34.6850, lng: 135.8430 },
   'Nara Park': { lat: 34.6850, lng: 135.8430 },
+  '東京ビッグサイト': { lat: 35.6301, lng: 139.7945 },
+  'ビッグサイト': { lat: 35.6301, lng: 139.7945 },
+  '有明': { lat: 35.6301, lng: 139.7945 },
+  '国際展示場': { lat: 35.6301, lng: 139.7945 },
+  'デザインフェスタ': { lat: 35.6301, lng: 139.7945 },
+  'デザフェス': { lat: 35.6301, lng: 139.7945 },
+  'Design Festa': { lat: 35.6301, lng: 139.7945 },
   '吉野家有楽町店': { lat: 35.67470, lng: 139.76344 },
   '吉野家 有楽町店': { lat: 35.67470, lng: 139.76344 },
   'Yoshinoya Yurakucho': { lat: 35.67470, lng: 139.76344 }
@@ -6734,6 +6742,12 @@ const CITY_CENTERS = {
   '後楽': { lat: 35.7056, lng: 139.7493 },
   '葛西': { lat: 35.6635, lng: 139.8604 },
   '江戸川': { lat: 35.6635, lng: 139.8604 },
+  '東京ビッグサイト': { lat: 35.6301, lng: 139.7945 },
+  'ビッグサイト': { lat: 35.6301, lng: 139.7945 },
+  '有明': { lat: 35.6301, lng: 139.7945 },
+  '国際展示場': { lat: 35.6301, lng: 139.7945 },
+  'デザインフェスタ': { lat: 35.6301, lng: 139.7945 },
+  'デザフェス': { lat: 35.6301, lng: 139.7945 },
   '練馬': { lat: 35.7350, lng: 139.6500 },
   '原宿': { lat: 35.6700, lng: 139.7020 },
   '三鷹': { lat: 35.7030, lng: 139.5800 },
@@ -6769,7 +6783,7 @@ function isOnlineOnlySpot(spot = {}) {
 }
 
 function getLandmarkCoordsForSpot(spot = {}) {
-  const combinedText = `${spot.area || ''} ${spot.name || ''}`;
+  const combinedText = `${spot.area || ''} ${spot.city || ''} ${spot.areaGroup || ''} ${spot.areaNote || ''} ${spot.name || ''} ${spot.memo || ''} ${spot.reason || ''}`;
   const normalizedCombined = normalizeString(combinedText);
   if (normalizedCombined.includes('吉野家') && normalizedCombined.includes('有楽町')) {
     return LANDMARK_CENTERS['吉野家有楽町店'];
@@ -6890,8 +6904,9 @@ function loadMapMarkers() {
   renderMapOnlinePanel();
 
   allSpots.forEach(spot => {
-    const normPref = normalizePrefValue(spot.pref);
-    const areaStr = String(spot.area || '');
+    const locationMeta = inferLocationMeta(spot);
+    const normPref = normalizePrefValue(spot.pref || locationMeta.pref);
+    const areaStr = String(spot.area || locationMeta.area || '');
 
     // オンライン・全国は地図ピン対象外
     if (normPref === '全国' || normPref === 'オンライン' || areaStr.includes('全国') || areaStr.includes('オンライン')) return;
@@ -6919,7 +6934,7 @@ function loadMapMarkers() {
     // 2. 静的スポットとマッチしなかった場合、CITY_CENTERSでエリア・スポット名マッチを試みる
     if (!coords) {
       let matchedCityKey = null;
-      const combinedText = ((spot.area || '') + ' ' + (spot.name || '')).toLowerCase();
+      const combinedText = ((spot.area || '') + ' ' + (locationMeta.area || '') + ' ' + (locationMeta.city || '') + ' ' + (spot.name || '') + ' ' + (spot.memo || '') + ' ' + (spot.reason || '')).toLowerCase();
       for (const key of Object.keys(CITY_CENTERS)) {
         if (combinedText.includes(key.toLowerCase())) {
           matchedCityKey = key;
