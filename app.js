@@ -2797,23 +2797,26 @@ function setActiveSpotCategory(cat = 'all') {
 
 function getSuggestedSpotItems() {
   const merged = mergeSuggestions();
-  return merged.map(s => ({
-    id: s.id || s.clientId || '',
-    cat: s.cat,
-    catLabel: getCatLabel(s.cat),
-    name: s.name,
-    area: s.area,
-    pref: s.pref || '',
-    city: s.city || s.areaGroup || '',
-    areaNote: s.areaNote || '',
-    url: s.url || '',
-    resources: getSuggestionResources(s),
-    memo: s.reason,
-    intent: s.intent || 'recommend',
-    suggested: true,
-    suggestedBy: s.nickname || '匿名リスナー',
-    timestamp: s.timestamp || 0
-  }));
+  return merged.map(s => {
+    const meta = inferLocationMeta(s);
+    return {
+      id: s.id || s.clientId || '',
+      cat: s.cat,
+      catLabel: getCatLabel(s.cat),
+      name: s.name,
+      area: meta.area,
+      pref: meta.pref || '',
+      city: meta.city || '',
+      areaNote: s.areaNote || '',
+      url: s.url || '',
+      resources: getSuggestionResources(s),
+      memo: s.reason,
+      intent: s.intent || 'recommend',
+      suggested: true,
+      suggestedBy: s.nickname || '匿名リスナー',
+      timestamp: s.timestamp || 0
+    };
+  });
 }
 
 // 数値を返す決定論的なハッシュ（FNV-1a）
