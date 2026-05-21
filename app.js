@@ -6812,11 +6812,15 @@ function getSelectedWeatherCities() {
     if (saved) {
       const ids = JSON.parse(saved);
       if (Array.isArray(ids) && ids.length > 0) {
-        return ALL_WEATHER_CITIES.filter(c => ids.includes(c.id));
+        return ids
+          .map(id => ALL_WEATHER_CITIES.find(c => c.id === id))
+          .filter(Boolean);
       }
     }
   } catch(e) {}
-  return ALL_WEATHER_CITIES.filter(c => DEFAULT_WEATHER_CITY_IDS.includes(c.id));
+  return DEFAULT_WEATHER_CITY_IDS
+    .map(id => ALL_WEATHER_CITIES.find(c => c.id === id))
+    .filter(Boolean);
 }
 
 function getWeatherIcon(code) {
@@ -7064,6 +7068,13 @@ async function renderWeather() {
   const cached = sessionStorage.getItem(cacheKey);
   if (cached) {
     container.innerHTML = cached + cached + cached;
+    // キャッシュ時も背景天気を復元
+    if (cities.length > 0) {
+      const cachedType = sessionStorage.getItem(`popopo_weather_type_${cities[0].id}`);
+      if (cachedType) {
+        updateWeatherBackdrop(cachedType);
+      }
+    }
     // 少し待ってからアニメ開始（DOM描画完了を待つ）
     setTimeout(startWeatherMarquee, 100);
     return;
@@ -7094,22 +7105,61 @@ function initWeatherCityPicker() {
   const saveBtn = document.getElementById('weatherCitySaveBtn');
   if (!modal || !grid) return;
 
+  let selectedIds = []; // 選択順序を保持する配列
+
   const openModal = () => {
-    const savedIds = getSelectedWeatherCities().map(c => c.id);
+    selectedIds = getSelectedWeatherCities().map(c => c.id);
     const isEn = currentLanguage === 'en';
+    
     grid.innerHTML = ALL_WEATHER_CITIES.map(city => {
       const displayName = isEn ? (ADDRESS_TRANSLATION_MAP[city.name] || city.name) : city.name;
       return `
         <button type="button"
-          class="weather-city-chip ${savedIds.includes(city.id) ? 'is-selected' : ''}"
+          class="weather-city-chip"
           data-city-id="${city.id}">
           <span class="chip-check">✓</span>${displayName}
         </button>
       `;
     }).join('');
 
+    const updateGridUI = () => {
+      grid.querySelectorAll('.weather-city-chip').forEach(chip => {
+        const cityId = chip.dataset.cityId;
+        const index = selectedIds.indexOf(cityId);
+        const isSelected = index !== -1;
+        const checkEl = chip.querySelector('.chip-check');
+
+        if (isSelected) {
+          chip.classList.add('is-selected');
+          if (checkEl) {
+            if (index === 0) {
+              checkEl.innerHTML = '👑 1:';
+              chip.title = isEn ? 'Backdrop Weather City (👑)' : '背景天気を決定する都市 (👑)';
+            } else {
+              checkEl.innerHTML = `${index + 1}:`;
+              chip.removeAttribute('title');
+            }
+          }
+        } else {
+          chip.classList.remove('is-selected');
+          chip.removeAttribute('title');
+        }
+      });
+    };
+
+    // 初期状態を反映
+    updateGridUI();
+
     grid.querySelectorAll('.weather-city-chip').forEach(chip => {
-      chip.addEventListener('click', () => chip.classList.toggle('is-selected'));
+      chip.addEventListener('click', () => {
+        const cityId = chip.dataset.cityId;
+        if (selectedIds.includes(cityId)) {
+          selectedIds = selectedIds.filter(id => id !== cityId);
+        } else {
+          selectedIds.push(cityId);
+        }
+        updateGridUI();
+      });
     });
 
     modal.classList.add('is-open');
@@ -7127,16 +7177,14 @@ function initWeatherCityPicker() {
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
   saveBtn?.addEventListener('click', () => {
-    const selected = Array.from(grid.querySelectorAll('.weather-city-chip.is-selected'))
-      .map(c => c.dataset.cityId);
     const isEn = currentLanguage === 'en';
-    if (selected.length === 0) {
+    if (selectedIds.length === 0) {
       showToast(isEn ? 'Please select at least one city' : '1つ以上の都市を選択してください');
       return;
     }
-    localStorage.setItem(WEATHER_CITY_STORAGE_KEY, JSON.stringify(selected));
+    localStorage.setItem(WEATHER_CITY_STORAGE_KEY, JSON.stringify(selectedIds));
     
-    // Clear only weather cache keys
+    // キャッシュをクリア
     for (let i = sessionStorage.length - 1; i >= 0; i--) {
       const key = sessionStorage.key(i);
       if (key && key.startsWith('popopo_weather_cache_')) {

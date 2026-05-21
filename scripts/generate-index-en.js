@@ -131,7 +131,7 @@ const bodyReplacements = [
   ['スポットを追加する</button>', 'Add a Spot</button>'],
   ['「ここ気になる」「行ってみたい」そんな一言からで大丈夫！</p>', 'Just a small recommendation or \'I want to go here\' is perfect!</p>'],
   ['🌤️ 今日のお出かけヒント', '🌤️ Today\'s Outing Hint'],
-  ['選んだ都市の天気が「今日のお出かけヒント」に表示されます（次回も記憶します）', 'Weather of selected cities will show in "Today\'s Outing Hint" (remembered)'],
+  ['選んだ都市の天気が「今日のお出かけヒント」に表示されます。<b>👑マークの付いた「1番目の都市」</b>の天気がサイト全体の背景（水彩アニメーション）に連動します。', 'Weather of selected cities will show in "Today\'s Outing Hint". The <b>1st city (marked with 👑)</b> determines the site\'s watercolor backdrop weather.'],
   ['🌤️ 表示する都市を選択', '🌤️ Select Cities to Display'],
   ['aria-label="閉じる"', 'aria-label="Close"'],
   ['キャンセル</button>', 'Cancel</button>'],

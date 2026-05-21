@@ -54,7 +54,8 @@ const TRANSLATIONS = {
     },
     get weather_city_hint() {
       const hours = new Date().getHours();
-      return (hours >= 18 || hours < 5) ? "選んだ都市の天気が「あしたのお出かけヒント」に表示されます（次回も記憶します）" : "選んだ都市の天気が「今日のお出かけヒント」に表示されます（次回も記憶します）";
+      const hint = (hours >= 18 || hours < 5) ? "あしたのお出かけヒント" : "今日のお出かけヒント";
+      return `選んだ都市の天気が「${hint}」に表示されます。<b>👑マークの付いた「1番目の都市」</b>の天気がサイト全体の背景（水彩アニメーション）に連動します。`;
     },
     weather_loading: "天気を取得中...",
     tab_all: "すべて",
@@ -164,7 +165,8 @@ const TRANSLATIONS = {
     },
     get weather_city_hint() {
       const hours = new Date().getHours();
-      return (hours >= 18 || hours < 5) ? "Weather of selected cities will show in \"Tomorrow's Outing Hint\" (remembered)" : "Weather of selected cities will show in \"Today's Outing Hint\" (remembered)";
+      const hint = (hours >= 18 || hours < 5) ? "Tomorrow's Outing Hint" : "Today's Outing Hint";
+      return `Weather of selected cities will show in "${hint}". The <b>1st city (marked with 👑)</b> determines the site's watercolor backdrop weather.`;
     },
     weather_loading: "Fetching weather...",
     tab_all: "All",
