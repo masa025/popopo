@@ -248,6 +248,15 @@ const TRANSLATIONS = {
 };
 
 const STATIC_TEXT_TRANSLATIONS = [
+  ['設備・対応サービス（任意）', 'Amenities / Services (Optional)'],
+  ['📶 Wi-Fiあり', '📶 Wi-Fi Available'],
+  ['🔌 電源あり', '🔌 Power Outlet Available'],
+  ['🌱 ビーガン対応', '🌱 Vegan Friendly'],
+  ['💳 クレジットカード可', '💳 Credit Card Accepted'],
+  ['🅿️ 駐車場あり', '🅿️ Parking Available'],
+  ['🐾 ペット可', '🐾 Pets Allowed'],
+  ['🚻 トイレあり', '🚻 Toilet Available'],
+  ['🚻 トイレの評価', '🚻 Restroom Rating'],
   ['キャンセル', 'Cancel'],
   ['保存する ✓', 'Save ✓'],
   ['🌤️ 表示する都市を選択', '🌤️ Select Cities to Display'],

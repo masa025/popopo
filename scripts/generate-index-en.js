@@ -100,6 +100,17 @@ html = html.replace('<span class="lang-label-mobile">JP</span>', '<span class="l
 
 // 7. Statically translate key body text nodes (for crawlers without JS)
 const bodyReplacements = [
+  // Amenities / Services
+  ['設備・対応サービス（任意）', 'Amenities / Services (Optional)'],
+  ['📶 Wi-Fiあり', '📶 Wi-Fi Available'],
+  ['🔌 電源あり', '🔌 Power Outlet Available'],
+  ['🌱 ビーガン対応', '🌱 Vegan Friendly'],
+  ['💳 クレジットカード可', '💳 Credit Card Accepted'],
+  ['🅿️ 駐車場あり', '🅿️ Parking Available'],
+  ['🐾 ペット可', '🐾 Pets Allowed'],
+  ['🚻 トイレあり', '🚻 Toilet Available'],
+  ['🚻 トイレの評価', '🚻 Restroom Rating'],
+
   // Nav
   ['logo-sub">お出かけマップ', 'logo-sub">Outing Map'],
   ['📍 おすすめスポット</a>', '📍 Recommended Spots</a>'],

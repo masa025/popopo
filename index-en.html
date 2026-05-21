@@ -603,6 +603,50 @@
           <span class="char-count"><span id="asCharNum">0</span>/150</span>
         </div>
         <div class="form-group">
+          <label class="form-label">Amenities / Services (Optional)</label>
+          <div class="amenities-segment">
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asWifi">
+              <span>📶 Wi-Fi Available</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asPower">
+              <span>🔌 Power Outlet Available</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asVegan">
+              <span>🌱 Vegan Friendly</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asCard">
+              <span>💳 Credit Card Accepted</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asParking">
+              <span>🅿️ Parking Available</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asPet">
+              <span>🐾 Pets Allowed</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asToilet">
+              <span>🚻 Toilet Available</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group" id="asToiletRatingGroup" style="display: none;">
+          <label class="form-label">🚻 Restroom Rating</label>
+          <div class="toilet-rating-stars">
+            <button type="button" class="toilet-star-btn" data-rating="1">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="2">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="3">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="4">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="5">★</button>
+          </div>
+          <input type="hidden" id="asToiletRating" value="0">
+        </div>
+        <div class="form-group">
           <label class="form-label">写真アップロード（任意）</label>
           <div class="image-upload-wrapper">
             <label class="image-upload-trigger" id="asUploadTrigger">

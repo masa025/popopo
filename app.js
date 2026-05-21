@@ -4048,18 +4048,18 @@ function updateWantListHint(visibleSavedCount = 0) {
 
 function renderSpotAmenitiesHtml(s, isEn) {
   const badges = [];
-  if (s.wifi) badges.push(`<span class="amenity-badge" title="${isEn ? 'Wi-Fi Available' : 'Wi-Fiあり'}">📶 Wi-Fi</span>`);
-  if (s.power) badges.push(`<span class="amenity-badge" title="${isEn ? 'Power Outlet Available' : '電源あり'}">🔌 電源</span>`);
-  if (s.vegan) badges.push(`<span class="amenity-badge" title="${isEn ? 'Vegan Friendly' : 'ビーガン対応'}">🌱 ビーガン</span>`);
-  if (s.card) badges.push(`<span class="amenity-badge" title="${isEn ? 'Credit Card Accepted' : 'クレカ可'}">💳 クレカ可</span>`);
-  if (s.parking) badges.push(`<span class="amenity-badge" title="${isEn ? 'Parking Available' : '駐車場あり'}">🅿️ 駐車場</span>`);
-  if (s.pet) badges.push(`<span class="amenity-badge" title="${isEn ? 'Pets Allowed' : 'ペット可'}">🐾 ペット可</span>`);
+  if (s.wifi) badges.push(`<span class="amenity-badge" title="${isEn ? 'Wi-Fi Available' : 'Wi-Fiあり'}">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fi'}</span>`);
+  if (s.power) badges.push(`<span class="amenity-badge" title="${isEn ? 'Power Outlet Available' : '電源あり'}">${isEn ? '🔌 Power' : '🔌 電源'}</span>`);
+  if (s.vegan) badges.push(`<span class="amenity-badge" title="${isEn ? 'Vegan Friendly' : 'ビーガン対応'}">${isEn ? '🌱 Vegan' : '🌱 ビーガン'}</span>`);
+  if (s.card) badges.push(`<span class="amenity-badge" title="${isEn ? 'Credit Card Accepted' : 'クレカ可'}">${isEn ? '💳 Credit Card' : '💳 クレカ可'}</span>`);
+  if (s.parking) badges.push(`<span class="amenity-badge" title="${isEn ? 'Parking Available' : '駐車場あり'}">${isEn ? '🅿️ Parking' : '🅿️ 駐車場'}</span>`);
+  if (s.pet) badges.push(`<span class="amenity-badge" title="${isEn ? 'Pets Allowed' : 'ペット可'}">${isEn ? '🐾 Pet-friendly' : '🐾 ペット可'}</span>`);
   if (s.toilet) {
     let ratingStr = '';
     if (s.toiletRating && s.toiletRating > 0) {
       ratingStr = ' ' + '★'.repeat(s.toiletRating) + '☆'.repeat(5 - s.toiletRating);
     }
-    badges.push(`<span class="amenity-badge" title="${isEn ? 'Toilet Available' : 'トイレあり'}">🚻 トイレ${escHtml(ratingStr)}</span>`);
+    badges.push(`<span class="amenity-badge" title="${isEn ? 'Toilet Available' : 'トイレあり'}">${isEn ? '🚻 Restroom' : '🚻 トイレ'}${escHtml(ratingStr)}</span>`);
   }
   if (badges.length === 0) return '';
   return `<div class="spot-amenities">${badges.join('')}</div>`;
@@ -5673,14 +5673,15 @@ function openSpotReviews(spotName) {
   const title = document.getElementById('spotReviewsTitle');
   const body = document.getElementById('spotReviewsBody');
   const reviews = getSpotReviews(spotName);
+  const isEn = currentLanguage === 'en';
 
-  title.textContent = `${spotName} のみんなの感想`;
+  title.textContent = isEn ? `Reviews for ${spotName}` : `${spotName} のみんなの感想`;
   body.innerHTML = reviews.length
     ? `<div class="spot-review-list">${renderSpotReviewCards(reviews)}</div>`
     : `
       <div class="spot-review-empty">
         <div class="empty-icon">💬</div>
-        <p>このスポットの感想はまだありません。<br>行ってみたら、最初の感想を投稿してみませんか？</p>
+        <p>${isEn ? 'No reviews for this spot yet.' : 'このスポットの感想はまだありません。'}<br>${isEn ? 'If you have been here, why not share the first review?' : '行ってみたら、最初の感想を投稿してみませんか？'}</p>
       </div>
     `;
 
