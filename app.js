@@ -2150,7 +2150,17 @@ function getDailyPromptInfo() {
   if (!activeGachaItem && currentDailyPromptInfo && currentDailyPromptInfo.source !== 'exhausted') {
     if (currentDailyPromptInfo.source === 'community') {
       const stillExists = merged.some(item => getCommunityPromptId(item) === currentDailyPromptInfo.seenId);
-      if (stillExists) return currentDailyPromptInfo;
+      if (stillExists) {
+        // 今表示中のお題より新しい未見のコミュニティお題があれば、そちらを優先して表示する
+        const hasNewerUnseen = merged.some(item => {
+          const seenId = getCommunityPromptId(item);
+          return seenId !== currentDailyPromptInfo.seenId &&
+                 !isDailyPromptSeen(seenId) &&
+                 (item.timestamp || 0) > (currentDailyPromptInfo.timestamp || 0);
+        });
+        if (!hasNewerUnseen) return currentDailyPromptInfo;
+        // 新しい未見のお題がある場合はキャッシュを無効化してフォールスルー
+      }
     } else if (currentDailyPromptInfo.source === 'fallback') {
       const hasUnseenCommunity = merged.some(item => !isDailyPromptSeen(getCommunityPromptId(item)));
       if (!hasUnseenCommunity) return currentDailyPromptInfo;
@@ -2183,7 +2193,7 @@ function getDailyPromptInfo() {
   }
 
   const unseenCommunity = getUnseenPromptCandidates({ includeFallback: false })
-    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // 最新のお題を優先表示
   const activeItem = unseenCommunity[0];
   if (activeItem) {
     return {
