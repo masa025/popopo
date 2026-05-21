@@ -48,7 +48,14 @@ const TRANSLATIONS = {
     sec_spots_sub: "『これ良かったよ』の気持ちをみんなでシェア。あなたの好きも、ぜひ教えてください。",
     btn_add_spot: "スポットを追加する",
     add_spot_hint: "「ここ気になる」「行ってみたい」そんな一言からで大丈夫！",
-    weather_hint: "🌤️ 今日のお出かけヒント",
+    get weather_hint() {
+      const hours = new Date().getHours();
+      return (hours >= 18 || hours < 5) ? "🌤️ あしたのお出かけヒント" : "🌤️ 今日のお出かけヒント";
+    },
+    get weather_city_hint() {
+      const hours = new Date().getHours();
+      return (hours >= 18 || hours < 5) ? "選んだ都市の天気が「あしたのお出かけヒント」に表示されます（次回も記憶します）" : "選んだ都市の天気が「今日のお出かけヒント」に表示されます（次回も記憶します）";
+    },
     weather_loading: "天気を取得中...",
     tab_all: "すべて",
     tab_food: "🍴 飲食店",
@@ -151,7 +158,14 @@ const TRANSLATIONS = {
     sec_spots_sub: "Share your 'I loved this place' moments with everyone. Tell us your favorites!",
     btn_add_spot: "Add a Spot",
     add_spot_hint: "Just a small recommendation or 'I want to go here' is perfect!",
-    weather_hint: "🌤️ Today's Outing Hint",
+    get weather_hint() {
+      const hours = new Date().getHours();
+      return (hours >= 18 || hours < 5) ? "🌤️ Tomorrow's Outing Hint" : "🌤️ Today's Outing Hint";
+    },
+    get weather_city_hint() {
+      const hours = new Date().getHours();
+      return (hours >= 18 || hours < 5) ? "Weather of selected cities will show in \"Tomorrow's Outing Hint\" (remembered)" : "Weather of selected cities will show in \"Today's Outing Hint\" (remembered)";
+    },
     weather_loading: "Fetching weather...",
     tab_all: "All",
     tab_food: "🍴 Food & Cafe",

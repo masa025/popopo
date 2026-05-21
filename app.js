@@ -6900,7 +6900,11 @@ async function fetchCityWeather(city) {
   if (!res.ok) throw new Error('Network error');
   const data = await res.json();
 
-  const weatherCode = data[0].timeSeries[0].areas[0].weatherCodes[0];
+  const currentHour = new Date().getHours();
+  const isTomorrow = (currentHour >= 18 || currentHour < 5);
+
+  const wCodes = data[0].timeSeries[0].areas[0].weatherCodes;
+  const weatherCode = (isTomorrow && wCodes.length > 1) ? wCodes[1] : wCodes[0];
   const icon = getWeatherIcon(weatherCode);
 
   const cities = getSelectedWeatherCities();
@@ -6911,19 +6915,77 @@ async function fetchCityWeather(city) {
     updateWeatherBackdrop(weatherType);
   }
 
-  let maxTemp = '';
-  try {
-    const tempsMax = data[1].timeSeries[1].areas[0].tempsMax;
-    const validTemp = tempsMax.find(t => t !== '');
-    if (validTemp) maxTemp = validTemp;
-  } catch(e) {}
+  const getLocalDateString = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const date = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${date}`;
+  };
 
+  const todayStr = getLocalDateString(new Date());
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = getLocalDateString(tomorrow);
+  const targetDateStr = isTomorrow ? tomorrowStr : todayStr;
+
+  // Max Temp extraction
+  let maxTemp = '';
+  let matchingTemps = [];
+  try {
+    const temps = data[0].timeSeries[2].areas[0].temps;
+    const timeDefines = data[0].timeSeries[2].timeDefines;
+    for (let i = 0; i < timeDefines.length; i++) {
+      if (timeDefines[i].startsWith(targetDateStr) && temps[i] !== undefined && temps[i] !== '') {
+        matchingTemps.push(parseInt(temps[i], 10));
+      }
+    }
+  } catch (e) {}
+
+  if (matchingTemps.length > 0) {
+    maxTemp = String(Math.max(...matchingTemps));
+  } else {
+    try {
+      const weeklyTimes = data[1].timeSeries[1].timeDefines;
+      const weeklyMaxes = data[1].timeSeries[1].areas[0].tempsMax;
+      for (let i = 0; i < weeklyTimes.length; i++) {
+        if (weeklyTimes[i].startsWith(targetDateStr) && weeklyMaxes[i] !== undefined && weeklyMaxes[i] !== '') {
+          maxTemp = weeklyMaxes[i];
+          break;
+        }
+      }
+    } catch (e) {}
+    
+    if (!maxTemp) {
+      try {
+        const tempsMax = data[1].timeSeries[1].areas[0].tempsMax;
+        const validTemp = tempsMax.find(t => t !== '');
+        if (validTemp) maxTemp = validTemp;
+      } catch(e) {}
+    }
+  }
+
+  // PoP extraction
   let pop = '';
+  let matchingPops = [];
   try {
     const pops = data[0].timeSeries[1].areas[0].pops;
-    const validPop = pops.find(p => p !== '');
-    if (validPop) pop = validPop;
-  } catch(e) {}
+    const timeDefines = data[0].timeSeries[1].timeDefines;
+    for (let i = 0; i < timeDefines.length; i++) {
+      if (timeDefines[i].startsWith(targetDateStr) && pops[i] !== undefined && pops[i] !== '') {
+        matchingPops.push(parseInt(pops[i], 10));
+      }
+    }
+  } catch (e) {}
+
+  if (matchingPops.length > 0) {
+    pop = String(Math.max(...matchingPops));
+  } else {
+    try {
+      const pops = data[0].timeSeries[1].areas[0].pops;
+      const validPop = pops.find(p => p !== '');
+      if (validPop) pop = validPop;
+    } catch(e) {}
+  }
 
   const isEn = currentLanguage === 'en';
   const cityName = isEn ? (ADDRESS_TRANSLATION_MAP[city.name] || city.name) : city.name;

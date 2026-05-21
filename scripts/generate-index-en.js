@@ -131,6 +131,12 @@ const bodyReplacements = [
   ['スポットを追加する</button>', 'Add a Spot</button>'],
   ['「ここ気になる」「行ってみたい」そんな一言からで大丈夫！</p>', 'Just a small recommendation or \'I want to go here\' is perfect!</p>'],
   ['🌤️ 今日のお出かけヒント', '🌤️ Today\'s Outing Hint'],
+  ['選んだ都市の天気が「今日のお出かけヒント」に表示されます（次回も記憶します）', 'Weather of selected cities will show in "Today\'s Outing Hint" (remembered)'],
+  ['🌤️ 表示する都市を選択', '🌤️ Select Cities to Display'],
+  ['aria-label="閉じる"', 'aria-label="Close"'],
+  ['キャンセル</button>', 'Cancel</button>'],
+  ['保存する ✓</button>', 'Save ✓</button>'],
+  ['aria-label="表示する都市を設定"', 'aria-label="Configure display cities"'],
   ['天気を取得中...</span>', 'Fetching weather...</span>'],
 
   // Tabs

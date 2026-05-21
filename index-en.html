@@ -206,14 +206,14 @@
   <div class="weather-city-modal" id="weatherCityModal" role="dialog" aria-modal="true" aria-labelledby="weatherCityTitle">
     <div class="weather-city-box">
       <div class="weather-city-head">
-        <h3 id="weatherCityTitle" class="weather-city-title">🌤️ 表示する都市を選択</h3>
-        <button class="modal-close" id="weatherCityClose" aria-label="閉じる">✕</button>
+        <h3 id="weatherCityTitle" class="weather-city-title">🌤️ Select Cities to Display</h3>
+        <button class="modal-close" id="weatherCityClose" aria-label="Close">✕</button>
       </div>
-      <p class="weather-city-hint">選んだ都市の天気が「今日のお出かけヒント」に表示されます（次回も記憶します）</p>
+      <p class="weather-city-hint" data-i18n="weather_city_hint">Weather of selected cities will show in "Today's Outing Hint" (remembered)</p>
       <div class="weather-city-grid" id="weatherCityGrid"><!-- JSで生成 --></div>
       <div class="weather-city-actions">
-        <button type="button" class="btn-ghost" id="weatherCityCancelBtn">キャンセル</button>
-        <button type="button" class="btn-primary" id="weatherCitySaveBtn">保存する ✓</button>
+        <button type="button" class="btn-ghost" id="weatherCityCancelBtn">Cancel</button>
+        <button type="button" class="btn-primary" id="weatherCitySaveBtn">Save ✓</button>
       </div>
     </div>
   </div>
@@ -239,7 +239,7 @@
               <span style="color:var(--text-muted); font-size:0.85rem;" data-i18n="weather_loading">Fetching weather...</span>
             </div>
           </div>
-          <button class="weather-settings-btn" id="weatherSettingsBtn" aria-label="表示する都市を設定">⚙️</button>
+          <button class="weather-settings-btn" id="weatherSettingsBtn" aria-label="Configure display cities">⚙️</button>
         </div>
       </div>
       <div class="tabs-outer-wrapper" id="tabsOuterWrapper">
@@ -378,7 +378,7 @@
     <div class="gallery-modal-box">
       <div class="modal-head">
         <h3 id="galleryModalTitle" class="modal-title">配信で届いた作品</h3>
-        <button class="modal-close" id="galleryModalClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="galleryModalClose" aria-label="Close">✕</button>
       </div>
       <div class="gallery-modal-layout">
         <div class="gallery-modal-visual" id="galleryModalVisual">
@@ -437,7 +437,7 @@
     <div class="modal-box">
       <div class="modal-head">
         <h3 id="modalTitle" class="modal-title">📝 感想を投稿する</h3>
-        <button class="modal-close" id="modalClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
       </div>
       <form id="postForm" class="modal-form" novalidate>
         <p class="form-assurance">同じ端末のブラウザでは、投稿後に編集できます。</p>
@@ -519,7 +519,7 @@
           <p class="form-error" id="fMediaError" aria-live="polite"></p>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-ghost" id="cancelBtn">キャンセル</button>
+          <button type="button" class="btn-ghost" id="cancelBtn">Cancel</button>
           <button type="submit" class="btn-primary" id="submitBtn">投稿する 🚀</button>
         </div>
       </form>
@@ -531,7 +531,7 @@
     <div class="modal-box">
       <div class="modal-head">
         <h3 id="spotReviewsTitle" class="modal-title">💬 みんなの感想</h3>
-        <button class="modal-close" id="spotReviewsClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="spotReviewsClose" aria-label="Close">✕</button>
       </div>
       <div class="spot-reviews-body" id="spotReviewsBody"></div>
       <div class="spot-reviews-actions">
@@ -546,7 +546,7 @@
     <div class="modal-box">
       <div class="modal-head">
         <h3 id="addSpotTitle" class="modal-title">✨ スポットを追加する</h3>
-        <button class="modal-close" id="addSpotModalClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="addSpotModalClose" aria-label="Close">✕</button>
       </div>
       <form id="addSpotForm" class="modal-form" novalidate>
         <p class="form-assurance">同じ端末のブラウザでは、追加後に編集できます。</p>
@@ -653,7 +653,7 @@
           <input type="text" id="asNick" class="form-input" placeholder="匿名リスナー" maxlength="20" autocomplete="nickname">
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-ghost" id="addSpotCancelBtn">キャンセル</button>
+          <button type="button" class="btn-ghost" id="addSpotCancelBtn">Cancel</button>
           <button type="submit" class="btn-primary" id="addSpotSubmitBtn">スポットを追加 🗺️</button>
         </div>
       </form>
@@ -665,7 +665,7 @@
     <div class="modal-box">
       <div class="modal-head">
         <h3 id="chatTitle" class="modal-title">✏️ つぶやきを投稿</h3>
-        <button class="modal-close" id="chatModalClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="chatModalClose" aria-label="Close">✕</button>
       </div>
       <form id="chatForm" class="modal-form" novalidate>
         <div id="chatReplyInfo" class="chat-reply-info" style="display:none;">
@@ -682,7 +682,7 @@
           <textarea id="cMsg" class="form-textarea" placeholder="POPOPOの感想、サイトへのご意見、お出かけについて自由につぶやいてください！（200文字以内）" maxlength="200" required></textarea>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-ghost" id="chatCancelBtn">キャンセル</button>
+          <button type="button" class="btn-ghost" id="chatCancelBtn">Cancel</button>
           <button type="submit" class="btn-primary" id="chatSubmitBtn">投稿する 🚀</button>
         </div>
       </form>
@@ -694,7 +694,7 @@
       <div class="gacha-splash-canvas" id="gachaSplashCanvas"></div>
       <div class="modal-head">
         <h3 id="gachaModalTitle" class="modal-title">✨ Pop & Pick!</h3>
-        <button type="button" class="modal-close" id="gachaModalClose" aria-label="閉じる">✕</button>
+        <button type="button" class="modal-close" id="gachaModalClose" aria-label="Close">✕</button>
       </div>
       <p id="gachaModalLead" class="gacha-modal-lead">We will gently suggest a spot or review at random. Great for when you can't decide where to go. Try as many times as you like!</p>
       <div class="gacha-body">
@@ -763,7 +763,7 @@
 
   <div id="kiribanModal" class="modal-bg kiriban-modal" role="dialog" aria-modal="true" aria-labelledby="kiribanTitle">
     <div class="kiriban-card">
-      <button class="kiriban-close" id="kiribanClose" type="button" aria-label="閉じる">✕</button>
+      <button class="kiriban-close" id="kiribanClose" type="button" aria-label="Close">✕</button>
       <p class="kiriban-kicker">POPOPO MILESTONE</p>
       <h3 id="kiribanTitle" class="kiriban-title">おめでとうございます！<br><span>Congratulations!</span></h3>
       <p class="kiriban-count"><span id="kiribanCount">0</span></p>
@@ -781,7 +781,7 @@
     <div class="modal-box modal-box-large">
       <div class="modal-head">
         <h3 id="fullGalleryTitle" class="modal-title">🖼️ ギャラリー＆用語辞典</h3>
-        <button class="modal-close" id="fullGalleryClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="fullGalleryClose" aria-label="Close">✕</button>
       </div>
       <div class="gallery-tabs">
         <button class="gallery-tab active" data-target="galleryGridArt">🎨 アート</button>
@@ -793,7 +793,7 @@
   </div>
   <div id="introStoryModal" class="modal-bg intro-story-modal" role="dialog" aria-modal="true" aria-labelledby="introStoryTitle">
     <div class="intro-story-card">
-      <button class="intro-story-close" id="introStoryClose" type="button" aria-label="閉じる">✕</button>
+      <button class="intro-story-close" id="introStoryClose" type="button" aria-label="Close">✕</button>
       <div class="intro-story-frame">
         <section class="intro-story-slide is-active" data-intro-story-slide>
           <p class="intro-story-kicker">STORY 01</p>
@@ -840,7 +840,7 @@
     <div class="modal-box">
       <div class="modal-head">
         <h3 id="howToTitle" class="modal-title">💡 サイトの使い方</h3>
-        <button class="modal-close" id="howToClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="howToClose" aria-label="Close">✕</button>
       </div>
       <div style="padding:24px;line-height:1.8;color:var(--text);font-size:0.95rem;max-height:60vh;overflow-y:auto;">
         <div style="margin-bottom:16px;">
@@ -900,7 +900,7 @@
     <div class="modal-box">
       <div class="modal-head">
         <h3 id="promptSuggestTitle" class="modal-title">✨ Suggest a Topic</h3>
-        <button class="modal-close" id="promptSuggestClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="promptSuggestClose" aria-label="Close">✕</button>
       </div>
       <form id="promptSuggestForm" class="modal-form" novalidate>
         <p class="form-assurance">明日以降のお題候補に並びます。心が動いたお題に ♡ がいちばん集まったものが、翌日のお題になります。</p>
@@ -915,7 +915,7 @@
           <p class="form-hint">「？」で終わる、やわらかな問いかけがおすすめです。</p>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-ghost" id="promptSuggestCancelBtn">キャンセル</button>
+          <button type="button" class="btn-ghost" id="promptSuggestCancelBtn">Cancel</button>
           <button type="submit" class="btn-primary" id="promptSuggestSubmitBtn">お題を送る 🌿</button>
         </div>
       </form>
@@ -927,7 +927,7 @@
     <div class="modal-box modal-box-large" style="max-width: 1080px; width: 95%; height: 82vh; display: flex; flex-direction: column;">
       <div class="modal-head">
         <h3 id="mapModalTitle" class="modal-title">🗺️POPOPOお出かけマップ</h3>
-        <button class="modal-close" id="mapModalClose" aria-label="閉じる">✕</button>
+        <button class="modal-close" id="mapModalClose" aria-label="Close">✕</button>
       </div>
       <div class="map-modal-body" style="flex: 1; position: relative; background: #fdfdfd; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 0 28px 24px;">
         <div class="map-modal-content-wrapper" style="flex: 1; display: flex; flex-direction: row; height: 100%; overflow: hidden; position: relative; width: 100%;">
