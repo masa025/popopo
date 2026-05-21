@@ -2785,7 +2785,13 @@ function pauseDiscoveryRotation(ms = DISCOVERY_PAUSE_MS) {
 
 function setActiveSpotCategory(cat = 'all') {
   document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.cat === cat);
+    const isActive = tab.dataset.cat === cat;
+    tab.classList.toggle('active', isActive);
+    if (isActive) {
+      setTimeout(() => {
+        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, 50);
+    }
   });
 }
 
@@ -6016,6 +6022,60 @@ function showToast(msg) {
   }, 2700);
 }
 
+// カテゴリータブの横スクロール操作性を極限まで高める（グラデーション、スクロール連動、自動センタリング、矢印操作、微小スクロールヒント）
+function initTabsScrollUX() {
+  const wrapper = document.getElementById('tabsOuterWrapper');
+  const tabs = document.getElementById('tabs');
+  const btnLeft = document.getElementById('tabsScrollLeft');
+  const btnRight = document.getElementById('tabsScrollRight');
+
+  if (!wrapper || !tabs) return;
+
+  function updateScrollState() {
+    const scrollWidth = tabs.scrollWidth;
+    const clientWidth = tabs.clientWidth;
+    const scrollLeft = tabs.scrollLeft;
+
+    const hasOverflow = scrollWidth > clientWidth;
+
+    if (hasOverflow) {
+      wrapper.classList.toggle('has-overflow-left', scrollLeft > 2);
+      wrapper.classList.toggle('has-overflow-right', scrollLeft < (scrollWidth - clientWidth - 2));
+    } else {
+      wrapper.classList.remove('has-overflow-left', 'has-overflow-right');
+    }
+  }
+
+  // スクロールおよびリサイズ時の更新
+  tabs.addEventListener('scroll', updateScrollState, { passive: true });
+  window.addEventListener('resize', updateScrollState, { passive: true });
+
+  // 左右矢印ボタンのクリック処理
+  if (btnLeft) {
+    btnLeft.addEventListener('click', () => {
+      tabs.scrollBy({ left: -220, behavior: 'smooth' });
+    });
+  }
+  if (btnRight) {
+    btnRight.addEventListener('click', () => {
+      tabs.scrollBy({ left: 220, behavior: 'smooth' });
+    });
+  }
+
+  // 初期化とスクロール位置チェック
+  setTimeout(() => {
+    updateScrollState();
+    
+    // 微細なスクロール誘導アクション（セルフスクロール・ウィグル効果）
+    if (tabs.scrollWidth > tabs.clientWidth) {
+      tabs.scrollTo({ left: 60, behavior: 'smooth' });
+      setTimeout(() => {
+        tabs.scrollTo({ left: 0, behavior: 'smooth' });
+      }, 600);
+    }
+  }, 800);
+}
+
 // ============================================================
 // 9. イベントバインド
 // ============================================================
@@ -6418,6 +6478,9 @@ function bindEvents() {
     activeSpotArea = 'all';
     visibleSpotCount = INITIAL_SPOT_COUNT;
     renderSpotCards(tab.dataset.cat);
+    
+    // スムーズな中央配置スクロールを実行
+    tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   });
   const areaFilter = document.getElementById('areaFilter');
   if (areaFilter) {
@@ -6571,6 +6634,9 @@ function bindEvents() {
       if (container) container.style.display = 'none';
     });
   }
+
+  // カテゴリータブの横スクロールUX初期化
+  initTabsScrollUX();
 }
 
 // 選択可能な全国主要都市一覧

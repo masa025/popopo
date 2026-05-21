@@ -264,9 +264,109 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .sec-sub{color:var(--text-muted);font-size:1rem;}
 .sec-header-row{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:48px;}
 .sec-header-row .sec-header{text-align:left;margin-bottom:0;}
+.tabs-outer-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40px;
+  padding: 0 4px;
+}
+.tabs-inner-container {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 30px;
+}
+.tabs-scroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1.5px solid rgba(79, 127, 216, 0.22);
+  color: var(--blue);
+  box-shadow: 0 4px 12px rgba(43, 67, 120, 0.08);
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  flex-shrink: 0;
+}
+.tabs-scroll-btn:hover {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  transform: translateY(-1px) scale(1.06);
+  box-shadow: 0 6px 16px rgba(91, 141, 238, 0.25);
+}
+.tabs-scroll-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+.tabs-scroll-btn--left {
+  margin-right: 8px;
+}
+.tabs-scroll-btn--right {
+  margin-left: 8px;
+}
+.tabs-fade-left, .tabs-fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tabs-fade-left {
+  left: 0;
+  background: linear-gradient(to right, rgba(255, 254, 250, 0.96) 20%, transparent);
+}
+.tabs-fade-right {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 254, 250, 0.96) 20%, transparent);
+}
+.tabs-outer-wrapper.has-overflow-left .tabs-fade-left {
+  opacity: 1;
+}
+.tabs-outer-wrapper.has-overflow-right .tabs-fade-right {
+  opacity: 1;
+}
+@media (min-width: 769px) {
+  .tabs-outer-wrapper.has-overflow-left:hover .tabs-scroll-btn--left,
+  .tabs-outer-wrapper.has-overflow-left .tabs-scroll-btn--left:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+  }
+  .tabs-outer-wrapper.has-overflow-right:hover .tabs-scroll-btn--right,
+  .tabs-outer-wrapper.has-overflow-right .tabs-scroll-btn--right:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+  }
+}
+@media (max-width: 768px) {
+  .tabs-outer-wrapper {
+    margin-bottom: 28px;
+  }
+  .tabs-scroll-btn {
+    display: none !important;
+  }
+  .tabs-fade-left, .tabs-fade-right {
+    width: 32px;
+  }
+}
 
-.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:40px;}
-.tab{padding:10px 20px;border-radius:999px;border:1.5px dashed var(--border);color:var(--text-muted);font-size:0.88rem;font-weight:600;transition:all .25s;background:rgba(255,254,250,0.9);}
+.tabs{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding:4px 0;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;padding:10px 20px;border-radius:999px;border:1.5px dashed var(--border);color:var(--text-muted);font-size:0.88rem;font-weight:600;transition:all .25s;background:rgba(255,254,250,0.9);cursor:pointer;}
 .tab:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
 .tab.active{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(91,141,238,0.3);}
 .area-filter{display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;margin:-22px auto 30px;max-width:900px;}
@@ -2368,7 +2468,7 @@ button{ -webkit-tap-highlight-color: transparent; }
 
 /* タブはスマホで指でつまみやすく */
 @media (max-width: 768px){
-  .tabs{ gap: 6px; padding: 0 4px; margin-bottom: 28px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
+  .tabs{ gap: 6px; padding: 0 4px; margin-bottom: 0; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
   .tabs::-webkit-scrollbar{ display: none; }
   .tabs{ scrollbar-width: none; }
   .tab{ flex: 0 0 auto; padding: 10px 16px; min-height: 40px; scroll-snap-align: start; }

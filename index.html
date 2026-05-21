@@ -241,18 +241,30 @@
           <button class="weather-settings-btn" id="weatherSettingsBtn" aria-label="表示する都市を設定">⚙️</button>
         </div>
       </div>
-      <div class="tabs" id="tabs">
-        <button class="tab active" data-cat="all" data-i18n="tab_all">すべて</button>
-        <button class="tab" data-cat="food" data-i18n="tab_food">🍴 飲食店</button>
-        <button class="tab" data-cat="mohinga" data-i18n="tab_mohinga">🍜 食べたいもの</button>
-        <button class="tab" data-cat="museum" data-i18n="tab_museum">🎨 美術館・博物館</button>
-        <button class="tab" data-cat="event" data-i18n="tab_event">🌿 イベント</button>
-        <button class="tab" data-cat="nature" data-i18n="tab_nature">🌳 自然・よりみち</button>
-        <button class="tab" data-cat="book" data-i18n="tab_book">📚 本・しらべもの</button>
-        <button class="tab" data-cat="shop" data-i18n="tab_shop">🛒 くらし・雑貨</button>
-        <button class="tab" data-cat="view" data-i18n="tab_view">✨ おきにいりの景色</button>
-        <button class="tab" data-cat="relax" data-i18n="tab_relax">🛁 癒やし・ととのう</button>
-        <button class="tab" data-cat="entertainment" data-i18n="tab_entertainment">🎬 エンタメ</button>
+      <div class="tabs-outer-wrapper" id="tabsOuterWrapper">
+        <button type="button" class="tabs-scroll-btn tabs-scroll-btn--left" id="tabsScrollLeft" aria-label="左にスクロール" tabindex="-1">
+          <span>◀</span>
+        </button>
+        <div class="tabs-inner-container">
+          <div class="tabs-fade-left" id="tabsFadeLeft"></div>
+          <div class="tabs" id="tabs">
+            <button class="tab active" data-cat="all" data-i18n="tab_all">すべて</button>
+            <button class="tab" data-cat="food" data-i18n="tab_food">🍴 飲食店</button>
+            <button class="tab" data-cat="mohinga" data-i18n="tab_mohinga">🍜 食べたいもの</button>
+            <button class="tab" data-cat="museum" data-i18n="tab_museum">🎨 美術館・博物館</button>
+            <button class="tab" data-cat="event" data-i18n="tab_event">🌿 イベント</button>
+            <button class="tab" data-cat="nature" data-i18n="tab_nature">🌳 自然・よりみち</button>
+            <button class="tab" data-cat="book" data-i18n="tab_book">📚 本・しらべもの</button>
+            <button class="tab" data-cat="shop" data-i18n="tab_shop">🛒 くらし・雑貨</button>
+            <button class="tab" data-cat="view" data-i18n="tab_view">✨ おきにいりの景色</button>
+            <button class="tab" data-cat="relax" data-i18n="tab_relax">🛁 癒やし・ととのう</button>
+            <button class="tab" data-cat="entertainment" data-i18n="tab_entertainment">🎬 エンタメ</button>
+          </div>
+          <div class="tabs-fade-right" id="tabsFadeRight"></div>
+        </div>
+        <button type="button" class="tabs-scroll-btn tabs-scroll-btn--right" id="tabsScrollRight" aria-label="右にスクロール" tabindex="-1">
+          <span>▶</span>
+        </button>
       </div>
       <div class="area-filter" id="areaFilter" aria-label="エリアで絞り込む"></div>
       <div class="spot-list-actions">
