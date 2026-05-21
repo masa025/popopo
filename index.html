@@ -603,6 +603,50 @@
           <span class="char-count"><span id="asCharNum">0</span>/150</span>
         </div>
         <div class="form-group">
+          <label class="form-label">設備・対応サービス（任意）</label>
+          <div class="amenities-segment">
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asWifi">
+              <span>📶 Wi-Fiあり</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asPower">
+              <span>🔌 電源あり</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asVegan">
+              <span>🌱 ビーガン対応</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asCard">
+              <span>💳 クレジットカード可</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asParking">
+              <span>🅿️ 駐車場あり</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asPet">
+              <span>🐾 ペット可</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asToilet">
+              <span>🚻 トイレあり</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group" id="asToiletRatingGroup" style="display: none;">
+          <label class="form-label">🚻 トイレの評価</label>
+          <div class="toilet-rating-stars">
+            <button type="button" class="toilet-star-btn" data-rating="1">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="2">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="3">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="4">★</button>
+            <button type="button" class="toilet-star-btn" data-rating="5">★</button>
+          </div>
+          <input type="hidden" id="asToiletRating" value="0">
+        </div>
+        <div class="form-group">
           <label class="form-label">写真アップロード（任意）</label>
           <div class="image-upload-wrapper">
             <label class="image-upload-trigger" id="asUploadTrigger">

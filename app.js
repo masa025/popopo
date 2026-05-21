@@ -2814,7 +2814,15 @@ function getSuggestedSpotItems() {
       intent: s.intent || 'recommend',
       suggested: true,
       suggestedBy: s.nickname || '匿名リスナー',
-      timestamp: s.timestamp || 0
+      timestamp: s.timestamp || 0,
+      wifi: s.wifi || false,
+      power: s.power || false,
+      vegan: s.vegan || false,
+      card: s.card || false,
+      parking: s.parking || false,
+      pet: s.pet || false,
+      toilet: s.toilet || false,
+      toiletRating: s.toiletRating || 0
     };
   });
 }
@@ -4038,6 +4046,25 @@ function updateWantListHint(visibleSavedCount = 0) {
   hint.hidden = !(showingWantList && visibleSavedCount > 0);
 }
 
+function renderSpotAmenitiesHtml(s, isEn) {
+  const badges = [];
+  if (s.wifi) badges.push(`<span class="amenity-badge" title="${isEn ? 'Wi-Fi Available' : 'Wi-Fiあり'}">📶 Wi-Fi</span>`);
+  if (s.power) badges.push(`<span class="amenity-badge" title="${isEn ? 'Power Outlet Available' : '電源あり'}">🔌 電源</span>`);
+  if (s.vegan) badges.push(`<span class="amenity-badge" title="${isEn ? 'Vegan Friendly' : 'ビーガン対応'}">🌱 ビーガン</span>`);
+  if (s.card) badges.push(`<span class="amenity-badge" title="${isEn ? 'Credit Card Accepted' : 'クレカ可'}">💳 クレカ可</span>`);
+  if (s.parking) badges.push(`<span class="amenity-badge" title="${isEn ? 'Parking Available' : '駐車場あり'}">🅿️ 駐車場</span>`);
+  if (s.pet) badges.push(`<span class="amenity-badge" title="${isEn ? 'Pets Allowed' : 'ペット可'}">🐾 ペット可</span>`);
+  if (s.toilet) {
+    let ratingStr = '';
+    if (s.toiletRating && s.toiletRating > 0) {
+      ratingStr = ' ' + '★'.repeat(s.toiletRating) + '☆'.repeat(5 - s.toiletRating);
+    }
+    badges.push(`<span class="amenity-badge" title="${isEn ? 'Toilet Available' : 'トイレあり'}">🚻 トイレ${escHtml(ratingStr)}</span>`);
+  }
+  if (badges.length === 0) return '';
+  return `<div class="spot-amenities">${badges.join('')}</div>`;
+}
+
 function renderSpotCards(cat = 'all') {
   const grid = document.getElementById('spotsGrid');
   const allSpots = getAllSpotItemsForDisplay();
@@ -4117,6 +4144,7 @@ function renderSpotCards(cat = 'all') {
           <span>📍 ${escHtml(displayArea)}</span>
           ${(s.weatherId || getWeatherIdByPref(s.pref)) ? `<span class="spot-card-weather" data-weather-id="${s.weatherId || getWeatherIdByPref(s.pref)}"></span>` : ''}
         </div>
+        ${renderSpotAmenitiesHtml(s, isEn)}
         ${inboundTagsHtml}
         <a href="${gmapsUrl}" target="_blank" rel="noopener" class="spot-gmaps-btn">
           ${gmapsText}
@@ -4551,14 +4579,24 @@ function captureAddSpotFormDraftState() {
     reason: document.getElementById('asReason')?.value || '',
     nick: document.getElementById('asNick')?.value || '',
     kinds: [1, 2, 3].map(i => document.getElementById(`asKind${i}`)?.value || ''),
-    urls: [1, 2, 3].map(i => document.getElementById(`asUrl${i}`)?.value || '')
+    urls: [1, 2, 3].map(i => document.getElementById(`asUrl${i}`)?.value || ''),
+    wifi: document.getElementById('asWifi')?.checked || false,
+    power: document.getElementById('asPower')?.checked || false,
+    vegan: document.getElementById('asVegan')?.checked || false,
+    card: document.getElementById('asCard')?.checked || false,
+    parking: document.getElementById('asParking')?.checked || false,
+    pet: document.getElementById('asPet')?.checked || false,
+    toilet: document.getElementById('asToilet')?.checked || false,
+    toiletRating: parseInt(document.getElementById('asToiletRating')?.value || '0', 10)
   };
 }
 
 function addSpotDraftStateHasText(state) {
   if (!state) return false;
   const parts = [state.name, state.area, state.pref, state.city, state.cityCustom, state.areaNote, state.reason, state.nick, ...(state.urls || [])];
-  return parts.some(p => String(p || '').trim().length > 0);
+  const hasText = parts.some(p => String(p || '').trim().length > 0);
+  const hasAmenities = state.wifi || state.power || state.vegan || state.card || state.parking || state.pet || state.toilet;
+  return hasText || hasAmenities;
 }
 
 function scheduleSaveAddSpotFormDraft() {
@@ -4606,6 +4644,10 @@ function restoreAddSpotFormDraftIfAny() {
     const el = document.getElementById(id);
     if (el && v != null) el.value = String(v);
   };
+  const setChecked = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = !!v;
+  };
   setVal('asName', state.name);
   if (state.pref) {
     setVal('asPref', state.pref);
@@ -4626,6 +4668,24 @@ function restoreAddSpotFormDraftIfAny() {
     if (k) setVal(`asKind${i + 1}`, k);
     if (u != null) setVal(`asUrl${i + 1}`, u);
   }
+  setChecked('asWifi', state.wifi);
+  setChecked('asPower', state.power);
+  setChecked('asVegan', state.vegan);
+  setChecked('asCard', state.card);
+  setChecked('asParking', state.parking);
+  setChecked('asPet', state.pet);
+  setChecked('asToilet', state.toilet);
+
+  const rating = state.toiletRating || 0;
+  setVal('asToiletRating', rating);
+  document.querySelectorAll('.toilet-star-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.rating, 10) <= rating);
+  });
+  const ratingGroup = document.getElementById('asToiletRatingGroup');
+  if (ratingGroup) {
+    ratingGroup.style.display = state.toilet ? 'block' : 'none';
+  }
+
   const reasonEl = document.getElementById('asReason');
   const charNum = document.getElementById('asCharNum');
   if (charNum && reasonEl) charNum.textContent = String((reasonEl.value || '').length);
@@ -4719,6 +4779,13 @@ function openAddSpotModal(id = null, clientId = null) {
   if (asPreview) asPreview.src = '';
   if (asContainer) asContainer.style.display = 'none';
 
+  // Reset amenities form state
+  document.querySelectorAll('.toilet-star-btn').forEach(btn => btn.classList.remove('active'));
+  const ratingGroup = document.getElementById('asToiletRatingGroup');
+  if (ratingGroup) ratingGroup.style.display = 'none';
+  const toiletRatingInput = document.getElementById('asToiletRating');
+  if (toiletRatingInput) toiletRatingInput.value = '0';
+
   populateAddSpotPrefSelect();
   setAddSpotIntent('recommend');
   document.getElementById('asCharNum').textContent = '0';
@@ -4738,6 +4805,24 @@ function openAddSpotModal(id = null, clientId = null) {
       document.getElementById('asReason').value = s.reason || '';
       document.getElementById('asNick').value = s.nickname || '';
       applySuggestionResourcesToAddSpotRows(s);
+
+      // Restore amenities fields
+      document.getElementById('asWifi').checked = !!s.wifi;
+      document.getElementById('asPower').checked = !!s.power;
+      document.getElementById('asVegan').checked = !!s.vegan;
+      document.getElementById('asCard').checked = !!s.card;
+      document.getElementById('asParking').checked = !!s.parking;
+      document.getElementById('asPet').checked = !!s.pet;
+      document.getElementById('asToilet').checked = !!s.toilet;
+
+      const rating = s.toiletRating || 0;
+      document.getElementById('asToiletRating').value = rating;
+      document.querySelectorAll('.toilet-star-btn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.rating, 10) <= rating);
+      });
+      const rGroup = document.getElementById('asToiletRatingGroup');
+      if (rGroup) rGroup.style.display = s.toilet ? 'block' : 'none';
+
       const reasonEl = document.getElementById('asReason');
       const charNum = document.getElementById('asCharNum');
       if (charNum && reasonEl) charNum.textContent = String((reasonEl.value || '').length);
@@ -5744,7 +5829,15 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     cat: document.getElementById('asCat').value,
     intent: getAddSpotIntent(),
     reason,
-    nickname: document.getElementById('asNick').value.trim()
+    nickname: document.getElementById('asNick').value.trim(),
+    wifi: document.getElementById('asWifi')?.checked || false,
+    power: document.getElementById('asPower')?.checked || false,
+    vegan: document.getElementById('asVegan')?.checked || false,
+    card: document.getElementById('asCard')?.checked || false,
+    parking: document.getElementById('asParking')?.checked || false,
+    pet: document.getElementById('asPet')?.checked || false,
+    toilet: document.getElementById('asToilet')?.checked || false,
+    toiletRating: document.getElementById('asToilet')?.checked ? parseInt(document.getElementById('asToiletRating')?.value || '0', 10) : 0
   };
   
   if (resources && resources.length > 0) {
@@ -6689,6 +6782,36 @@ function bindEvents() {
       if (e.target === mapModal) closeMapModal();
     });
   }
+
+  // アメニティ：トイレ有無と星評価のインタラクティブ制御
+  const asToilet = document.getElementById('asToilet');
+  const asToiletRatingGroup = document.getElementById('asToiletRatingGroup');
+  const asToiletRating = document.getElementById('asToiletRating');
+
+  if (asToilet) {
+    asToilet.addEventListener('change', function() {
+      if (asToiletRatingGroup) {
+        asToiletRatingGroup.style.display = this.checked ? 'block' : 'none';
+      }
+      if (!this.checked && asToiletRating) {
+        asToiletRating.value = '0';
+        document.querySelectorAll('.toilet-star-btn').forEach(btn => btn.classList.remove('active'));
+      }
+    });
+  }
+
+  document.querySelectorAll('.toilet-star-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const rating = this.dataset.rating;
+      if (asToiletRating) {
+        asToiletRating.value = rating;
+      }
+      document.querySelectorAll('.toilet-star-btn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.rating, 10) <= parseInt(rating, 10));
+      });
+      scheduleSaveAddSpotFormDraft();
+    });
+  });
 
   // スポット追加の画像アップロードイベント
   const asImageFile = document.getElementById('asImageFile');
