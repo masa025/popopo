@@ -2,8 +2,20 @@
 // POPOPO お出かけマップ — i18n.js
 // 言語切り替えロジックと翻訳辞書データ（全ページ共通）
 // ============================================================
-
-let currentLanguage = localStorage.getItem('popopo_language') || 'jp';
+let currentLanguage = localStorage.getItem('popopo_language');
+if (!currentLanguage) {
+  const pathName = location.pathname.split('/').pop() || 'index.html';
+  if (pathName === 'index-en.html') {
+    currentLanguage = 'en';
+  } else {
+    const browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    if (browserLang.startsWith('en') || !browserLang.startsWith('ja')) {
+      currentLanguage = 'en';
+    } else {
+      currentLanguage = 'jp';
+    }
+  }
+}
 
 const HERO_IMAGE_BY_LANG = {
   jp: 'assets/popopo-map-visual-20260518.png',
@@ -410,6 +422,18 @@ function escHtml(str) {
 }
 
 function applyLanguage(lang) {
+  const path = location.pathname.split('/').pop() || 'index.html';
+  if (lang === 'jp' && path === 'index-en.html') {
+    localStorage.setItem('popopo_language', 'jp');
+    location.href = 'index.html';
+    return;
+  }
+  if (lang === 'en' && path === 'index.html') {
+    localStorage.setItem('popopo_language', 'en');
+    location.href = 'index-en.html';
+    return;
+  }
+
   currentLanguage = lang;
   localStorage.setItem('popopo_language', lang);
   document.documentElement.lang = lang === 'en' ? 'en' : 'ja';
@@ -464,6 +488,17 @@ function setupI18n() {
       const newLang = currentLanguage === 'en' ? 'jp' : 'en';
       applyLanguage(newLang);
     });
+  }
+
+  // Redirect on initial load if language preference conflicts with page
+  const path = location.pathname.split('/').pop() || 'index.html';
+  if (currentLanguage === 'en' && path === 'index.html') {
+    location.replace('index-en.html');
+    return;
+  }
+  if (currentLanguage === 'jp' && path === 'index-en.html') {
+    location.replace('index.html');
+    return;
   }
 
   // 初期ロード時の言語適用

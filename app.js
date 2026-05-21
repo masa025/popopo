@@ -2974,7 +2974,7 @@ function gachaResultCardHtml(item, index = 0) {
   const staggerMs = prefersReducedDiscoveryMotion() ? 0 : Math.min(index, 14) * 42;
   const staggerStyle = staggerMs ? ` style="animation-delay:${staggerMs}ms"` : '';
   return `
-    <button type="button" class="gacha-result-card"${staggerStyle} data-kind="${escHtml(kind)}" data-id="${escHtml(item.id || '')}" data-cat="${escHtml(item.cat || '')}" data-spot="${escHtml(item.spotName || item.title || '')}" data-title="${escHtml(item.title || '')}">
+    <button type="button" class="gacha-result-card premium-3d-rise"${staggerStyle} data-kind="${escHtml(kind)}" data-id="${escHtml(item.id || '')}" data-cat="${escHtml(item.cat || '')}" data-spot="${escHtml(item.spotName || item.title || '')}" data-title="${escHtml(item.title || '')}">
       <span class="gacha-result-src">${escHtml(src)}</span>
       <span class="gacha-result-title">${escHtml(titleLabel)}</span>
       <span class="gacha-result-text">${escHtml(preview)}</span>
@@ -3012,6 +3012,25 @@ function resetGachaModalUi() {
   if (idle) idle.hidden = false;
   if (spin) spin.hidden = true;
   if (res) res.hidden = true;
+
+  // Reset Gacha Wheel wrapper, rotation, and watercolor splash canvas
+  const wrapper = document.getElementById('gachaWheelWrapper');
+  if (wrapper) {
+    wrapper.style.display = '';
+    wrapper.style.opacity = '1';
+    wrapper.style.transform = 'scale(1)';
+  }
+  const wheel = document.getElementById('gachaWheel');
+  if (wheel) {
+    wheel.style.transition = 'none';
+    wheel.style.transform = 'rotate(0deg)';
+    void wheel.offsetHeight; // Force reflow to immediately reset transition
+    wheel.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.85, 0.35, 1)';
+  }
+  const splashCanvas = document.getElementById('gachaSplashCanvas');
+  if (splashCanvas) {
+    splashCanvas.innerHTML = '';
+  }
 }
 
 function openGachaModal() {
@@ -3063,6 +3082,12 @@ function showGachaResult(outcome) {
   const res = document.getElementById('gachaPhaseResult');
   if (res) res.hidden = false;
 
+  // Make sure the wheel wrapper is hidden once results are active
+  const wrapper = document.getElementById('gachaWheelWrapper');
+  if (wrapper) {
+    wrapper.style.display = 'none';
+  }
+
   const foot = document.getElementById('gachaResultFoot');
 
   if (outcome.mode === 'empty') {
@@ -3095,6 +3120,50 @@ function showGachaResult(outcome) {
       }
     }
   });
+}
+
+function triggerWatercolorSplash() {
+  const canvas = document.getElementById('gachaSplashCanvas');
+  if (!canvas) return;
+  canvas.innerHTML = '';
+
+  const colors = [
+    'rgba(255, 229, 229, 0.85)', // Sector 1: Pink (Food)
+    'rgba(229, 244, 227, 0.85)', // Sector 2: Green (Nature)
+    'rgba(230, 238, 250, 0.85)', // Sector 3: Blue (Museum)
+    'rgba(253, 243, 227, 0.85)', // Sector 4: Cream (Shop)
+    'rgba(234, 230, 250, 0.85)', // Sector 5: Purple (Relax)
+    'rgba(255, 251, 229, 0.85)', // Sector 6: Yellow (Views)
+    'rgba(229, 244, 236, 0.85)', // Sector 7: Mint (Event)
+    'rgba(247, 230, 250, 0.85)'  // Sector 8: Lavender (Entertainment)
+  ];
+
+  const blobCount = 8;
+  for (let i = 0; i < blobCount; i++) {
+    const blob = document.createElement('div');
+    blob.className = 'gacha-splash-blob';
+    
+    const size = Math.floor(Math.random() * 40) + 50; // 50px to 90px
+    const color = colors[i % colors.length];
+    
+    const angle = (i * (360 / blobCount)) + (Math.random() * 20 - 10);
+    const rad = (angle * Math.PI) / 180;
+    const distance = Math.floor(Math.random() * 50) + 70; // 70px to 120px
+    const dx = Math.round(Math.cos(rad) * distance);
+    const dy = Math.round(Math.sin(rad) * distance);
+
+    blob.style.width = `${size}px`;
+    blob.style.height = `${size}px`;
+    blob.style.background = `radial-gradient(circle, ${color} 0%, rgba(255,255,255,0) 80%)`;
+    blob.style.setProperty('--splash-dx', `${dx}px`);
+    blob.style.setProperty('--splash-dy', `${dy}px`);
+    
+    canvas.appendChild(blob);
+    
+    setTimeout(() => {
+      blob.classList.add('animate');
+    }, Math.random() * 40);
+  }
 }
 
 function runGachaSpin() {
@@ -3135,38 +3204,83 @@ function runGachaSpin() {
     return;
   }
 
-  let tickCount = 0;
-  const maxTicks = 12;
-  let nextDelay = 68;
-  const runFlickerTick = () => {
-    if (tickCount >= maxTicks) {
-      gachaSpinTickTimer = null;
+  // Segment Alignment Math: Identify category segment and calculate exact rotation
+  const selectedItem = outcome.items[0];
+  const cat = selectedItem ? selectedItem.cat : 'food';
+  const catAngles = {
+    food: 22.5,
+    mohinga: 22.5,
+    nature: 67.5,
+    museum: 112.5,
+    book: 112.5,
+    shop: 157.5,
+    relax: 202.5,
+    view: 247.5,
+    event: 292.5,
+    entertainment: 337.5
+  };
+  const baseAngle = catAngles[cat] || 22.5;
+  const spins = 5;
+  const jitter = (Math.random() * 24 - 12); // ±12 deg organic jitter
+  const targetRotation = (360 * spins) - baseAngle + jitter;
+
+  const wheel = document.getElementById('gachaWheel');
+  if (wheel) {
+    wheel.style.transform = `rotate(${targetRotation}deg)`;
+  }
+
+  // Ticker timer for slowly reducing category/text flickering (matching physical easing)
+  const duration = 3500;
+  const startTime = performance.now();
+
+  const tick = () => {
+    const elapsed = performance.now() - startTime;
+    if (elapsed >= duration) {
       return;
     }
+
     const sample = pool[Math.floor(Math.random() * pool.length)];
     const categoryLabel = getCatLabel(sample.cat);
     spinText.textContent = getDiscoveryTitle(sample, categoryLabel);
-    tickCount += 1;
-    nextDelay = Math.min(nextDelay + 12, 148);
-    gachaSpinTickTimer = window.setTimeout(runFlickerTick, nextDelay);
-  };
-  gachaSpinTickTimer = window.setTimeout(runFlickerTick, 55);
 
-  const settleMs = 1580;
+    const p = elapsed / duration;
+    // Quadratic delay mapping from 50ms up to 450ms matching the wheel's deceleration curve
+    const delay = 50 + (400 * Math.pow(p, 2));
+    gachaSpinTickTimer = window.setTimeout(tick, delay);
+  };
+  gachaSpinTickTimer = window.setTimeout(tick, 50);
+
   gachaSpinTimer = window.setTimeout(() => {
     if (gachaSpinTickTimer) {
       window.clearTimeout(gachaSpinTickTimer);
       gachaSpinTickTimer = null;
     }
-    showGachaResult(outcome);
-    gachaSpinTimer = null;
-    gachaIsSpinning = false;
-    if (spinBtn) {
-      spinBtn.disabled = false;
-      spinBtn.removeAttribute('aria-busy');
+
+    // Trigger watercolor splash at the center
+    triggerWatercolorSplash();
+
+    // Gracefully fade the wheel out from view
+    const wrapper = document.getElementById('gachaWheelWrapper');
+    if (wrapper) {
+      wrapper.style.opacity = '0';
+      wrapper.style.transform = 'scale(0.85)';
     }
-    spin.removeAttribute('aria-busy');
-  }, settleMs);
+
+    // Transition to outcomes card display after fade is partially complete
+    gachaSpinTimer = window.setTimeout(() => {
+      showGachaResult(outcome);
+      if (wrapper) {
+        wrapper.style.display = 'none';
+      }
+      gachaSpinTimer = null;
+      gachaIsSpinning = false;
+      if (spinBtn) {
+        spinBtn.disabled = false;
+        spinBtn.removeAttribute('aria-busy');
+      }
+      spin.removeAttribute('aria-busy');
+    }, 300);
+  }, duration);
 }
 
 function onGachaResultClick(e) {
@@ -6714,6 +6828,73 @@ function getWeatherIcon(code) {
   return '☁️';
 }
 
+function getWeatherType(code) {
+  const c = parseInt(code, 10);
+  if (isNaN(c)) return 'sunny';
+  if (c >= 100 && c < 200) return 'sunny';
+  if (c >= 200 && c < 300) return 'cloudy';
+  if (c >= 300 && c < 400) return 'rainy';
+  if (c >= 400) return 'snowy';
+  return 'sunny';
+}
+
+function updateWeatherBackdrop(type) {
+  const hero = document.getElementById('hero');
+  const canvas = document.getElementById('heroWeatherCanvas');
+  if (!hero || !canvas) return;
+
+  hero.classList.remove('weather-sunny', 'weather-cloudy', 'weather-rainy', 'weather-snowy');
+  hero.classList.add(`weather-${type}`);
+
+  canvas.innerHTML = '';
+
+  if (type === 'sunny') {
+    const count = 24;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'weather-particle sunny-particle';
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.animationDelay = `${Math.random() * 12}s`;
+      p.style.animationDuration = `${8 + Math.random() * 8}s`;
+      p.style.setProperty('--drift-x', `${(Math.random() - 0.5) * 80}px`);
+      canvas.appendChild(p);
+    }
+  } else if (type === 'cloudy') {
+    const count = 3;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'weather-particle cloudy-particle';
+      p.style.top = `${5 + Math.random() * 60}%`;
+      p.style.animationDelay = `${Math.random() * -48}s`;
+      p.style.animationDuration = `${40 + Math.random() * 20}s`;
+      p.style.setProperty('--drift-y', `${(Math.random() - 0.5) * 60}px`);
+      canvas.appendChild(p);
+    }
+  } else if (type === 'rainy') {
+    const count = 40;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'weather-particle rainy-particle';
+      p.style.left = `${Math.random() * 110}%`;
+      p.style.animationDelay = `${Math.random() * 2}s`;
+      p.style.animationDuration = `${0.9 + Math.random() * 0.6}s`;
+      p.style.setProperty('--drift-x', `${-40 - Math.random() * 40}px`);
+      canvas.appendChild(p);
+    }
+  } else if (type === 'snowy') {
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'weather-particle snowy-particle';
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.animationDelay = `${Math.random() * 8}s`;
+      p.style.animationDuration = `${6 + Math.random() * 5}s`;
+      p.style.setProperty('--drift-x', `${20 + Math.random() * 60}px`);
+      canvas.appendChild(p);
+    }
+  }
+}
+
 async function fetchCityWeather(city) {
   const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${city.id}.json`);
   if (!res.ok) throw new Error('Network error');
@@ -6721,6 +6902,14 @@ async function fetchCityWeather(city) {
 
   const weatherCode = data[0].timeSeries[0].areas[0].weatherCodes[0];
   const icon = getWeatherIcon(weatherCode);
+
+  const cities = getSelectedWeatherCities();
+  const isFirstCity = cities.length > 0 && city.id === cities[0].id;
+  if (isFirstCity) {
+    const weatherType = getWeatherType(weatherCode);
+    sessionStorage.setItem(`popopo_weather_type_${city.id}`, weatherType);
+    updateWeatherBackdrop(weatherType);
+  }
 
   let maxTemp = '';
   try {

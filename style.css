@@ -3499,3 +3499,272 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
     font-size: 0.68rem !important;
   }
 }
+
+/* ==========================================================================
+   PREMIUM WEATHER BACKDROP & UX STYLES
+   ========================================================================== */
+
+/* Weather backdrop overrides */
+#hero.weather-sunny {
+  background: radial-gradient(circle at 20% 15%, rgba(255, 235, 180, 0.32), transparent 28%),
+              radial-gradient(circle at 82% 18%, rgba(255, 220, 150, 0.24), transparent 34%),
+              radial-gradient(circle at 50% 82%, rgba(255, 200, 120, 0.18), transparent 38%),
+              linear-gradient(135deg, #fffef7 0%, #fffcf2 58%, #fff8e8 100%) !important;
+}
+#hero.weather-sunny .orb-1 { background: radial-gradient(circle, rgba(255,250,220,0.92), transparent) !important; }
+#hero.weather-sunny .orb-2 { background: radial-gradient(circle, #ffe3bd, transparent) !important; }
+#hero.weather-sunny .orb-3 { background: radial-gradient(circle, #ffd0a8, transparent) !important; }
+
+#hero.weather-cloudy {
+  background: radial-gradient(circle at 20% 15%, rgba(210, 220, 230, 0.3), transparent 26%),
+              radial-gradient(circle at 82% 18%, rgba(190, 205, 220, 0.26), transparent 32%),
+              radial-gradient(circle at 50% 82%, rgba(180, 195, 215, 0.2), transparent 36%),
+              linear-gradient(135deg, #fbfcfd 0%, #edf1f6 58%, #eef3f7 100%) !important;
+}
+#hero.weather-cloudy .orb-1 { background: radial-gradient(circle, rgba(230,238,245,0.9), transparent) !important; }
+#hero.weather-cloudy .orb-2 { background: radial-gradient(circle, #dbe4ef, transparent) !important; }
+#hero.weather-cloudy .orb-3 { background: radial-gradient(circle, #cfdbeb, transparent) !important; }
+
+#hero.weather-rainy {
+  background: radial-gradient(circle at 20% 15%, rgba(170, 190, 210, 0.35), transparent 26%),
+              radial-gradient(circle at 82% 18%, rgba(150, 175, 200, 0.28), transparent 32%),
+              radial-gradient(circle at 50% 82%, rgba(135, 160, 185, 0.22), transparent 36%),
+              linear-gradient(135deg, #f3f6f9 0%, #e1e7f0 58%, #d8e2eb 100%) !important;
+}
+#hero.weather-rainy .orb-1 { background: radial-gradient(circle, rgba(200,215,230,0.85), transparent) !important; }
+#hero.weather-rainy .orb-2 { background: radial-gradient(circle, #c7d5e6, transparent) !important; }
+#hero.weather-rainy .orb-3 { background: radial-gradient(circle, #b8cbdc, transparent) !important; }
+
+#hero.weather-snowy {
+  background: radial-gradient(circle at 20% 15%, rgba(240, 245, 255, 0.4), transparent 28%),
+              radial-gradient(circle at 82% 18%, rgba(220, 235, 255, 0.32), transparent 34%),
+              radial-gradient(circle at 50% 82%, rgba(205, 220, 245, 0.24), transparent 38%),
+              linear-gradient(135deg, #ffffff 0%, #f5f8fc 58%, #edf3fa 100%) !important;
+}
+#hero.weather-snowy .orb-1 { background: radial-gradient(circle, rgba(255,255,255,0.95), transparent) !important; }
+#hero.weather-snowy .orb-2 { background: radial-gradient(circle, #eaf1fb, transparent) !important; }
+#hero.weather-snowy .orb-3 { background: radial-gradient(circle, #dbe7f7, transparent) !important; }
+
+/* Weather particles containers & animations */
+.hero-weather-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.weather-particle {
+  position: absolute;
+  will-change: transform, opacity;
+}
+
+/* Sunny Particles: golden slow floating dots */
+.sunny-particle {
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(255,225,140,0.85) 0%, rgba(255,210,100,0) 80%);
+  border-radius: 50%;
+  animation: floatSunny 12s linear infinite;
+}
+@keyframes floatSunny {
+  0% {
+    transform: translate3d(0, 105%, 0) scale(0.4);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--drift-x, 40px), -5%, 0) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Cloudy Particles: massive slow passing mist shadows */
+.cloudy-particle {
+  width: 520px;
+  height: 380px;
+  background: radial-gradient(ellipse, rgba(226, 235, 246, 0.26) 0%, rgba(226, 235, 246, 0) 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: driftCloudy 48s linear infinite;
+}
+@keyframes driftCloudy {
+  0% {
+    transform: translate3d(-105%, 0, 0);
+  }
+  100% {
+    transform: translate3d(105%, var(--drift-y, 20px), 0);
+  }
+}
+
+/* Rainy Particles: fast vertical/diagonal slashes */
+.rainy-particle {
+  width: 1.5px;
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(140, 170, 205, 0.45), rgba(140, 170, 205, 0.05));
+  animation: fallRain 1.4s linear infinite;
+}
+@keyframes fallRain {
+  0% {
+    transform: translate3d(0, -40px, 0) rotate(12deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--drift-x, -30px), 105vh, 0) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+/* Snowy Particles: fluttering crystal flakes */
+.snowy-particle {
+  width: 6px;
+  height: 6px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.85);
+  animation: flutterSnow 9s linear infinite;
+}
+@keyframes flutterSnow {
+  0% {
+    transform: translate3d(0, -10px, 0) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--drift-x, 60px), 105vh, 0) scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   PREMIUM GACHA WHEEL & WATERCOLOR SPLASH UX STYLES
+   ========================================================================== */
+
+/* Gacha Wheel UI */
+.gacha-wheel-wrapper {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 10px auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.gacha-pointer {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+  font-size: 2.1rem;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+  animation: pointerWiggle 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes pointerWiggle {
+  0%, 100% { transform: translateX(-50%) rotate(180deg) translateY(0); }
+  50% { transform: translateX(-50%) rotate(180deg) translateY(-2px); }
+}
+
+.gacha-wheel-shadow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(140, 126, 107, 0.14) 40%, rgba(140, 126, 107, 0.04) 70%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gacha-wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #FFFEFA;
+  box-shadow: 0 6px 20px rgba(140, 126, 107, 0.22), inset 0 2px 5px rgba(255,255,255,0.8);
+  position: relative;
+  z-index: 2;
+  transform: rotate(0deg);
+  transition: transform 3.5s cubic-bezier(0.15, 0.85, 0.35, 1);
+  will-change: transform;
+}
+
+.gacha-wheel-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Watercolor Splash Splat effect inside modal */
+.gacha-splash-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gacha-splash-blob {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  opacity: 0;
+  filter: blur(12px);
+  will-change: transform, opacity;
+}
+
+.gacha-splash-blob.animate {
+  animation: watercolorSplat 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes watercolorSplat {
+  0% {
+    transform: scale(0) translate3d(0, 0, 0);
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(2.4) translate3d(var(--splash-dx, 20px), var(--splash-dy, -20px), 0);
+    opacity: 0;
+  }
+}
+
+/* Premium 3D Card Rise override */
+.gacha-result-card.premium-3d-rise {
+  opacity: 0;
+  transform: perspective(800px) rotateX(16deg) rotateY(-8deg) translateY(24px) scale(0.92);
+  box-shadow: 0 15px 35px rgba(43, 67, 120, 0.16), 0 0 0 1px rgba(79, 127, 216, 0.08) !important;
+  animation: premium3DCardRise 0.75s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
+}
+
+@keyframes premium3DCardRise {
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1);
+    box-shadow: 0 8px 24px rgba(43, 67, 120, 0.08), 0 0 0 1px rgba(79, 127, 216, 0.12);
+  }
+}
+
