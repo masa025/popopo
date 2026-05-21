@@ -4110,7 +4110,10 @@ function renderSpotCards(cat = 'all') {
       ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
       <div class="spot-card-info">
         <div class="spot-name">${escHtml(displayName)}</div>
-        <div class="spot-area"><span>📍 ${escHtml(displayArea)}</span></div>
+        <div class="spot-area">
+          <span>📍 ${escHtml(displayArea)}</span>
+          ${(s.weatherId || getWeatherIdByPref(s.pref)) ? `<span class="spot-card-weather" data-weather-id="${s.weatherId || getWeatherIdByPref(s.pref)}"></span>` : ''}
+        </div>
         ${inboundTagsHtml}
         <a href="${gmapsUrl}" target="_blank" rel="noopener" class="spot-gmaps-btn">
           ${gmapsText}
@@ -4167,6 +4170,7 @@ function renderSpotCards(cat = 'all') {
   setStatText('statSpots', allSpots.length);
   updateMoreButton('spotsMoreBtn', filtered.length, Math.min(visibleSpotCount, filtered.length), INITIAL_SPOT_COUNT);
   queueAutoTranslateVisibleContent();
+  fetchAndRenderSpotWeather();
 }
 
 function getCatLabel(cat) {
@@ -7810,6 +7814,88 @@ function init() {
   adjustHeroPadding();
   window.addEventListener('resize', adjustHeroPadding);
   window.addEventListener('load', adjustHeroPadding);
+}
+
+function getWeatherIdByPref(pref) {
+  if (!pref) return null;
+  const cleanPref = pref.replace(/(都|道|府|県)$/, '').trim();
+  const prefMap = {
+    '北海道': '016000', '青森': '020000', '岩手': '030000', '宮城': '040000', '秋田': '050000',
+    '山形': '060000', '福島': '070000', '茨城': '080000', '栃木': '090000', '群馬': '100000',
+    '埼玉': '110000', '千葉': '120000', '東京': '130000', '神奈川': '140000', '新潟': '150000',
+    '富山': '160000', '石川': '170000', '福井': '180000', '山梨': '190000', '長野': '200000',
+    '岐阜': '210000', '静岡': '220000', '愛知': '230000', '三重': '240000', '滋賀': '250000',
+    '京都': '260000', '大阪': '270000', '兵庫': '280000', '奈良': '290000', '和歌山': '300000',
+    '鳥取': '310000', '島根': '320000', '岡山': '330000', '広島': '340000', '山口': '350000',
+    '徳島': '360000', '香川': '370000', '愛媛': '380000', '高知': '390000', '福岡': '400000',
+    '佐賀': '410000', '長崎': '420000', '熊本': '430000', '大分': '440000', '宮崎': '450000',
+    '鹿児島': '460100', '沖縄': '471000'
+  };
+  return prefMap[cleanPref] || null;
+}
+
+function getWeatherName(code, isEn) {
+  const c = parseInt(code, 10);
+  if (isNaN(c)) return isEn ? 'Cloudy' : '曇り';
+  if (c >= 100 && c < 200) return isEn ? 'Sunny' : '晴れ';
+  if (c >= 200 && c < 300) return isEn ? 'Cloudy' : '曇り';
+  if (c >= 300 && c < 400) return isEn ? 'Rainy' : '雨';
+  if (c >= 400) return isEn ? 'Snowy' : '雪';
+  return isEn ? 'Cloudy' : '曇り';
+}
+
+async function fetchAndRenderSpotWeather() {
+  const badges = document.querySelectorAll('.spot-card-weather');
+  if (badges.length === 0) return;
+
+  const weatherIds = Array.from(new Set(
+    Array.from(badges)
+      .map(el => el.dataset.weatherId)
+      .filter(Boolean)
+  ));
+
+  const isEn = typeof currentLanguage !== 'undefined' ? currentLanguage === 'en' : false;
+
+  const promises = weatherIds.map(async (id) => {
+    try {
+      const cached = sessionStorage.getItem(`popopo_spot_weather_${id}`);
+      if (cached) {
+        return { id, code: cached };
+      }
+      const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${id}.json`);
+      if (!res.ok) throw new Error('JMA API error');
+      const data = await res.json();
+      const wCodes = data[0].timeSeries[0].areas[0].weatherCodes;
+      const code = wCodes.length > 1 ? wCodes[1] : wCodes[0];
+      if (code) {
+        sessionStorage.setItem(`popopo_spot_weather_${id}`, code);
+        return { id, code };
+      }
+    } catch (e) {
+      console.error(`Failed to fetch weather for area ${id}:`, e);
+    }
+    return { id, code: null };
+  });
+
+  const results = await Promise.all(promises);
+  const weatherMap = {};
+  results.forEach(r => {
+    if (r.code) {
+      weatherMap[r.id] = r.code;
+    }
+  });
+
+  badges.forEach(badge => {
+    const id = badge.dataset.weatherId;
+    const code = weatherMap[id];
+    if (code) {
+      const icon = (typeof getWeatherIcon !== 'undefined') ? getWeatherIcon(code) : '☁️';
+      const name = getWeatherName(code, isEn);
+      badge.innerHTML = `${isEn ? 'Tomorrow' : '明日'}: ${icon} ${name}`;
+    } else {
+      badge.style.display = 'none';
+    }
+  });
 }
 
 // ヒーローの上部余白をナビゲーションバーの実際の高さに合わせて動的に調整する
