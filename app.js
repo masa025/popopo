@@ -7844,6 +7844,8 @@ function getWeatherName(code, isEn) {
   return isEn ? 'Cloudy' : '曇り';
 }
 
+const _spotWeatherInMemoryCache = {};
+
 async function fetchAndRenderSpotWeather() {
   const badges = document.querySelectorAll('.spot-card-weather');
   if (badges.length === 0) return;
@@ -7857,22 +7859,46 @@ async function fetchAndRenderSpotWeather() {
   const isEn = typeof currentLanguage !== 'undefined' ? currentLanguage === 'en' : false;
 
   const promises = weatherIds.map(async (id) => {
+    const cacheKey = `popopo_spot_weather_${id}`;
     try {
-      const cached = sessionStorage.getItem(`popopo_spot_weather_${id}`);
-      if (cached) {
+      let cached = null;
+      try {
+        cached = sessionStorage.getItem(cacheKey);
+      } catch (e) {
+        cached = _spotWeatherInMemoryCache[cacheKey];
+      }
+
+      if (cached && cached !== 'null' && cached !== 'undefined' && cached !== 'error') {
         return { id, code: cached };
       }
+      
+      if (cached === 'error') {
+        return { id, code: null };
+      }
+
       const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${id}.json`);
-      if (!res.ok) throw new Error('JMA API error');
+      if (!res.ok) throw new Error(`JMA API status ${res.status}`);
       const data = await res.json();
-      const wCodes = data[0].timeSeries[0].areas[0].weatherCodes;
+      
+      const wCodes = data?.[0]?.timeSeries?.[0]?.areas?.[0]?.weatherCodes;
+      if (!wCodes || wCodes.length === 0) throw new Error('Invalid JSON structure or empty weatherCodes');
+      
       const code = wCodes.length > 1 ? wCodes[1] : wCodes[0];
       if (code) {
-        sessionStorage.setItem(`popopo_spot_weather_${id}`, code);
+        try {
+          sessionStorage.setItem(cacheKey, code);
+        } catch (e) {
+          _spotWeatherInMemoryCache[cacheKey] = code;
+        }
         return { id, code };
       }
     } catch (e) {
-      console.error(`Failed to fetch weather for area ${id}:`, e);
+      console.warn(`[Spot Weather] Failed to fetch weather for area ${id}:`, e);
+      try {
+        sessionStorage.setItem(cacheKey, 'error');
+      } catch (err) {
+        _spotWeatherInMemoryCache[cacheKey] = 'error';
+      }
     }
     return { id, code: null };
   });
@@ -7880,19 +7906,25 @@ async function fetchAndRenderSpotWeather() {
   const results = await Promise.all(promises);
   const weatherMap = {};
   results.forEach(r => {
-    if (r.code) {
+    if (r.code && r.code !== 'error') {
       weatherMap[r.id] = r.code;
     }
   });
 
   badges.forEach(badge => {
-    const id = badge.dataset.weatherId;
-    const code = weatherMap[id];
-    if (code) {
-      const icon = (typeof getWeatherIcon !== 'undefined') ? getWeatherIcon(code) : '☁️';
-      const name = getWeatherName(code, isEn);
-      badge.innerHTML = `${isEn ? 'Tomorrow' : '明日'}: ${icon} ${name}`;
-    } else {
+    try {
+      const id = badge.dataset.weatherId;
+      const code = weatherMap[id];
+      if (code && code !== 'error') {
+        const icon = (typeof getWeatherIcon !== 'undefined') ? getWeatherIcon(code) : '☁️';
+        const name = getWeatherName(code, isEn);
+        badge.innerHTML = `${isEn ? 'Tomorrow' : '明日'}: ${icon} ${name}`;
+        badge.style.display = '';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('[Spot Weather] Render error for badge:', e);
       badge.style.display = 'none';
     }
   });
