@@ -3999,10 +3999,9 @@ function renderSpotCards(cat = 'all') {
         ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">${escHtml(suggestedByText)}</div>` : ''}
         ${(() => {
           const spotTextForTrans = `【${s.name}】\n${s.memo || s.reason || ''}`;
-          const hasJapaneseText = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(spotTextForTrans);
           const showSpotTransBtn = isEn 
             ? (!spotTrans.name && !spotTrans.memo) 
-            : (!hasJapaneseText && spotTextForTrans.trim().length > 0);
+            : (spotTextForTrans.trim().length > 0);
           return showSpotTransBtn ? renderTranslationButton(spotTextForTrans) : '';
         })()}
       </div>
