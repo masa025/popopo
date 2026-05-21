@@ -629,7 +629,15 @@ window.toggleTranslation = async function(btn) {
   let translatedBox = container.querySelector('.translated-box');
   if (translatedBox) {
     translatedBox.remove();
-    btn.innerHTML = `🌐 ${currentLanguage === 'en' ? 'English' : '翻訳する'}`;
+    const originalText = btn.dataset.translateText || '';
+    let label = '🌐 翻訳する';
+    if (currentLanguage === 'en') {
+      label = '🌐 Show English';
+    } else {
+      const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(originalText);
+      label = hasJapanese ? '🌐 Translate to English' : '🌐 翻訳する';
+    }
+    btn.innerHTML = label;
     return;
   }
 
@@ -638,9 +646,24 @@ window.toggleTranslation = async function(btn) {
 
   btn.disabled = true;
   const originalLabel = btn.innerHTML;
-  btn.innerHTML = `<span class="translation-loading"></span> ${currentLanguage === 'en' ? 'Translating...' : '翻訳中...'}`;
+  
+  let targetLang = currentLanguage;
+  let loadingText = '翻訳中...';
+  if (currentLanguage === 'en') {
+    loadingText = 'Translating...';
+  } else {
+    const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(originalText);
+    if (hasJapanese) {
+      targetLang = 'en';
+      loadingText = 'Translating...';
+    } else {
+      targetLang = 'ja';
+      loadingText = '翻訳中...';
+    }
+  }
 
-  const targetLang = currentLanguage;
+  btn.innerHTML = `<span class="translation-loading"></span> ${loadingText}`;
+
   const translated = await fetchTranslation(originalText, targetLang);
 
   btn.disabled = false;
@@ -655,7 +678,12 @@ window.toggleTranslation = async function(btn) {
     } else {
       container.appendChild(translatedBox);
     }
-    btn.innerHTML = `🌐 ${currentLanguage === 'en' ? 'Show Original' : '原文を表示'}`;
+    
+    let revertLabel = '🌐 原文を表示';
+    if (currentLanguage === 'en' || targetLang === 'en') {
+      revertLabel = '🌐 Show Original';
+    }
+    btn.innerHTML = revertLabel;
   } else {
     btn.innerHTML = originalLabel;
     if (btn.dataset.autoTranslate !== 'true') {
@@ -666,7 +694,13 @@ window.toggleTranslation = async function(btn) {
 
 function renderTranslationButton(text) {
   if (!text) return '';
-  const label = currentLanguage === 'en' ? '🌐 Show English' : '🌐 翻訳する';
+  let label = '';
+  if (currentLanguage === 'en') {
+    label = '🌐 Show English';
+  } else {
+    const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
+    label = hasJapanese ? '🌐 Translate to English' : '🌐 翻訳する';
+  }
   return `
     <div class="translate-btn-container">
       <button class="translate-btn" data-translate-text="${escHtml(text)}" onclick="toggleTranslation(this)">
@@ -3278,6 +3312,28 @@ function isDirectImageUrl(url) {
   return /\.(png|jpe?g|gif|webp|avif)(\?.*)?$/i.test(url || '');
 }
 
+function renderChatMessage(message) {
+  if (!message) return '';
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = String(message).split(urlRegex);
+  return parts.map(part => {
+    if (part.match(/^https?:\/\/[^\s]+$/)) {
+      if (isDirectImageUrl(part)) {
+        return `
+          <div class="chat-attached-image-container" style="margin-top:6px;">
+            <a href="${escHtml(part)}" target="_blank" rel="noopener noreferrer">
+              <img class="chat-attached-image" src="${escHtml(part)}" alt="User attached image" style="max-width:100%; max-height:280px; border-radius:8px; border:1px solid var(--border); display:block; object-fit:contain;">
+            </a>
+          </div>
+        `;
+      } else {
+        return `<a href="${escHtml(part)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue); text-decoration:underline; word-break:break-all;">${escHtml(part)}</a>`;
+      }
+    }
+    return escHtml(part);
+  }).join('');
+}
+
 function shuffleItems(items = []) {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -3941,7 +3997,14 @@ function renderSpotCards(cat = 'all') {
         </a>
         ${displayMemo ? `<div class="spot-memo">${escHtml(displayMemo)}</div>` : ''}
         ${s.suggested ? `<div class="spot-memo" style="font-size:0.78rem;color:var(--text-dim);">${escHtml(suggestedByText)}</div>` : ''}
-        ${isEn && !spotTrans.name && !spotTrans.memo ? renderTranslationButton(`【${s.name}】\n${s.memo || s.reason || ''}`) : ''}
+        ${(() => {
+          const spotTextForTrans = `【${s.name}】\n${s.memo || s.reason || ''}`;
+          const hasJapaneseText = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(spotTextForTrans);
+          const showSpotTransBtn = isEn 
+            ? (!spotTrans.name && !spotTrans.memo) 
+            : (!hasJapaneseText && spotTextForTrans.trim().length > 0);
+          return showSpotTransBtn ? renderTranslationButton(spotTextForTrans) : '';
+        })()}
       </div>
       ${resources.length ? `<div class="spot-resources">${renderResourceLinks(resources, 'spot', 'spot-link')}</div>` : ''}
       ${latestReviewText ? `
@@ -4196,7 +4259,7 @@ function renderChats(chats) {
             <span class="chat-date">${dateStr}</span>
           </div>
           ${replyContext}
-          <div class="chat-msg">${escHtml(chat.message)}</div>
+          <div class="chat-msg">${renderChatMessage(chat.message)}</div>
           ${translationHtml}
           <div class="chat-reactions">
             ${renderChatReactionButton(thanksId, '💐', thanksLabel, thanksReacted)}
