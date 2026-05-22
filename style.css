@@ -4071,4 +4071,446 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
   box-shadow: 0 4px 8px rgba(79, 127, 216, 0.08);
 }
 
+/* ============================================================
+   ダークモード：主要コンポーネントの仕上げ（v20260520-dark）
+   ここから下は [data-theme="dark"] 限定の上書き。
+   light テーマには一切影響しません。
+   ============================================================ */
+[data-theme="dark"] {
+  --hand-accent: #4FD1C5;
+  --teal-text: #5FCFC1;            /* ダークで読める теаль文字 */
+  --surface-1: #162238;            /* カード標準面 */
+  --surface-2: #1D2E4B;            /* 少し浮いた面 */
+  --surface-sunken: #0F1626;       /* 沈んだ面（引用・入力など） */
+  --tint-blue: rgba(96,165,250,0.14);
+  --tint-teal: rgba(79,209,197,0.14);
+}
+
+/* --- 背景・セクション --- */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 12% 4%, rgba(96,165,250,0.07), transparent 26%),
+    radial-gradient(circle at 90% 12%, rgba(79,209,197,0.06), transparent 28%),
+    var(--bg);
+}
+[data-theme="dark"] #hero {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(96,165,250,0.13), transparent 26%),
+    radial-gradient(circle at 82% 18%, rgba(79,209,197,0.10), transparent 30%),
+    radial-gradient(circle at 50% 82%, rgba(96,165,250,0.08), transparent 34%),
+    linear-gradient(135deg, #0B0F19 0%, #111827 58%, #0E1A24 100%);
+}
+[data-theme="dark"] #hero::before {
+  background:
+    radial-gradient(ellipse at center, rgba(11,15,25,0.88) 0%, rgba(11,15,25,0.80) 38%, rgba(11,15,25,0.56) 72%, rgba(11,15,25,0.42) 100%),
+    url('assets/popopo-map-visual-20260518.png') center 46% / cover no-repeat;
+  opacity: 0.55;
+}
+[data-theme="dark"] #spots { background: rgba(17,24,39,0.35); }
+[data-theme="dark"] #visited,
+[data-theme="dark"] #community {
+  background: linear-gradient(180deg, rgba(17,24,39,0.5), rgba(11,15,25,0.66));
+}
+
+/* --- 背景オーブ --- */
+[data-theme="dark"] .orb { opacity: 0.14; }
+[data-theme="dark"] .orb-1 { background: radial-gradient(circle, rgba(96,165,250,0.55), transparent); }
+[data-theme="dark"] .orb-2 { background: radial-gradient(circle, rgba(167,139,250,0.45), transparent); }
+[data-theme="dark"] .orb-3 { background: radial-gradient(circle, rgba(79,209,197,0.45), transparent); }
+
+/* --- ボタン --- */
+[data-theme="dark"] .btn-outline { background: rgba(96,165,250,0.06); }
+[data-theme="dark"] .btn-outline:hover { background: var(--tint-blue); }
+[data-theme="dark"] .btn-ghost { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .btn-ghost:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+[data-theme="dark"] .btn-add-spot { background: var(--tint-blue); }
+[data-theme="dark"] .btn-add-spot:hover { background: var(--surface-2); }
+[data-theme="dark"] .btn-gallery-all { background: var(--surface-1); }
+[data-theme="dark"] .btn-gallery-all:hover { background: var(--surface-2); }
+
+/* --- ナビ（発見カード行） --- */
+[data-theme="dark"] .nav-discovery {
+  background: rgba(17,24,39,0.92);
+  border-top-color: rgba(96,165,250,0.12);
+}
+[data-theme="dark"] .nav-discovery-category {
+  background: var(--surface-2);
+  border-color: rgba(96,165,250,0.22);
+}
+[data-theme="dark"] .nav-gacha-btn {
+  background: linear-gradient(165deg, #1D2E4B, #162238);
+  border-color: rgba(170,150,120,0.35);
+  color: #E8DEC9;
+}
+[data-theme="dark"] .nav-gacha-btn:hover { background: var(--surface-2); }
+
+/* --- ヒーロー内パーツ --- */
+[data-theme="dark"] .hero-float-card {
+  background: rgba(22,34,56,0.92);
+  border-color: rgba(96,165,250,0.18);
+}
+[data-theme="dark"] .hero-float-text { color: #AEB9CF; }
+[data-theme="dark"] .hero-float-meta { color: var(--text-dim); }
+[data-theme="dark"] .hero-float-kind { background: var(--tint-blue); }
+[data-theme="dark"] .hero-badge,
+[data-theme="dark"] .hero-chat-ticker {
+  background: rgba(22,34,56,0.86);
+  color: var(--teal-text);
+}
+[data-theme="dark"] .hero-gallery-item { background: var(--surface-2); }
+[data-theme="dark"] .hero-title { color: #F3F4F6; }
+[data-theme="dark"] .hero-accent { color: var(--teal-text); }
+[data-theme="dark"] .hero-sub { color: #AEB9CF; }
+[data-theme="dark"] .hero-story-link {
+  background: rgba(22,34,56,0.82);
+  color: var(--teal-text);
+}
+[data-theme="dark"] .hero-story-link:hover { background: var(--surface-2); color: var(--teal-text); }
+[data-theme="dark"] .hero-quick-link {
+  background: rgba(22,34,56,0.7);
+  color: #C7D0E2;
+  border-color: rgba(96,165,250,0.18);
+}
+[data-theme="dark"] .hero-quick-link:hover { background: var(--surface-2); color: var(--teal-text); }
+[data-theme="dark"] .hero-quick-link--gacha {
+  background: linear-gradient(165deg, #21304d, #1a2740);
+  color: #E8DEC9;
+  border-color: rgba(170,150,120,0.4);
+}
+[data-theme="dark"] .hero-quick-link--game {
+  background: rgba(22,34,56,0.7);
+  color: var(--blue);
+}
+[data-theme="dark"] .hero-stats {
+  background: rgba(22,34,56,0.82);
+  border-color: rgba(96,165,250,0.18);
+}
+[data-theme="dark"] .hero-btns .btn-outline {
+  background: rgba(22,34,56,0.55);
+  color: #AEB9CF;
+}
+[data-theme="dark"] .hero-btns .btn-outline:hover { background: var(--tint-blue); }
+[data-theme="dark"] .scroll-hint { background: rgba(22,34,56,0.85); }
+
+/* --- ガチャ --- */
+[data-theme="dark"] .gacha-spinner-display {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
+  border-color: rgba(96,165,250,0.16);
+  color: #C7D0E2;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+[data-theme="dark"] .gacha-result-card {
+  background: var(--surface-1);
+  border-color: rgba(96,165,250,0.16);
+}
+
+/* --- タブ・フィルター --- */
+[data-theme="dark"] .tab { background: rgba(22,34,56,0.7); }
+[data-theme="dark"] .tabs-scroll-btn {
+  background: var(--surface-2);
+  border-color: rgba(96,165,250,0.22);
+}
+[data-theme="dark"] .tabs-fade-left { background: linear-gradient(to right, var(--bg) 20%, transparent); }
+[data-theme="dark"] .tabs-fade-right { background: linear-gradient(to left, var(--bg) 20%, transparent); }
+[data-theme="dark"] .area-filter-row-sub {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(96,165,250,0.14);
+}
+[data-theme="dark"] .area-chip {
+  background: rgba(22,34,56,0.8);
+  color: #AEB9CF;
+}
+[data-theme="dark"] .area-chip-main { background: var(--surface-1); }
+[data-theme="dark"] .area-chip-sub { background: rgba(22,34,56,0.6); }
+[data-theme="dark"] .want-list-toggle { background: rgba(22,34,56,0.8); }
+[data-theme="dark"] .want-list-hint {
+  background: var(--tint-blue);
+  border-color: rgba(96,165,250,0.22);
+}
+
+/* --- スポットカード --- */
+[data-theme="dark"] .spot-card { background: var(--surface-1); }
+[data-theme="dark"] .spot-card:hover { background: var(--surface-2); }
+[data-theme="dark"] .spot-intent-badge {
+  background: var(--tint-teal);
+  color: var(--teal-text);
+}
+[data-theme="dark"] .spot-like-btn { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .spot-card-weather {
+  background: var(--surface-sunken);
+  border-color: rgba(96,165,250,0.2);
+}
+[data-theme="dark"] .spot-latest-review {
+  background: rgba(255,255,255,0.03);
+}
+[data-theme="dark"] .spot-latest-review span { background: var(--tint-teal); color: var(--teal-text); }
+[data-theme="dark"] .spot-latest-review strong { color: #C7D0E2; }
+[data-theme="dark"] .spot-latest-review:hover { background: var(--surface-2); }
+[data-theme="dark"] .spot-link,
+[data-theme="dark"] .spot-reviews-btn,
+[data-theme="dark"] .spot-post-btn { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .spots-empty-card { background: var(--surface-1); }
+
+/* --- 感想カード --- */
+[data-theme="dark"] .visited-card { background: var(--surface-1); }
+[data-theme="dark"] .visited-category-badge.food { background: rgba(255,107,53,0.16); }
+[data-theme="dark"] .visited-category-badge.museum { background: rgba(155,93,229,0.18); }
+[data-theme="dark"] .visited-review {
+  background: var(--surface-sunken);
+}
+[data-theme="dark"] .visited-photo-link:hover { background: var(--surface-2); }
+[data-theme="dark"] .review-seen-btn { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .visited-book {
+  background: rgba(167,139,250,0.12);
+  border-color: rgba(167,139,250,0.3);
+  color: #C4B5FD;
+}
+[data-theme="dark"] .visited-book a { color: #C4B5FD; }
+
+/* --- 掲示板・お題 --- */
+[data-theme="dark"] .daily-prompt-card {
+  background: linear-gradient(135deg, var(--surface-1), rgba(29,46,75,0.85));
+  border-color: rgba(79,209,197,0.26);
+}
+[data-theme="dark"] .daily-prompt-kicker { background: var(--tint-teal); color: var(--teal-text); }
+[data-theme="dark"] .firebase-notice {
+  background: rgba(252,211,77,0.1);
+  border-color: rgba(252,211,77,0.32);
+  color: #FCD34D;
+}
+[data-theme="dark"] .filter-bar { background: var(--surface-1); }
+[data-theme="dark"] .filter-select { background: var(--surface-sunken); }
+[data-theme="dark"] .chat-card { background: var(--surface-1); }
+[data-theme="dark"] .chat-reaction-btn { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .chat-thread {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+  border-color: rgba(96,165,250,0.1);
+}
+[data-theme="dark"] .chat-replies-label {
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+[data-theme="dark"] .chat-card.is-reply {
+  background: var(--surface-2);
+  border-color: rgba(79,209,197,0.16);
+}
+[data-theme="dark"] .chat-card.is-reply .chat-avatar {
+  background: rgba(79,209,197,0.16);
+  color: var(--teal-text);
+}
+[data-theme="dark"] .chat-reply-clear { background: rgba(255,255,255,0.08); }
+[data-theme="dark"] .chat-reply-clear:hover { background: rgba(255,255,255,0.16); }
+[data-theme="dark"] .btn-reply { background: rgba(255,255,255,0.04); }
+/* お題・投票（v20260510で追加した部分） */
+[data-theme="dark"] .daily-prompt-toggle { background: rgba(96,165,250,0.1); }
+[data-theme="dark"] .daily-prompt-toggle:hover { background: var(--surface-2); }
+[data-theme="dark"] .daily-prompt-suggest {
+  background: linear-gradient(135deg, rgba(29,46,75,0.7), rgba(22,34,56,0.7));
+  border-color: rgba(79,209,197,0.26);
+}
+[data-theme="dark"] .daily-prompt-item { background: var(--surface-2); }
+[data-theme="dark"] .daily-prompt-item:hover { background: #233655; }
+[data-theme="dark"] .daily-prompt-item.is-leading {
+  background: linear-gradient(135deg, var(--surface-2), rgba(79,209,197,0.12));
+}
+[data-theme="dark"] .daily-prompt-empty { background: rgba(255,255,255,0.03); }
+
+/* --- フォーム --- */
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-textarea { background: var(--surface-sunken); }
+[data-theme="dark"] .form-assurance {
+  background: var(--tint-blue);
+  border-color: rgba(96,165,250,0.22);
+  color: #AEB9CF;
+}
+[data-theme="dark"] .star-btn { color: #3A4860; }
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] .btn-post-action { background: var(--surface-sunken); }
+[data-theme="dark"] .btn-post-action { border-color: var(--border); }
+[data-theme="dark"] .btn-post-action.is-delete:hover {
+  background: rgba(255,77,77,0.14);
+  border-color: rgba(255,120,120,0.4);
+  color: #FF8585;
+}
+
+/* --- モーダル類 --- */
+[data-theme="dark"] .gallery-modal-visual { background: var(--surface-sunken); }
+[data-theme="dark"] .gallery-modal-image { background: #1A2740; }
+[data-theme="dark"] .gallery-lock-visual { background: rgba(255,255,255,0.03); }
+[data-theme="dark"] .gallery-lock-icon { background: var(--surface-2); }
+[data-theme="dark"] .gallery-lock-panel {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
+}
+[data-theme="dark"] .gallery-grid-container { background: var(--surface-sunken); }
+[data-theme="dark"] .gallery-grid-item { background: var(--surface-1); }
+[data-theme="dark"] .gallery-tabs { border-bottom-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .gallery-tab.active { color: var(--text); border-bottom-color: var(--blue); }
+[data-theme="dark"] .gallery-modal-box.is-dictionary-mode .gallery-modal-visual {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(96,165,250,0.07), transparent 34%),
+    linear-gradient(180deg, #141d30 0%, #0F1626 100%);
+}
+[data-theme="dark"] .kiriban-card {
+  background:
+    radial-gradient(circle at 22% 10%, rgba(96,165,250,0.18), transparent 40%),
+    linear-gradient(135deg, #1D2E4B, #162238);
+  border-color: rgba(96,165,250,0.3);
+}
+[data-theme="dark"] .kiriban-close { background: var(--surface-2); }
+[data-theme="dark"] .intro-story-card {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(96,165,250,0.12), transparent 30%),
+    var(--paper);
+  border-color: rgba(96,165,250,0.22);
+}
+[data-theme="dark"] .intro-story-close { background: var(--surface-2); }
+[data-theme="dark"] .intro-story-kicker { color: var(--teal-text); }
+[data-theme="dark"] .intro-story-slide p { color: #AEB9CF; }
+[data-theme="dark"] .intro-story-slide p[lang="en"] { color: var(--text-dim); }
+
+/* --- 天気バー --- */
+[data-theme="dark"] .weather-bar {
+  background: linear-gradient(135deg, var(--surface-1), rgba(29,46,75,0.85));
+  border-color: rgba(96,165,250,0.22);
+}
+[data-theme="dark"] .weather-city-chip { background: var(--surface-sunken); }
+
+/* --- スマホ Bottom Nav --- */
+[data-theme="dark"] .bottom-nav {
+  background: rgba(17,24,39,0.94);
+  border-top-color: var(--border);
+}
+[data-theme="dark"] .bottom-nav-post::before { background: rgba(255,255,255,0.04); }
+
+/* --- 人参鹿ガイド --- */
+[data-theme="dark"] .carrot-guide-bubble {
+  background: rgba(22,34,56,0.96);
+  border-color: rgba(79,209,197,0.4);
+}
+[data-theme="dark"] .carrot-guide-bubble::after {
+  background: rgba(22,34,56,0.96);
+  border-color: rgba(79,209,197,0.32);
+}
+[data-theme="dark"] .carrot-guide-kicker { color: var(--teal-text); }
+[data-theme="dark"] .carrot-guide-text { color: #AEB9CF; }
+[data-theme="dark"] .carrot-guide-link { background: rgba(96,165,250,0.1); }
+[data-theme="dark"] .carrot-guide-btn { background: var(--surface-1); }
+[data-theme="dark"] .carrot-guide-btn img { background: var(--surface-2); }
+
+/* --- about（この場所を作った理由）ページ --- */
+[data-theme="dark"] .about-page {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(79,209,197,0.08), transparent 30%),
+    radial-gradient(circle at 86% 8%, rgba(96,165,250,0.08), transparent 28%),
+    linear-gradient(180deg, #0B0F19 0%, #111827 48%, #0E1A24 100%);
+}
+[data-theme="dark"] .about-hero-luxury {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(96,165,250,0.12), transparent 24%),
+    radial-gradient(circle at 78% 22%, rgba(79,209,197,0.1), transparent 28%),
+    linear-gradient(135deg, #0B0F19 0%, #111827 56%, #0E1A24 100%);
+}
+[data-theme="dark"] .about-hero-luxury::before {
+  background:
+    radial-gradient(ellipse at center, rgba(11,15,25,0.86) 0%, rgba(11,15,25,0.74) 36%, rgba(11,15,25,0.5) 68%, rgba(11,15,25,0.38) 100%),
+    url('assets/popopo-map-visual-20260518.png') center 48% / cover no-repeat;
+  opacity: 0.6;
+}
+[data-theme="dark"] .about-luxury-label {
+  background: rgba(22,34,56,0.7);
+  color: var(--teal-text);
+}
+[data-theme="dark"] .about-luxury-title { color: #F3F4F6; }
+[data-theme="dark"] .about-luxury-lead {
+  background: rgba(22,34,56,0.7);
+  border-color: rgba(96,165,250,0.18);
+  color: #C7D0E2;
+}
+[data-theme="dark"] .about-story-section {
+  background: linear-gradient(180deg, rgba(17,24,39,0.6), rgba(11,15,25,0.78));
+}
+[data-theme="dark"] .about-story-eyebrow { color: var(--teal-text); }
+[data-theme="dark"] .about-story-heading p { color: #AEB9CF; }
+[data-theme="dark"] .about-story-chapter {
+  background: var(--surface-1);
+  border-color: rgba(96,165,250,0.2);
+}
+[data-theme="dark"] .about-story-chapter:nth-child(even) {
+  background: var(--surface-2);
+  border-color: rgba(79,209,197,0.22);
+}
+[data-theme="dark"] .about-chapter-number {
+  background: var(--tint-blue);
+  border-color: rgba(96,165,250,0.3);
+}
+[data-theme="dark"] .about-chapter-copy h2 { color: #F3F4F6; }
+[data-theme="dark"] .about-chapter-copy p { color: #C7D0E2; }
+[data-theme="dark"] .about-chapter-copy p + p { color: var(--text-dim); }
+[data-theme="dark"] .about-story-closing { color: var(--teal-text) !important; }
+[data-theme="dark"] .about-story-closing-luxury {
+  background: var(--surface-1);
+  border-color: rgba(79,209,197,0.34);
+}
+
+/* --- how-to（使い方）ページ --- */
+[data-theme="dark"] .guide-hero {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(96,165,250,0.12), transparent 25%),
+    radial-gradient(circle at 80% 18%, rgba(79,209,197,0.1), transparent 30%),
+    linear-gradient(135deg, #0B0F19 0%, #111827 62%, #0E1A24 100%);
+}
+[data-theme="dark"] .guide-kicker {
+  background: rgba(22,34,56,0.7);
+  color: var(--teal-text);
+}
+[data-theme="dark"] .guide-lead { color: #AEB9CF; }
+[data-theme="dark"] .guide-section { background: rgba(17,24,39,0.4); }
+[data-theme="dark"] .guide-card { background: var(--surface-1); }
+[data-theme="dark"] .intent-segment {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(96,165,250,0.2);
+}
+[data-theme="dark"] .intent-option:has(input:checked) { background: var(--surface-2); }
+
+/* --- SEOスポット個別ページ --- */
+[data-theme="dark"] .seo-spot-page {
+  background:
+    radial-gradient(circle at 12% 4%, rgba(96,165,250,0.07), transparent 24%),
+    radial-gradient(circle at 92% 12%, rgba(79,209,197,0.06), transparent 28%),
+    var(--bg);
+}
+[data-theme="dark"] .seo-spot-hero {
+  background: linear-gradient(180deg, rgba(17,24,39,0.6), rgba(11,15,25,0.5));
+}
+[data-theme="dark"] .seo-spot-meta {
+  background: var(--tint-blue);
+  border-color: rgba(96,165,250,0.22);
+}
+[data-theme="dark"] .seo-spot-lead { color: #AEB9CF; }
+[data-theme="dark"] .seo-spot-review {
+  background: var(--surface-1);
+}
+
+/* --- 汎用：暖色テキストと共通バッジの微調整 --- */
+[data-theme="dark"] .story-kicker { background: var(--tint-blue); }
+[data-theme="dark"] .suggest-badge {
+  background: linear-gradient(135deg, var(--tint-blue), rgba(79,209,197,0.12));
+}
+
+/* --- 選択中・ホバー状態の保護 ---
+   上の [data-theme="dark"] .xxx ルールと同じ詳細度で衝突するため、
+   active / selected / hover を高い詳細度で再宣言して見た目を守る --- */
+[data-theme="dark"] .tab:hover { background: var(--tint-blue); color: var(--blue); }
+[data-theme="dark"] .tab.active { background: var(--blue); color: #0B0F19; }
+[data-theme="dark"] .spot-like-btn:hover,
+[data-theme="dark"] .spot-like-btn.liked { background: var(--tint-blue); color: var(--blue); }
+[data-theme="dark"] .want-list-toggle:hover,
+[data-theme="dark"] .want-list-toggle.active { background: var(--blue); color: #0B0F19; }
+[data-theme="dark"] .area-chip:hover,
+[data-theme="dark"] .area-chip.active { background: var(--tint-blue); color: var(--blue); }
+[data-theme="dark"] .review-seen-btn.is-seen { background: var(--tint-blue); color: var(--blue); }
+[data-theme="dark"] .chat-reaction-btn.is-reacted { background: var(--tint-blue); color: var(--blue); }
+[data-theme="dark"] .spot-card.is-discovery-target { background: var(--surface-2); }
+[data-theme="dark"] .gallery-grid-item:hover { background: var(--surface-2); }
+
 

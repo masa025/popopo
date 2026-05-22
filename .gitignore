@@ -2,4 +2,7 @@
 .netlify
 node_modules/
 package-lock.json
+package.json
 .vercel
+.cache/
+scratch/*.png
