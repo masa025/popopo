@@ -807,6 +807,7 @@ document.addEventListener('languageChanged', (e) => {
 
   const activeTab = document.querySelector('.tab.active');
   renderSpotCards(activeTab ? activeTab.dataset.cat : 'all');
+  updateCarrotGuide();
   if (typeof allPosts !== 'undefined') {
     renderVisited(allPosts);
   }
@@ -1214,6 +1215,96 @@ const CARROT_GUIDE_HINTS = {
       title: '合言葉つきの作品もあります',
       text: '用語辞典など一部の作品は、配信の思い出にまつわる合言葉で開けます。',
       actionLabel: 'ギャラリーへ',
+      href: '#hero'
+    }
+  ]
+};
+const CARROT_GUIDE_HINTS_EN = {
+  hero: [
+    {
+      title: 'Unsure where to start?',
+      text: 'Use the entry points below the top visual to visit recommended spots or guest reviews. Start by browsing places that catch your interest.',
+      actionLabel: 'Go to Spots',
+      href: '#spots'
+    },
+    {
+      title: "Today's Discoveries rotate",
+      text: 'The "Today\'s Discovery" section at the top slowly rotates through shared spots and reviews. Tap a name to open its detail card.',
+      actionLabel: 'View Discoveries',
+      href: '#hero'
+    },
+    {
+      title: 'Tap floating artworks',
+      text: 'You can swipe or slide the artwork icons moving across the top. Tap any artwork to see a larger version.',
+      actionLabel: 'View Artworks',
+      href: '#hero'
+    },
+    {
+      title: 'For detailed instructions',
+      text: 'The "How to Use" guide summarizes how to post, use the want-list, view the gallery, and check free talk.',
+      actionLabel: 'Go to Guide',
+      href: 'how-to.html'
+    }
+  ],
+  spots: [
+    {
+      title: 'Save places you like',
+      text: 'Tap "Want" on any spot card to save it to your local want-list on this device.',
+      actionLabel: 'View Spots',
+      href: '#spots'
+    },
+    {
+      title: 'Recent reviews as hints',
+      text: 'Spot cards display a one-line preview of the latest review. You can see all reviews from the "Guest Reviews" section.',
+      actionLabel: 'View Reviews',
+      href: '#visited'
+    },
+    {
+      title: 'Post your recommendations',
+      text: 'Tap "Add a Spot" to propose a new place. Once posted, you can edit it anytime from the same device.',
+      actionLabel: 'Add Spot',
+      href: '#add-spot'
+    }
+  ],
+  visited: [
+    {
+      title: 'Reviews in chronological order',
+      text: 'Guest reviews are listed with the newest posts at the top. Once read, tap "Seen" to share your appreciation.',
+      actionLabel: 'View Reviews',
+      href: '#visited'
+    },
+    {
+      title: 'Share a quick thought',
+      text: 'Photos or post URLs are optional. Once posted, you can edit it from this device. Even a short review helps the next visitor!',
+      actionLabel: 'Post Review',
+      href: '#visited'
+    }
+  ],
+  community: [
+    {
+      title: 'Unsure what to talk about?',
+      text: 'You can post thoughts based on "Today\'s Topic". Feedback about POPOPO, site opinions, or your outing plans are also welcome!',
+      actionLabel: 'Go to Board',
+      href: '#community'
+    },
+    {
+      title: 'Conversations thread together',
+      text: 'You can reply directly to any post. Visual threads make it easy to follow the flow of conversation later.',
+      actionLabel: 'View Posts',
+      href: '#community'
+    }
+  ],
+  gallery: [
+    {
+      title: 'Browse arts left & right',
+      text: 'When you open an artwork, you can navigate using the left/right buttons or swipe gestures.',
+      actionLabel: 'Back to Art',
+      href: '#hero'
+    },
+    {
+      title: 'Artworks with passcodes',
+      text: 'Some works, like the glossary, can be unlocked with passcodes related to memories of the podcast broadcast.',
+      actionLabel: 'Go to Gallery',
       href: '#hero'
     }
   ]
@@ -6212,7 +6303,9 @@ function getCarrotGuideContext() {
 
 function updateCarrotGuide(context = getCarrotGuideContext(), advance = false) {
   const { title, text, action } = getCarrotGuideElements();
-  const hints = CARROT_GUIDE_HINTS[context] || CARROT_GUIDE_HINTS.hero;
+  const isEn = currentLanguage === 'en';
+  const hintsDict = isEn ? CARROT_GUIDE_HINTS_EN : CARROT_GUIDE_HINTS;
+  const hints = hintsDict[context] || hintsDict.hero;
   if (!title || !text || !action || !hints.length) return;
 
   if (advance || carrotGuideIndexByContext[context] === undefined) {
@@ -6224,7 +6317,7 @@ function updateCarrotGuide(context = getCarrotGuideContext(), advance = false) {
   carrotGuideContext = context;
   title.textContent = hint.title;
   text.textContent = hint.text;
-  action.textContent = hint.actionLabel || '見てみる';
+  action.textContent = hint.actionLabel || (isEn ? 'View' : '見てみる');
   action.setAttribute('href', hint.href || '#hero');
 }
 

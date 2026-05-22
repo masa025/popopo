@@ -368,7 +368,12 @@ const STATIC_TEXT_TRANSLATIONS = [
   ['♿ すべてのスポットに戻る', '♿ Back to All Spots'],
   ['🚼 多目的トイレあり', '🚼 Accessible Restroom'],
   ['♿ バリアフリー対応', '♿ Wheelchair Accessible'],
-  ['🍼 授乳室あり', '🍼 Nursing Room Available']
+  ['🍼 授乳室あり', '🍼 Nursing Room Available'],
+  ['人参鹿さんの使い方ヒント', "Carrot Deer's Guide Tips"],
+  ['別のヒント', 'Another Tip'],
+  ['閉じる', 'Close'],
+  ['使い方', 'Guide'],
+  ['迷ったらここから', 'Start Here']
 ];
 
 const STATIC_ATTR_TRANSLATIONS = [
