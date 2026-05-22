@@ -588,6 +588,15 @@ function renderInboundTags(s, lang) {
   if (s.traditional) {
     html += `<span class="inbound-tag inbound-tag--traditional">${isEn ? '⛩️ Traditional Japan' : '⛩️ 日本の伝統・文化'}</span>`;
   }
+  if (s.accessibleToilet) {
+    html += `<span class="inbound-tag inbound-tag--accessibleToilet">${isEn ? '🚼 Accessible' : '🚼 多目的トイレあり'}</span>`;
+  }
+  if (s.barrierFree) {
+    html += `<span class="inbound-tag inbound-tag--barrierFree">${isEn ? '♿ Barrier-free' : '♿ バリアフリー対応'}</span>`;
+  }
+  if (s.nursingRoom) {
+    html += `<span class="inbound-tag inbound-tag--nursingRoom">${isEn ? '🍼 Nursing' : '🍼 授乳室あり'}</span>`;
+  }
   return html ? `<div class="inbound-tags-container" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${html}</div>` : '';
 }
 
@@ -1247,6 +1256,7 @@ let visibleReviewCount = INITIAL_REVIEW_COUNT;
 let visibleChatCount = INITIAL_CHAT_COUNT;
 let replyingTo = null;
 let showingWantList = false;
+let showingBarrierFreeOnly = false;
 let activeAreaRegion = 'all';
 let activeSpotArea = 'all';
 let heroBackdropTimer = null;
@@ -2864,7 +2874,10 @@ function getSuggestedSpotItems() {
       parking: s.parking || false,
       pet: s.pet || false,
       toilet: s.toilet || false,
-      toiletRating: s.toiletRating || 0
+      toiletRating: s.toiletRating || 0,
+      accessibleToilet: s.accessibleToilet || false,
+      barrierFree: s.barrierFree || false,
+      nursingRoom: s.nursingRoom || false
     };
   });
 }
@@ -4088,6 +4101,17 @@ function updateWantListHint(visibleSavedCount = 0) {
   hint.hidden = !(showingWantList && visibleSavedCount > 0);
 }
 
+function updateBarrierFreeButton() {
+  const btn = document.getElementById('barrierFreeFilterBtn');
+  if (!btn) return;
+  const isEn = currentLanguage === 'en';
+  btn.classList.toggle('active', showingBarrierFreeOnly);
+  btn.setAttribute('aria-pressed', showingBarrierFreeOnly ? 'true' : 'false');
+  btn.textContent = showingBarrierFreeOnly
+    ? (isEn ? '♿ Back to All Spots' : '♿ すべてのスポットに戻る')
+    : (isEn ? '♿ Accessible Outings' : '♿ やさしいお出かけ');
+}
+
 function renderSpotAmenitiesHtml(s, isEn) {
   const badges = [];
   if (s.wifi) badges.push(`<span class="amenity-badge" title="${isEn ? 'Wi-Fi Available' : 'Wi-Fiあり'}">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fi'}</span>`);
@@ -4103,6 +4127,9 @@ function renderSpotAmenitiesHtml(s, isEn) {
     }
     badges.push(`<span class="amenity-badge" title="${isEn ? 'Toilet Available' : 'トイレあり'}">${isEn ? '🚻 Restroom' : '🚻 トイレ'}${escHtml(ratingStr)}</span>`);
   }
+  if (s.accessibleToilet) badges.push(`<span class="amenity-badge" title="${isEn ? 'Accessible Restroom' : '多目的トイレあり'}">${isEn ? '🚼 Accessible Restroom' : '🚼 多目的トイレ'}</span>`);
+  if (s.barrierFree) badges.push(`<span class="amenity-badge" title="${isEn ? 'Wheelchair Accessible' : 'バリアフリー対応'}">${isEn ? '♿ Barrier-free' : '♿ バリアフリー'}</span>`);
+  if (s.nursingRoom) badges.push(`<span class="amenity-badge" title="${isEn ? 'Nursing Room Available' : '授乳室あり'}">${isEn ? '🍼 Nursing Room' : '🍼 授乳室'}</span>`);
   if (badges.length === 0) return '';
   return `<div class="spot-amenities">${badges.join('')}</div>`;
 }
@@ -4118,8 +4145,12 @@ function renderSpotCards(cat = 'all') {
   if (showingWantList) {
     filtered = filtered.filter(s => localLikes[s.id]);
   }
+  if (showingBarrierFreeOnly) {
+    filtered = filtered.filter(s => s.accessibleToilet || s.barrierFree || s.nursingRoom);
+  }
   const visibleSpots = filtered.slice(0, visibleSpotCount);
   updateWantListButton();
+  updateBarrierFreeButton();
   updateWantListHint(filtered.length);
   const isEn = currentLanguage === 'en';
   if (showingWantList && filtered.length === 0) {
@@ -4629,7 +4660,10 @@ function captureAddSpotFormDraftState() {
     parking: document.getElementById('asParking')?.checked || false,
     pet: document.getElementById('asPet')?.checked || false,
     toilet: document.getElementById('asToilet')?.checked || false,
-    toiletRating: parseInt(document.getElementById('asToiletRating')?.value || '0', 10)
+    toiletRating: parseInt(document.getElementById('asToiletRating')?.value || '0', 10),
+    accessibleToilet: document.getElementById('asAccessibleToilet')?.checked || false,
+    barrierFree: document.getElementById('asBarrierFree')?.checked || false,
+    nursingRoom: document.getElementById('asNursingRoom')?.checked || false
   };
 }
 
@@ -4637,7 +4671,7 @@ function addSpotDraftStateHasText(state) {
   if (!state) return false;
   const parts = [state.name, state.area, state.pref, state.city, state.cityCustom, state.areaNote, state.reason, state.nick, ...(state.urls || [])];
   const hasText = parts.some(p => String(p || '').trim().length > 0);
-  const hasAmenities = state.wifi || state.power || state.vegan || state.card || state.parking || state.pet || state.toilet;
+  const hasAmenities = state.wifi || state.power || state.vegan || state.card || state.parking || state.pet || state.toilet || state.accessibleToilet || state.barrierFree || state.nursingRoom;
   return hasText || hasAmenities;
 }
 
@@ -4717,6 +4751,9 @@ function restoreAddSpotFormDraftIfAny() {
   setChecked('asParking', state.parking);
   setChecked('asPet', state.pet);
   setChecked('asToilet', state.toilet);
+  setChecked('asAccessibleToilet', state.accessibleToilet);
+  setChecked('asBarrierFree', state.barrierFree);
+  setChecked('asNursingRoom', state.nursingRoom);
 
   const rating = state.toiletRating || 0;
   setVal('asToiletRating', rating);
@@ -4856,6 +4893,9 @@ function openAddSpotModal(id = null, clientId = null) {
       document.getElementById('asParking').checked = !!s.parking;
       document.getElementById('asPet').checked = !!s.pet;
       document.getElementById('asToilet').checked = !!s.toilet;
+      document.getElementById('asAccessibleToilet').checked = !!s.accessibleToilet;
+      document.getElementById('asBarrierFree').checked = !!s.barrierFree;
+      document.getElementById('asNursingRoom').checked = !!s.nursingRoom;
 
       const rating = s.toiletRating || 0;
       document.getElementById('asToiletRating').value = rating;
@@ -5880,7 +5920,10 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     parking: document.getElementById('asParking')?.checked || false,
     pet: document.getElementById('asPet')?.checked || false,
     toilet: document.getElementById('asToilet')?.checked || false,
-    toiletRating: document.getElementById('asToilet')?.checked ? parseInt(document.getElementById('asToiletRating')?.value || '0', 10) : 0
+    toiletRating: document.getElementById('asToilet')?.checked ? parseInt(document.getElementById('asToiletRating')?.value || '0', 10) : 0,
+    accessibleToilet: document.getElementById('asAccessibleToilet')?.checked || false,
+    barrierFree: document.getElementById('asBarrierFree')?.checked || false,
+    nursingRoom: document.getElementById('asNursingRoom')?.checked || false
   };
   
   if (resources && resources.length > 0) {
@@ -6770,6 +6813,16 @@ function bindEvents() {
   if (wantListToggleBtn) {
     wantListToggleBtn.addEventListener('click', () => {
       showingWantList = !showingWantList;
+      visibleSpotCount = INITIAL_SPOT_COUNT;
+      renderSpotCards(getActiveSpotCategory());
+    });
+  }
+  const barrierFreeFilterBtn = document.getElementById('barrierFreeFilterBtn');
+  if (barrierFreeFilterBtn) {
+    barrierFreeFilterBtn.addEventListener('click', () => {
+      showingBarrierFreeOnly = !showingBarrierFreeOnly;
+      barrierFreeFilterBtn.classList.toggle('active', showingBarrierFreeOnly);
+      barrierFreeFilterBtn.setAttribute('aria-pressed', showingBarrierFreeOnly ? 'true' : 'false');
       visibleSpotCount = INITIAL_SPOT_COUNT;
       renderSpotCards(getActiveSpotCategory());
     });

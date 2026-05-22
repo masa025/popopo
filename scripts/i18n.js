@@ -363,7 +363,12 @@ const STATIC_TEXT_TRANSLATIONS = [
   ['前の作品へ', 'Previous Art'],
   ['次の作品へ', 'Next Art'],
   ['拡大を戻す', 'Reset Zoom'],
-  ['画像を拡大する', 'Zoom Image']
+  ['画像を拡大する', 'Zoom Image'],
+  ['♿ やさしいお出かけ', '♿ Accessible Outings'],
+  ['♿ すべてのスポットに戻る', '♿ Back to All Spots'],
+  ['🚼 多目的トイレあり', '🚼 Accessible Restroom'],
+  ['♿ バリアフリー対応', '♿ Wheelchair Accessible'],
+  ['🍼 授乳室あり', '🍼 Nursing Room Available']
 ];
 
 const STATIC_ATTR_TRANSLATIONS = [
@@ -387,6 +392,7 @@ const PLACEHOLDER_TRANSLATIONS = [
   ['匿名リスナー', 'Anonymous Listener'],
   ['スポット名を入力', 'Enter a spot name'],
   ['感想を教えてください！（200文字以内）', 'Share your impressions! (up to 200 characters)'],
+  ['感想を教えてください！（200文字以内）ベビーカーや車椅子での行きやすさ、多目的トイレ等の情報も大歓迎です！', 'Share your impressions! (up to 200 characters) Wheelchair/stroller accessibility or restroom info is highly welcome!'],
   ['InstagramやXの投稿URLなど', 'Instagram, X, or other post URL'],
   ['写真や投稿のURL', 'Photo or post URL'],
   ['補足情報のURL', 'Additional info URL'],

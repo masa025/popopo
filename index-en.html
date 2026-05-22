@@ -276,6 +276,7 @@
       <div class="area-filter" id="areaFilter" aria-label="エリアで絞り込む"></div>
       <div class="spot-list-actions">
         <button type="button" class="want-list-toggle" id="wantListToggleBtn" aria-pressed="false" data-i18n="btn_want_list">🔖 Want to Go (0)</button>
+        <button type="button" class="barrier-free-toggle" id="barrierFreeFilterBtn" aria-pressed="false" data-i18n="♿ やさしいお出かけ">♿ Accessible Outings</button>
         <button type="button" class="want-list-toggle want-add-btn" id="wantAddSpotBtn" data-i18n="btn_add_want">🌱 Add a Spot You Want to Visit</button>
       </div>
       <div class="want-list-hint" id="wantListHint" hidden>
@@ -475,7 +476,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="fComment">コメント <span class="req">必須</span></label>
-          <textarea id="fComment" class="form-textarea" placeholder="感想を教えてください！（200文字以内）" maxlength="200" required></textarea>
+          <textarea id="fComment" class="form-textarea" placeholder="感想を教えてください！（200文字以内）ベビーカーや車椅子での行きやすさ、多目的トイレ等の情報も大歓迎です！" maxlength="200" required></textarea>
           <span class="char-count"><span id="charNum">0</span>/200</span>
         </div>
         <div class="form-group">
@@ -638,6 +639,18 @@
             <label class="amenity-checkbox">
               <input type="checkbox" id="asToilet">
               <span>🚻 Toilet Available</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asAccessibleToilet">
+              <span>🚼 Accessible Restroom</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asBarrierFree">
+              <span>♿ Wheelchair Accessible</span>
+            </label>
+            <label class="amenity-checkbox">
+              <input type="checkbox" id="asNursingRoom">
+              <span>🍼 Nursing Room Available</span>
             </label>
           </div>
         </div>
