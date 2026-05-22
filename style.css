@@ -4204,6 +4204,9 @@ body.weather-snowy {
 [data-theme="dark"] .btn-gallery-all:hover { background: var(--surface-2); }
 
 /* --- ナビ（発見カード行） --- */
+[data-theme="dark"] #navbar.scrolled {
+  background: rgba(17, 24, 39, 0.97);
+}
 [data-theme="dark"] .nav-discovery {
   background: rgba(17,24,39,0.92);
   border-top-color: rgba(96,165,250,0.12);
