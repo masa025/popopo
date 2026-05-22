@@ -4611,4 +4611,10 @@ body.weather-snowy {
 [data-theme="dark"] .spot-card.is-discovery-target { background: var(--surface-2); }
 [data-theme="dark"] .gallery-grid-item:hover { background: var(--surface-2); }
 
-
+/* --- ダークモード時のトップ画像色味調整 --- */
+#heroImage {
+  transition: filter 0.3s ease;
+}
+[data-theme="dark"] #heroImage {
+  filter: brightness(0.82) saturate(0.88);
+}
