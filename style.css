@@ -4618,3 +4618,15 @@ body.weather-snowy {
 [data-theme="dark"] #heroImage {
   filter: brightness(0.82) saturate(0.88);
 }
+
+/* --- 設備・対応サービス（アメニティ）のダークモード表示バグ修正 --- */
+[data-theme="dark"] .amenities-segment {
+  background: rgba(22, 34, 56, 0.4);
+  border-color: rgba(91, 141, 238, 0.1);
+}
+[data-theme="dark"] .amenity-checkbox {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--text);
+}
+
