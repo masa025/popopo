@@ -615,7 +615,7 @@ const EXTRA_SPOT_TRANSLATIONS = {
   }
 };
 
-// Merge vegan/card/wifi tags dynamically from SPOTS and VISITED arrays in app.js
+// Merge vegan/card/wifi/amenities tags dynamically from SPOTS and VISITED arrays in app.js
 const allAppSpots = [...SPOTS, ...VISITED];
 for (const spot of spots) {
   const appSpot = allAppSpots.find(s => s.id === spot.id);
@@ -624,6 +624,11 @@ for (const spot of spots) {
     if (appSpot.card) spot.card = true;
     if (appSpot.wifi) spot.wifi = true;
     if (appSpot.traditional) spot.traditional = true;
+    if (appSpot.power) spot.power = true;
+    if (appSpot.parking) spot.parking = true;
+    if (appSpot.pet) spot.pet = true;
+    if (appSpot.toilet) spot.toilet = true;
+    if (appSpot.toiletRating) spot.toiletRating = appSpot.toiletRating;
   }
 }
 
@@ -651,14 +656,30 @@ function getGoogleMapsUrl(spot) {
 function renderInboundTags(s, lang) {
   let html = '';
   const isEn = lang === 'en';
+  if (s.wifi) {
+    html += `<span class="inbound-tag inbound-tag--wifi">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fiあり'}</span>`;
+  }
+  if (s.power) {
+    html += `<span class="inbound-tag inbound-tag--power">${isEn ? '🔌 Power' : '🔌 電源あり'}</span>`;
+  }
   if (s.vegan) {
     html += `<span class="inbound-tag inbound-tag--vegan">${isEn ? '🌱 Vegan' : '🌱 ヴィーガン対応'}</span>`;
   }
   if (s.card) {
     html += `<span class="inbound-tag inbound-tag--card">${isEn ? '💳 Card OK' : '💳 カード決済可'}</span>`;
   }
-  if (s.wifi) {
-    html += `<span class="inbound-tag inbound-tag--wifi">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fiあり'}</span>`;
+  if (s.parking) {
+    html += `<span class="inbound-tag inbound-tag--parking">${isEn ? '🅿️ Parking' : '🅿️ 駐車場あり'}</span>`;
+  }
+  if (s.pet) {
+    html += `<span class="inbound-tag inbound-tag--pet">${isEn ? '🐾 Pet-friendly' : '🐾 ペット可'}</span>`;
+  }
+  if (s.toilet) {
+    let ratingStr = '';
+    if (s.toiletRating && s.toiletRating > 0) {
+      ratingStr = ' ' + '★'.repeat(s.toiletRating) + '☆'.repeat(5 - s.toiletRating);
+    }
+    html += `<span class="inbound-tag inbound-tag--toilet">${isEn ? '🚻 Restroom' : '🚻 トイレあり'}${ratingStr}</span>`;
   }
   if (s.traditional) {
     html += `<span class="inbound-tag inbound-tag--traditional">${isEn ? '🏯 Traditional' : '🏯 日本の伝統'}</span>`;
@@ -786,6 +807,9 @@ function pageHtml(spot, lang) {
         <a href="${relativeDepth}/how-to.html" class="nav-link">${isEn ? '💡 Guide' : '💡 使い方'}</a>
       </div>
       <div class="nav-actions">
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Theme / テーマ切り替え">
+          <span class="theme-icon">🌓</span>
+        </button>
         ${langToggleHtml}
       </div>
     </div>
@@ -935,6 +959,9 @@ function indexHtml(lang) {
         <a href="${relativeDepth}/how-to.html" class="nav-link">${isEn ? '💡 Guide' : '💡 使い方'}</a>
       </div>
       <div class="nav-actions">
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Theme / テーマ切り替え">
+          <span class="theme-icon">🌓</span>
+        </button>
         ${langToggleHtml}
       </div>
     </div>

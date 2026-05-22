@@ -112,6 +112,7 @@ const bodyReplacements = [
   ['🚻 トイレの評価', '🚻 Restroom Rating'],
 
   // Nav
+  ['テーマ: システム', 'Theme: System'],
   ['logo-sub">お出かけマップ', 'logo-sub">Outing Map'],
   ['📍 おすすめスポット</a>', '📍 Recommended Spots</a>'],
   ['💬 みんなの感想</a>', '💬 Guest Reviews</a>'],

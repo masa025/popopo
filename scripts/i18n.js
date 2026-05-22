@@ -1,7 +1,17 @@
 // ============================================================
 // POPOPO お出かけマップ — i18n.js
-// 言語切り替えロジックと翻訳辞書データ（全ページ共通）
+// 言語切り替え ＆ ダークモードシステム連動ロジック
 // ============================================================
+
+// 1. ホワイトフラッシュを防止するため、スクリプトのロード直後（描画前）にテーマを適用
+(function() {
+  const savedTheme = localStorage.getItem('popopo_theme') || 'system';
+  let activeTheme = savedTheme;
+  if (savedTheme === 'system') {
+    activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', activeTheme);
+})();
 let currentLanguage = localStorage.getItem('popopo_language');
 if (!currentLanguage) {
   const pathName = location.pathname.split('/').pop() || 'index.html';
@@ -494,8 +504,105 @@ function applyLanguage(lang) {
   applyStaticTextTranslations(lang);
   applyDocumentMetaTranslations(lang);
 
+  // テーマUIの更新（言語切り替えに追従）
+  if (typeof updateThemeUI === 'function') {
+    updateThemeUI();
+  }
+
   // 自動翻訳用のイベント発火 (app.js で受け取って投稿を自動翻訳する)
   document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
+}
+
+// ------------------------------------------------------------
+// ダークモード制御システム
+// ------------------------------------------------------------
+const THEME_STRINGS = {
+  jp: {
+    system: { label: "テーマ: システム", tooltip: "テーマ: システム (端末の設定に合わせる)" },
+    dark: { label: "テーマ: ダーク", tooltip: "テーマ: ダーク (常にダーク)" },
+    light: { label: "テーマ: ライト", tooltip: "テーマ: ライト (常にライト)" }
+  },
+  en: {
+    system: { label: "Theme: System", tooltip: "Theme: System (Sync with system)" },
+    dark: { label: "Theme: Dark", tooltip: "Theme: Dark (Always dark)" },
+    light: { label: "Theme: Light", tooltip: "Theme: Light (Always light)" }
+  }
+};
+
+function updateThemeUI() {
+  const savedTheme = localStorage.getItem('popopo_theme') || 'system';
+  let activeIcon = '🌓';
+  if (savedTheme === 'dark') activeIcon = '🌙';
+  if (savedTheme === 'light') activeIcon = '☀️';
+
+  const strings = THEME_STRINGS[currentLanguage] || THEME_STRINGS.jp;
+  const currentThemeStrings = strings[savedTheme] || strings.system;
+
+  // デスクトップ用トグルボタン
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  if (themeToggleBtn) {
+    themeToggleBtn.setAttribute('title', currentThemeStrings.tooltip);
+    themeToggleBtn.setAttribute('aria-label', currentThemeStrings.tooltip);
+    const iconSpan = themeToggleBtn.querySelector('.theme-icon');
+    if (iconSpan) {
+      iconSpan.textContent = activeIcon;
+    }
+  }
+
+  // モバイル用トグルボタン
+  const themeToggleBtnMobile = document.getElementById('themeToggleBtnMobile');
+  if (themeToggleBtnMobile) {
+    themeToggleBtnMobile.setAttribute('aria-label', currentThemeStrings.tooltip);
+    themeToggleBtnMobile.innerHTML = `<span class="theme-icon">${activeIcon}</span> ${currentThemeStrings.label}`;
+  }
+}
+
+function toggleTheme() {
+  const savedTheme = localStorage.getItem('popopo_theme') || 'system';
+  let nextTheme = 'system';
+  if (savedTheme === 'system') {
+    nextTheme = 'dark';
+  } else if (savedTheme === 'dark') {
+    nextTheme = 'light';
+  } else if (savedTheme === 'light') {
+    nextTheme = 'system';
+  }
+
+  localStorage.setItem('popopo_theme', nextTheme);
+
+  // 実際の data-theme 属性の適用
+  let activeTheme = nextTheme;
+  if (nextTheme === 'system') {
+    activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', activeTheme);
+
+  updateThemeUI();
+}
+
+function setupTheme() {
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', toggleTheme);
+  }
+
+  const themeToggleBtnMobile = document.getElementById('themeToggleBtnMobile');
+  if (themeToggleBtnMobile) {
+    themeToggleBtnMobile.addEventListener('click', toggleTheme);
+  }
+
+  // システム設定変更の監視
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    const savedTheme = localStorage.getItem('popopo_theme') || 'system';
+    if (savedTheme === 'system') {
+      const activeTheme = e.matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', activeTheme);
+      updateThemeUI();
+    }
+  });
+
+  // 初期ロード時のUI同期
+  updateThemeUI();
 }
 
 function setupI18n() {
@@ -528,6 +635,9 @@ function setupI18n() {
 
   // 初期ロード時の言語適用
   applyLanguage(currentLanguage);
+
+  // テーマ機能の初期化
+  setupTheme();
 }
 
 document.addEventListener('DOMContentLoaded', setupI18n);
