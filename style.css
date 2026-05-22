@@ -3751,6 +3751,47 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
 #hero.weather-snowy .orb-2 { background: radial-gradient(circle, #eaf1fb, transparent) !important; }
 #hero.weather-snowy .orb-3 { background: radial-gradient(circle, #dbe7f7, transparent) !important; }
 
+/* --------------------------------------------------------------------------
+   Whole-page weather-linked watercolor background (body)
+   👑1番目の都市の天気を body 全体の水彩背景に連動させる
+   -------------------------------------------------------------------------- */
+body.weather-sunny {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(255,209,120,0.20), transparent 26%),
+    radial-gradient(circle at 90% 10%, rgba(255,224,150,0.16), transparent 30%),
+    radial-gradient(circle at 50% 97%, rgba(255,206,128,0.13), transparent 44%),
+    repeating-linear-gradient(0deg, rgba(79,127,216,0.035) 0 1px, transparent 1px 34px),
+    linear-gradient(180deg, rgba(255,243,216,0.55), rgba(255,248,232,0.40)),
+    var(--bg) !important;
+}
+body.weather-cloudy {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(206,216,228,0.22), transparent 26%),
+    radial-gradient(circle at 90% 10%, rgba(190,203,218,0.18), transparent 30%),
+    radial-gradient(circle at 50% 97%, rgba(196,208,222,0.14), transparent 44%),
+    repeating-linear-gradient(0deg, rgba(79,127,216,0.035) 0 1px, transparent 1px 34px),
+    linear-gradient(180deg, rgba(237,241,246,0.60), rgba(241,244,248,0.45)),
+    var(--bg) !important;
+}
+body.weather-rainy {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(150,178,206,0.26), transparent 28%),
+    radial-gradient(circle at 90% 10%, rgba(132,162,194,0.20), transparent 32%),
+    radial-gradient(circle at 50% 97%, rgba(140,168,198,0.16), transparent 46%),
+    repeating-linear-gradient(0deg, rgba(79,127,216,0.04) 0 1px, transparent 1px 34px),
+    linear-gradient(180deg, rgba(222,231,240,0.62), rgba(228,235,243,0.48)),
+    var(--bg) !important;
+}
+body.weather-snowy {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(214,230,248,0.30), transparent 28%),
+    radial-gradient(circle at 90% 10%, rgba(224,236,252,0.24), transparent 32%),
+    radial-gradient(circle at 50% 97%, rgba(220,233,250,0.18), transparent 46%),
+    repeating-linear-gradient(0deg, rgba(79,127,216,0.03) 0 1px, transparent 1px 34px),
+    linear-gradient(180deg, rgba(244,249,255,0.66), rgba(248,251,255,0.50)),
+    var(--bg) !important;
+}
+
 /* Weather particles containers & animations */
 .hero-weather-canvas {
   position: absolute;
@@ -4092,6 +4133,40 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
     radial-gradient(circle at 12% 4%, rgba(96,165,250,0.07), transparent 26%),
     radial-gradient(circle at 90% 12%, rgba(79,209,197,0.06), transparent 28%),
     var(--bg);
+}
+
+/* ダークモードでも body 全体の水彩背景を天気に連動（暗さは保ったまま色味だけ寄せる） */
+[data-theme="dark"] body.weather-sunny {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(255,198,110,0.11), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(255,182,96,0.085), transparent 34%),
+    radial-gradient(circle at 50% 97%, rgba(255,176,92,0.06), transparent 48%),
+    linear-gradient(180deg, rgba(60,46,22,0.32), rgba(36,30,18,0.18)),
+    var(--bg) !important;
+}
+[data-theme="dark"] body.weather-cloudy {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(150,165,186,0.085), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(138,154,176,0.07), transparent 34%),
+    radial-gradient(circle at 50% 97%, rgba(140,156,178,0.05), transparent 48%),
+    linear-gradient(180deg, rgba(36,42,52,0.34), rgba(24,28,36,0.20)),
+    var(--bg) !important;
+}
+[data-theme="dark"] body.weather-rainy {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(96,150,210,0.12), transparent 32%),
+    radial-gradient(circle at 90% 10%, rgba(84,134,194,0.09), transparent 36%),
+    radial-gradient(circle at 50% 97%, rgba(88,140,200,0.065), transparent 50%),
+    linear-gradient(180deg, rgba(20,32,48,0.40), rgba(14,22,34,0.22)),
+    var(--bg) !important;
+}
+[data-theme="dark"] body.weather-snowy {
+  background:
+    radial-gradient(circle at 12% 3%, rgba(170,200,235,0.12), transparent 32%),
+    radial-gradient(circle at 90% 10%, rgba(186,212,240,0.095), transparent 36%),
+    radial-gradient(circle at 50% 97%, rgba(180,206,236,0.07), transparent 50%),
+    linear-gradient(180deg, rgba(28,38,54,0.36), rgba(18,26,38,0.20)),
+    var(--bg) !important;
 }
 [data-theme="dark"] #hero {
   background:

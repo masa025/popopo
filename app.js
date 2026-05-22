@@ -601,25 +601,66 @@ async function fetchTranslation(text, targetLang = 'en') {
   } catch (e) {
     // localStorageが使えない環境ではキャッシュなしで続行
   }
-  try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(sourceText)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Translation failed');
-    const data = await res.json();
-    if (data && data[0]) {
-      const translated = data[0].map(s => s[0]).join('');
-      try {
-        localStorage.setItem(cacheKey, translated);
-      } catch (e) {
-        // ignore
+
+  const maxRetries = 2;
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(sourceText)}`;
+      const res = await fetch(url);
+      if (res.status === 429) {
+        attempt++;
+        if (attempt <= maxRetries) {
+          console.warn(`Translation rate limited (429). Retrying attempt ${attempt}...`);
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+          continue;
+        }
       }
-      return translated;
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      if (data && data[0]) {
+        const translated = data[0].map(s => s[0]).join('');
+        try {
+          localStorage.setItem(cacheKey, translated);
+        } catch (e) {
+          // ignore
+        }
+        return translated;
+      }
+      throw new Error('Invalid translation format');
+    } catch (err) {
+      attempt++;
+      if (attempt > maxRetries) {
+        console.error('Translation error after retries:', err);
+        return null;
+      }
+      console.warn(`Translation failed: ${err.message}. Retrying...`);
+      await new Promise(r => setTimeout(r, 500 * attempt));
     }
-    throw new Error('Invalid translation format');
-  } catch (err) {
-    console.error('Translation error:', err);
-    return null;
   }
+  return null;
+}
+
+
+// 投稿時に1回だけ呼ばれ、日本語を含むフィールドだけを英訳して返す。
+// 失敗してもスローせず、取れた分だけ返す（表示側にライブ翻訳のフォールバックがある）。
+const JAPANESE_RE = new RegExp('[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]');
+async function translateFieldsToEnglish(fields = {}) {
+  const out = {};
+  for (const key of Object.keys(fields)) {
+    const text = String(fields[key] || '').trim();
+    if (!text) continue;
+    if (!JAPANESE_RE.test(text)) continue; // 日本語を含まないものは翻訳不要
+    try {
+      const translated = await fetchTranslation(text, 'en');
+      if (translated && translated.trim() && translated.trim() !== text) {
+        out[key] = translated;
+      }
+    } catch (e) {
+      // 1フィールド失敗しても他は続行。未設定のままなら表示側がライブ翻訳にフォールバック。
+    }
+  }
+  return out;
 }
 
 window.toggleTranslation = async function(btn) {
@@ -727,16 +768,17 @@ async function autoTranslateVisibleContent() {
       const container = btn.closest('.visited-card-body, .spot-review-card, .chat-content, .spot-card-info');
       return container && !container.querySelector('.translated-box');
     })
-    .slice(0, 24);
+    .slice(0, 15);
 
   for (const btn of btns) {
     btn.dataset.autoTranslate = 'true';
     await toggleTranslation(btn);
     delete btn.dataset.autoTranslate;
-    await new Promise(r => setTimeout(r, 120));
+    await new Promise(r => setTimeout(r, 380));
   }
   autoTranslationRunning = false;
 }
+
 
 document.addEventListener('languageChanged', (e) => {
   const lang = e.detail.lang;
@@ -6974,11 +7016,19 @@ function getWeatherType(code) {
 }
 
 function updateWeatherBackdrop(type) {
+  const WEATHER_CLASSES = ['weather-sunny', 'weather-cloudy', 'weather-rainy', 'weather-snowy'];
+
+  // サイト全体（body）の水彩背景を天気に連動させる
+  if (document.body) {
+    document.body.classList.remove(...WEATHER_CLASSES);
+    document.body.classList.add(`weather-${type}`);
+  }
+
   const hero = document.getElementById('hero');
   const canvas = document.getElementById('heroWeatherCanvas');
   if (!hero || !canvas) return;
 
-  hero.classList.remove('weather-sunny', 'weather-cloudy', 'weather-rainy', 'weather-snowy');
+  hero.classList.remove(...WEATHER_CLASSES);
   hero.classList.add(`weather-${type}`);
 
   canvas.innerHTML = '';

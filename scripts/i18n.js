@@ -12,12 +12,34 @@
   }
   document.documentElement.setAttribute('data-theme', activeTheme);
 })();
+function getNormalizedPath() {
+  let file = location.pathname.split('/').pop() || 'index';
+  if (file.endsWith('.html')) {
+    file = file.substring(0, file.length - 5);
+  }
+  if (file === '') {
+    file = 'index';
+  }
+  return file;
+}
+const pathName = getNormalizedPath();
 let currentLanguage = localStorage.getItem('popopo_language');
-if (!currentLanguage) {
-  const pathName = location.pathname.split('/').pop() || 'index.html';
-  if (pathName === 'index-en.html') {
-    currentLanguage = 'en';
-  } else {
+
+if (pathName === 'index-en') {
+  currentLanguage = 'en';
+  localStorage.setItem('popopo_language', 'en');
+} else if (pathName === 'index') {
+  if (!currentLanguage) {
+    const browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    if (browserLang.startsWith('en') || !browserLang.startsWith('ja')) {
+      currentLanguage = 'en';
+    } else {
+      currentLanguage = 'jp';
+    }
+  }
+} else {
+  // Lower level pages (about, how-to, etc.)
+  if (!currentLanguage) {
     const browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
     if (browserLang.startsWith('en') || !browserLang.startsWith('ja')) {
       currentLanguage = 'en';
@@ -26,6 +48,7 @@ if (!currentLanguage) {
     }
   }
 }
+
 
 const HERO_IMAGE_BY_LANG = {
   jp: 'assets/popopo-map-visual-20260518.png',
@@ -410,29 +433,29 @@ function applyStaticTextTranslations(lang) {
 }
 
 function applyDocumentMetaTranslations(lang) {
-  const path = location.pathname.split('/').pop() || 'index.html';
+  const path = getNormalizedPath();
   const isEn = lang === 'en';
   const metaByPage = {
-    'index.html': {
+    'index': {
       title: isEn ? 'POPOPO Outing Map | A Human Route' : 'POPOPO お出かけマップ | みんなで作るお出かけマップ',
       description: isEn
         ? 'POPOPO Outing Map is a listener community where people share recommended spots, reviews, and free talk beyond search and algorithms.'
         : 'POPOPO お出かけマップで、リスナーおすすめスポット、みんなの感想、フリートークを共有。検索やAIではなく、誰かの言葉から次のお出かけを見つけるコミュニティです。'
     },
-    'about.html': {
+    'about': {
       title: isEn ? 'Story | POPOPO Outing Map' : 'この場所を作った理由 | POPOPO お出かけマップ',
       description: isEn
         ? 'The story behind POPOPO Outing Map: a place for discoveries passed from person to person, beyond search and AI.'
         : 'POPOPO お出かけマップを作った理由。検索やAIだけでは出会えない、人から人へ伝わるおすすめや感想を集めるリスナーコミュニティについて紹介します。'
     },
-    'how-to.html': {
+    'how-to': {
       title: isEn ? 'Guide | POPOPO Outing Map' : '使い方 | POPOPO お出かけマップ',
       description: isEn
         ? 'How to use POPOPO Outing Map: browse spots, read reviews, save places, enjoy listener art, and post free talk.'
         : 'POPOPO お出かけマップの使い方。今日の発見、リスナー作品、行きたいリスト、おすすめスポット、みんなの感想、フリートーク、スポット追加の流れを紹介します。'
     }
   };
-  const meta = metaByPage[path] || metaByPage['index.html'];
+  const meta = metaByPage[path] || metaByPage['index'];
   document.title = meta.title;
   document.querySelector('meta[name="description"]')?.setAttribute('content', meta.description);
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', meta.title);
@@ -457,15 +480,17 @@ function escHtml(str) {
 }
 
 function applyLanguage(lang) {
-  const path = location.pathname.split('/').pop() || 'index.html';
-  if (lang === 'jp' && path === 'index-en.html') {
+  const originalPath = location.pathname.split('/').pop() || 'index.html';
+  const hasHtmlExt = originalPath.endsWith('.html');
+  const path = getNormalizedPath();
+  if (lang === 'jp' && path === 'index-en') {
     localStorage.setItem('popopo_language', 'jp');
-    location.href = 'index.html';
+    location.href = hasHtmlExt ? 'index.html' : 'index';
     return;
   }
-  if (lang === 'en' && path === 'index.html') {
+  if (lang === 'en' && path === 'index') {
     localStorage.setItem('popopo_language', 'en');
-    location.href = 'index-en.html';
+    location.href = hasHtmlExt ? 'index-en.html' : 'index-en';
     return;
   }
 
@@ -623,15 +648,14 @@ function setupI18n() {
   }
 
   // Redirect on initial load if language preference conflicts with page
-  const path = location.pathname.split('/').pop() || 'index.html';
-  if (currentLanguage === 'en' && path === 'index.html') {
-    location.replace('index-en.html');
+  const originalPath = location.pathname.split('/').pop() || 'index.html';
+  const hasHtmlExt = originalPath.endsWith('.html');
+  const path = getNormalizedPath();
+  if (currentLanguage === 'en' && path === 'index') {
+    location.replace(hasHtmlExt ? 'index-en.html' : 'index-en');
     return;
   }
-  if (currentLanguage === 'jp' && path === 'index-en.html') {
-    location.replace('index.html');
-    return;
-  }
+
 
   // 初期ロード時の言語適用
   applyLanguage(currentLanguage);
