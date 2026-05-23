@@ -319,6 +319,26 @@ const SPOT_TRANSLATIONS = {
     name: 'Koishikawa Korakuen Garden',
     memo: 'A historic, tranquil Japanese garden near Tokyo Dome. A perfect hidden retreat to experience seasonal nature.'
   },
+  'sample-yasashii-ueno-park': {
+    name: 'Ueno Park',
+    memo: '[Sample] A central Tokyo park with accessible restroom information available on public accessibility guides. Easy to pair with museums and short walks, but check the latest route details before visiting.'
+  },
+  'sample-yasashii-tennoji-park': {
+    name: 'Tenshiba, Tennoji Park',
+    memo: '[Sample] A spacious park entrance area near major stations in Osaka, with official information on nursing rooms, accessible restrooms, elevators, and escalators.'
+  },
+  'sample-yasashii-oasis21': {
+    name: 'Oasis 21',
+    memo: '[Sample] A Nagoya landmark directly connected to Sakae Station, with elevators, escalators, rest areas, accessible restrooms, and a nursing room noted on the official site.'
+  },
+  'sample-yasashii-odori-park': {
+    name: 'Odori Park',
+    memo: '[Sample] A central Sapporo park where accessible water fountains, wheelchair rental, and accessible restrooms are listed in the official park guide.'
+  },
+  'sample-yasashii-fukuoka-art-museum': {
+    name: 'Fukuoka Art Museum',
+    memo: '[Sample] A museum beside Ohori Park with slopes at entrances, wheelchair rental, accessible restrooms, and nursing room information listed on the official accessibility page.'
+  },
   'tsutaya': {
     name: 'Daikanyama T-Site (Tsutaya Books)',
     memo: 'A beautifully designed lifestyle bookstore offering books, cafes, and creative inspiration.'
@@ -492,6 +512,8 @@ const ADDRESS_TRANSLATION_MAP = {
   '鳥取市': 'Tottori',
   '米子市': 'Yonago',
   '大山町': 'Daisen',
+  '札幌市': 'Sapporo',
+  '名古屋市': 'Nagoya',
   '大阪市': 'Osaka',
   '堺市': 'Sakai',
   '豊中市': 'Toyonaka',
@@ -531,6 +553,11 @@ const ADDRESS_TRANSLATION_MAP = {
   '幕張': 'Makuhari',
   '武蔵野市・三鷹市': 'Musashino / Mitaka',
   '文京区後楽': 'Koraku, Bunkyo-ku',
+  '上野': 'Ueno',
+  '大阪市天王寺区': 'Tennoji-ku, Osaka',
+  '名古屋・栄': 'Sakae, Nagoya',
+  '札幌・大通': 'Odori, Sapporo',
+  '福岡市中央区大濠公園': 'Ohori Park, Chuo-ku, Fukuoka',
   '代官山': 'Daikanyama',
   '蔵前': 'Kuramae',
   '渋谷': 'Shibuya',
@@ -905,6 +932,11 @@ const SPOTS = [
   // --- 自然・よりみち ---
   { id: 'inokashira', cat: 'nature', emoji: '🌳', name: '井の頭恩賜公園', area: '武蔵野市・三鷹市', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/format/index044.html', memo: '【サンプル】散歩するだけで心が整う、緑豊かな公園。' },
   { id: 'koishikawa-korakuen', cat: 'nature', emoji: '🌿', name: '小石川後楽園', area: '文京区後楽', pref: '東京', url: 'https://www.tokyo-park.or.jp/park/koishikawakorakuen/index.html', memo: '都内でアクセスしやすいのに、落ち着いて過ごせる庭園。リスナーさん曰く「人少なくてチル」。東京ドーム方面のライブ音が聞こえてきたこともあるそう。', suggested: true, suggestedBy: '匿名リスナー', traditional: true },
+  { id: 'sample-yasashii-ueno-park', cat: 'nature', emoji: '♿', name: '上野恩賜公園', area: '上野', pref: '東京', url: 'https://www.udnavi.tokyo/udinfo/detail/detail00225.html', memo: '【サンプル】文化施設めぐりや短い散歩と組み合わせやすい都心の公園です。バリアフリー情報を確認しながら予定を立てやすく、無理のないお出かけ例として使いやすい場所です。', toilet: true, accessibleToilet: true, barrierFree: true },
+  { id: 'sample-yasashii-tennoji-park', cat: 'nature', emoji: '🍼', name: 'てんしば（天王寺公園）', area: '大阪市天王寺区', pref: '大阪', url: 'https://www.tennoji-park.jp/facility/', memo: '【サンプル】主要駅から立ち寄りやすく、芝生広場で休憩もしやすい大阪の入口スポットです。授乳室・多目的トイレ・エレベーターなどの施設情報を公式ページで確認できます。', toilet: true, accessibleToilet: true, barrierFree: true, nursingRoom: true },
+  { id: 'sample-yasashii-oasis21', cat: 'view', emoji: '🏙️', name: 'オアシス21', area: '名古屋・栄', pref: '愛知', url: 'https://www.sakaepark.co.jp/about/', memo: '【サンプル】栄駅直結で天候に左右されにくく、短時間でも景色や休憩を楽しみやすい場所です。多目的トイレや授乳室、エレベーター情報が確認しやすいのも安心です。', toilet: true, accessibleToilet: true, barrierFree: true, nursingRoom: true },
+  { id: 'sample-yasashii-odori-park', cat: 'nature', emoji: '🌿', name: '大通公園', area: '札幌・大通', pref: '北海道', url: 'https://odori-park.jp/guide/', memo: '【サンプル】札幌中心部で休憩しながら歩ける公園です。公式ガイドで車いす貸出や多目的トイレの場所を確認できるため、初めてでも予定を組みやすい候補です。', toilet: true, accessibleToilet: true, barrierFree: true },
+  { id: 'sample-yasashii-fukuoka-art-museum', cat: 'museum', emoji: '🎨', name: '福岡市美術館', area: '福岡市中央区大濠公園', pref: '福岡', url: 'https://www.fukuoka-art-museum.jp/guide/barrierfree/', memo: '【サンプル】大濠公園と合わせて過ごしやすい美術館です。入口スロープ、車いす貸出、みんなのトイレ、授乳室などの案内があり、落ち着いたお出かけ例として紹介しやすい場所です。', toilet: true, accessibleToilet: true, barrierFree: true, nursingRoom: true },
   // --- 本・しらべもの ---
   { id: 'tsutaya', cat: 'book', emoji: '📚', name: '代官山 蔦屋書店', area: '代官山', pref: '東京', url: 'https://store.tsite.jp/daikanyama/', memo: '【サンプル】新しい本との出会いがある、心地よい空間。' },
   // --- くらし・雑貨 ---
@@ -1006,6 +1038,7 @@ const PREFECTURE_OPTIONS = [
 ];
 
 const CITY_OPTIONS_BY_PREF = {
+  北海道: ['札幌市'],
   東京: [
     '千代田区', '中央区', '港区', '新宿区', '文京区', '台東区', '墨田区', '江東区', '品川区',
     '目黒区', '大田区', '世田谷区', '渋谷区', '中野区', '杉並区', '豊島区', '北区', '荒川区',
@@ -1019,6 +1052,7 @@ const CITY_OPTIONS_BY_PREF = {
   岡山: ['岡山市', '倉敷市'],
   鳥取: ['鳥取市', '米子市', '大山町'],
   大阪: ['大阪市', '堺市', '豊中市', '吹田市'],
+  愛知: ['名古屋市'],
   京都: ['京都市', '宇治市'],
   福岡: ['福岡市', '北九州市'],
   全国: ['全国'],
@@ -1050,6 +1084,10 @@ const AREA_ALIAS_RULES = [
   { keywords: ['鳥取・大山', '大山まきば', 'みるくの里', '白バラ牛乳'], pref: '鳥取', city: '大山町' },
   { keywords: ['鳥取・米子', '米子', 'ラーメンおたま', '牛骨ラーメン'], pref: '鳥取', city: '米子市' },
   { keywords: ['鳥取'], pref: '鳥取', city: '鳥取' },
+  { keywords: ['てんしば', '天王寺公園', '大阪市天王寺区'], pref: '大阪', city: '大阪市' },
+  { keywords: ['オアシス21', '名古屋・栄', '栄'], pref: '愛知', city: '名古屋市' },
+  { keywords: ['大通公園', '札幌・大通', '札幌'], pref: '北海道', city: '札幌市' },
+  { keywords: ['福岡市美術館', '大濠公園', '福岡市中央区大濠公園'], pref: '福岡', city: '福岡市' },
   { keywords: ['福岡市中央区天神', '天神', '楽勝ラーメン'], pref: '福岡', city: '福岡市' },
   { keywords: ['福岡'], pref: '福岡', city: '福岡' },
   { keywords: ['全国'], pref: '全国', city: '全国' },
@@ -7567,6 +7605,11 @@ const SPOT_COORDINATES = {
   'lafollejournee-tokyo-2026': { lat: 35.6769, lng: 139.7644 },
   'niconico-chokaigi': { lat: 35.6484, lng: 140.0347 },
   'kasai-rinkai-crystal-view': { lat: 35.6406, lng: 139.8595 },
+  'sample-yasashii-ueno-park': { lat: 35.7148, lng: 139.7732 },
+  'sample-yasashii-tennoji-park': { lat: 34.6498, lng: 135.5120 },
+  'sample-yasashii-oasis21': { lat: 35.1709, lng: 136.9083 },
+  'sample-yasashii-odori-park': { lat: 43.0599, lng: 141.3477 },
+  'sample-yasashii-fukuoka-art-museum': { lat: 33.5862, lng: 130.3797 },
   'tokyo-mitaiwara': { lat: 35.6635, lng: 139.8604 },
   'ota-memorial-museum': { lat: 35.669417, lng: 139.704889 },
   'rakusho-ramen': { lat: 33.589739, lng: 130.397435 },
