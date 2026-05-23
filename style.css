@@ -470,6 +470,9 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .spot-like-count{min-width:1.2em;text-align:center;}
 .spot-name{font-weight:700;font-size:1.1rem;margin-bottom:4px;color:var(--text);}
 .spot-preview-img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-sm);margin-bottom:14px;border:1px solid var(--border);background:var(--blue-light);}
+.resource-preview-button{display:block;width:100%;margin:0 0 14px;padding:0;border:0;background:transparent;border-radius:var(--r-sm);cursor:zoom-in;text-align:inherit;transition:transform .2s ease, filter .2s ease;}
+.resource-preview-button:hover{transform:translateY(-1px);filter:saturate(1.04);}
+.resource-preview-button .spot-preview-img{display:block;margin-bottom:0;}
 .spot-area{font-size:0.82rem;color:var(--text-muted);margin-bottom:10px;}
 .spot-area span{background:var(--blue-light);color:var(--blue);padding:3px 10px;border-radius:999px;font-weight:600;}
 
@@ -505,6 +508,7 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .spot-latest-review:hover{border-color:rgba(42,157,143,0.46);background:#fff;transform:translateY(-1px);}
 .spot-footer{display:flex;gap:8px;flex-wrap:wrap;}
 .spot-link{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:999px;border:1.5px dashed var(--border);color:var(--text-muted);font-size:0.8rem;transition:all .2s;background:#fff;}
+button.spot-link{font-family:inherit;cursor:zoom-in;}
 .spot-link:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
 .spot-reviews-btn{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:999px;border:1.5px dashed var(--border);color:var(--text-muted);font-size:0.8rem;font-weight:600;transition:all .2s;background:#fff;}
 .spot-reviews-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
@@ -527,6 +531,7 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .visited-review{font-size:0.9rem;color:var(--text-muted);line-height:1.7;padding:14px;background:rgba(237,246,255,0.8);border-radius:18px 14px 20px 15px;border-left:3px solid var(--hand-accent);margin-bottom:16px;}
 .visited-photos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .visited-photo-link{padding:6px 14px;border-radius:999px;background:var(--blue-light);border:1.5px dashed var(--border);color:var(--blue);font-size:0.8rem;font-weight:600;transition:all .2s;}
+button.visited-photo-link{font-family:inherit;cursor:zoom-in;}
 .visited-photo-link:hover{background:#dbeafe;}
 .review-reactions{display:flex;justify-content:flex-end;margin-top:14px;}
 .review-seen-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1.5px dashed rgba(79,127,216,0.28);background:#fff;color:var(--text-muted);font-size:0.78rem;font-weight:700;transition:all .2s;box-shadow:0 5px 14px rgba(43,67,120,0.08);}
@@ -726,6 +731,11 @@ html[lang="en"] .seo-spot-hero::before{background:url('assets/popopo-map-visual-
 .modal-close{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:0.85rem;transition:all .2s;}
 .modal-close:hover{background:var(--bg);color:var(--text);}
 .gallery-modal-box{background:var(--paper);border:1.5px solid var(--border);border-radius:28px 22px 30px 24px;width:100%;max-width:960px;max-height:90vh;overflow-y:auto;overscroll-behavior:contain;animation:slideUp .3s ease;box-shadow:var(--shadow-lg);}
+.gallery-modal-box.is-resource-image-mode{max-width:min(920px,94vw);}
+.gallery-modal-box.is-resource-image-mode #galleryBtnPrev,
+.gallery-modal-box.is-resource-image-mode #galleryBtnNext,
+.gallery-modal-box.is-resource-image-mode #galleryPanelPageNum{display:none;}
+.gallery-modal-box.is-resource-image-mode .gallery-modal-caption{white-space:pre-wrap;}
 .gallery-modal-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,0.85fr);}
 .gallery-modal-visual {
   position: relative;
@@ -4666,4 +4676,3 @@ body.weather-snowy {
   border-color: var(--border);
   color: var(--text);
 }
-

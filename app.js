@@ -3755,12 +3755,26 @@ function getResourcePreviewImage(resources = []) {
   return resources.find(resource => isDirectImageUrl(resource.url))?.url || '';
 }
 
+function renderResourcePreviewButton(imageUrl, title, caption = '') {
+  if (!imageUrl) return '';
+  const label = currentLanguage === 'en' ? 'Open image' : '画像を開く';
+  return `
+    <button type="button" class="resource-preview-button" data-resource-image="${escHtml(imageUrl)}" data-resource-title="${escHtml(title || label)}" data-resource-caption="${escHtml(caption || '')}" aria-label="${escHtml(label)}">
+      <img class="spot-preview-img" src="${escHtml(imageUrl)}" alt="" loading="lazy">
+    </button>
+  `;
+}
+
 function renderResourceLinks(resources = [], context = 'spot', className = 'spot-link') {
   if (!resources.length) return '';
   return resources.map((resource, i) => {
     const label = translateResourceLabel(resource.label || getResourceKindLabel(resource.kind, context), context);
     const suffix = resources.length > 1 ? i + 1 : '';
-    return `<a href="${escHtml(resource.url)}" target="_blank" rel="noopener" class="${className} ${className}--${escHtml(resource.kind || '')}">${getResourceIcon(resource.kind)} ${escHtml(label + suffix)}</a>`;
+    const displayLabel = label + suffix;
+    if (isDirectImageUrl(resource.url)) {
+      return `<button type="button" class="${className} ${className}--${escHtml(resource.kind || '')} resource-image-link" data-resource-image="${escHtml(resource.url)}" data-resource-title="${escHtml(displayLabel)}" data-resource-caption="${escHtml(context === 'spot' ? 'スポット投稿の写真' : 'みんなの感想の写真')}">${getResourceIcon(resource.kind)} ${escHtml(displayLabel)}</button>`;
+    }
+    return `<a href="${escHtml(resource.url)}" target="_blank" rel="noopener" class="${className} ${className}--${escHtml(resource.kind || '')}">${getResourceIcon(resource.kind)} ${escHtml(displayLabel)}</a>`;
   }).join('');
 }
 
@@ -4339,7 +4353,7 @@ function renderSpotCards(cat = 'all') {
           </button>
         </div>
       </div>
-      ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
+      ${previewImage ? renderResourcePreviewButton(previewImage, displayName, displayMemo) : ''}
       <div class="spot-card-info">
         <div class="spot-name">${escHtml(displayName)}</div>
         <div class="spot-area">
@@ -4444,7 +4458,7 @@ function renderSpotReviewCards(reviews) {
           <span class="spot-review-rating">${renderStars(p.rating || 0)}</span>
         </div>
         <div class="spot-review-meta">${areaStr} &nbsp; 📅 ${formatVisitDate(p.visitDate)} &nbsp; 👤 ${escHtml(nickname)}</div>
-        ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
+        ${previewImage ? renderResourcePreviewButton(previewImage, p.spotName || (isEn ? 'Review photo' : '感想の写真'), p.comment || '') : ''}
         <div class="spot-review-comment">"${escHtml(p.comment)}"</div>
         ${translationHtml}
         ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
@@ -4472,7 +4486,7 @@ function renderListenerReviewCard(p) {
         <div class="visited-name">${escHtml(p.spotName)}</div>
         <div class="visited-area">${areaStr} &nbsp; 📅 ${dateStr} &nbsp; 👤 ${escHtml(nickname)}</div>
         <div class="visited-rating">${renderStars(p.rating || 0)}</div>
-        ${previewImage ? `<img class="spot-preview-img" src="${escHtml(previewImage)}" alt="" loading="lazy">` : ''}
+        ${previewImage ? renderResourcePreviewButton(previewImage, p.spotName || (isEn ? 'Review photo' : '感想の写真'), p.comment || '') : ''}
         <div class="visited-review">"${escHtml(p.comment)}"</div>
         ${translationHtml}
         ${media.length ? `<div class="visited-photos">${renderResourceLinks(media, 'post', 'visited-photo-link')}</div>` : ''}
@@ -5346,10 +5360,51 @@ function showGalleryImage(imageSrc, title, caption, alt) {
   if (!modal || !image || !titleEl || !captionEl) return;
   setGalleryLockState(false);
   setGalleryModalMode(imageSrc);
+  image.onerror = null;
   image.src = imageSrc;
   image.alt = alt || title || '配信で届いた作品';
   titleEl.textContent = title || '配信で届いた作品';
   captionEl.textContent = caption || '';
+}
+
+function openResourceImageModal(imageSrc, title = '', caption = '') {
+  if (!imageSrc) return;
+  currentGalleryIndex = -1;
+  const modal = document.getElementById('galleryModal');
+  const image = document.getElementById('galleryModalImage');
+  const titleEl = document.getElementById('galleryModalTitle');
+  const captionEl = document.getElementById('galleryModalCaption');
+  const modalBox = document.querySelector('.gallery-modal-box');
+  const visual = document.getElementById('galleryModalVisual');
+  const pageNumEl = document.getElementById('galleryModalPageNum');
+  const panelPageNumEl = document.getElementById('galleryPanelPageNum');
+  if (!modal || !image || !titleEl || !captionEl) return;
+
+  pendingGalleryUnlock = null;
+  setGalleryLockState(false);
+  setGalleryBaseControls(false);
+  hideDictionaryThumbs();
+  if (visual) visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
+  if (pageNumEl) pageNumEl.hidden = true;
+  if (panelPageNumEl) { panelPageNumEl.hidden = true; panelPageNumEl.textContent = ''; }
+  if (modalBox) {
+    modalBox.classList.remove('is-dictionary-mode', 'is-dictionary-zoomed', 'is-focus-mode');
+    modalBox.classList.add('is-resource-image-mode');
+  }
+
+  image.onerror = () => {
+    captionEl.textContent = currentLanguage === 'en'
+      ? 'The image could not be loaded. If this is an external image, the source may not allow embedding.'
+      : '画像を読み込めませんでした。外部画像の場合、掲載元の制限で表示できないことがあります。';
+  };
+  image.src = imageSrc;
+  image.alt = title || (currentLanguage === 'en' ? 'Posted image' : '投稿画像');
+  titleEl.textContent = title || (currentLanguage === 'en' ? 'Posted image' : '投稿画像');
+  captionEl.textContent = caption || '';
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  resetGalleryZoom();
+  showGalleryHint(currentLanguage === 'en' ? 'Tap to zoom / Swipe down to close' : 'タップで拡大 ／ 下にスワイプで閉じる');
 }
 
 function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHint = '') {
@@ -5362,6 +5417,7 @@ function openGalleryModal(imageSrc, title, caption, alt, lockAnswer = '', lockHi
   const needsUnlock = Boolean(lockAnswer);
   const isUnlocked = needsUnlock && isGalleryUnlocked(imageSrc);
   const isDict = isDictionaryGalleryItem(getCurrentGalleryItem() || getGalleryItemByImage(imageSrc));
+  document.querySelector('.gallery-modal-box')?.classList.remove('is-resource-image-mode');
   setGalleryModalMode(imageSrc);
   setGalleryBaseControls(isDict);
   titleEl.textContent = title || '配信で届いた作品';
@@ -5464,6 +5520,19 @@ function resetGalleryZoom() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const trigger = target?.closest('[data-resource-image]');
+    if (!trigger) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openResourceImageModal(
+      trigger.dataset.resourceImage,
+      trigger.dataset.resourceTitle || '',
+      trigger.dataset.resourceCaption || ''
+    );
+  });
+
   const modalImg = document.getElementById('galleryModalImage');
   if (modalImg) {
     modalImg.addEventListener('click', (e) => {
@@ -5574,6 +5643,7 @@ function closeGalleryModal() {
   modal.classList.remove('is-open');
   image.src = '';
   image.alt = '';
+  image.onerror = null;
   pendingGalleryUnlock = null;
   currentGalleryIndex = -1;
   const visual = document.getElementById('galleryModalVisual');
@@ -5583,7 +5653,7 @@ function closeGalleryModal() {
   if (visual) visual.querySelectorAll('.modal-img-nav').forEach(el => el.remove());
   if (pageNumEl) pageNumEl.hidden = true;
   if (panelPageNumEl) { panelPageNumEl.hidden = true; panelPageNumEl.textContent = ''; }
-  if (modalBox) modalBox.classList.remove('is-dictionary-mode', 'is-dictionary-zoomed', 'is-focus-mode');
+  if (modalBox) modalBox.classList.remove('is-dictionary-mode', 'is-dictionary-zoomed', 'is-focus-mode', 'is-resource-image-mode');
   hideDictionaryThumbs();
   resetGalleryZoom();
   setGalleryLockState(false);
@@ -5832,6 +5902,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (Math.abs(diffX) > 54 && Math.abs(diffX) > Math.abs(diffY) * 1.35) {
+        if (document.querySelector('.gallery-modal-box')?.classList.contains('is-resource-image-mode')) return;
         const moved = diffX < 0
           // 次へ（左スワイプ）
           ? moveGalleryFromCurrent('next')
@@ -5852,13 +5923,14 @@ function isTypingTarget(el) {
 function handleGalleryKeyboard(e) {
   const modal = document.getElementById('galleryModal');
   if (!modal?.classList.contains('is-open') || isTypingTarget(e.target)) return false;
+  const isResourceImageMode = document.querySelector('.gallery-modal-box')?.classList.contains('is-resource-image-mode');
 
-  if (e.key === 'ArrowRight') {
+  if (!isResourceImageMode && e.key === 'ArrowRight') {
     e.preventDefault();
     if (!moveGalleryFromCurrent('next')) showGalleryHint('最後の作品です');
     return true;
   }
-  if (e.key === 'ArrowLeft') {
+  if (!isResourceImageMode && e.key === 'ArrowLeft') {
     e.preventDefault();
     if (!moveGalleryFromCurrent('prev')) showGalleryHint('最初の作品です');
     return true;
