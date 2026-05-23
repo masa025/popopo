@@ -165,7 +165,7 @@ const TRANSLATIONS = {
     howto_step6_desc: "おすすめしたい場所や気になっている場所があれば、「スポットを追加する」から提案できます。参考URL・写真・情報を3件まで種類つきで登録でき、画像URLならカードにプレビューも表示されます。設備対応サービス（多目的トイレ、バリアフリー、授乳室など）も設定でき、カードや詳細にバリアフリーの目安として表示されます。入力中の下書き保存にも対応しています。",
     howto_step7_title: "フリートークで話す",
     howto_step7_desc: "POPOPOの感想、サイトへのご意見、今度行きたい場所、ちょっとしたお出かけメモなどを自由に投稿できます。返信のあったスレッドは、掲示板の上の方に近づきやすくなっています。必要な分だけ「もっと見る」で広げられます。",
-    howto_note: "投稿内容は公開されます。個人情報の取り扱い等には十分に注意してください。スポット・感想・つぶやきは、同じ端末のブラウザでは投稿後に編集できます。スポット追加フォームは、未送信の内容を端末内に一時保存します（別のタブで開き直したときなどに復元できます）。写真は画像ファイルを直接アップロードする形式ではなく、SNSや共有リンクのURLを貼る形です。「行きたいリスト」はログイン不要で使えるよう、同じ端末のブラウザに保存されます。"
+    howto_note: "投稿内容は公開されます。個人情報の取り扱い等には十分に注意してください。スポット・感想・つぶやきは、同じ端末のブラウザでは投稿後に編集できます。スポット追加フォームは、未送信の内容を端末内に一時保存します（別のタブで開き直したときなどに復元できます）。画像は直接ファイル（写真）をアップロードできるほか、SNS等の投稿URLを添付することも可能です（アップロードされた画像は自動的に最適化されます）。「行きたいリスト」はログイン不要で使えるよう、同じ端末のブラウザに保存されます。"
   },
   en: {
     logo_sub: "Outing Map",
@@ -276,7 +276,7 @@ const TRANSLATIONS = {
     howto_step6_desc: "Suggest a spot you want to recommend or are curious about. You can add up to 3 links, photos, or info. You can also check accessibility amenities (accessible restrooms, wheelchair access, nursing rooms) to display on cards and details. Drafts are temporarily saved in your browser.",
     howto_step7_title: "Talk in Free Talk",
     howto_step7_desc: "Freely post your thoughts on POPOPO, site feedback, or outing plans. Threads with replies stay near the top. Tap 'See More' to expand.",
-    howto_note: "Posts are public. Please be careful with personal information. Spots, reviews, and chats can be edited from the same browser. Spot drafts are saved locally in the browser. Photos are added via SNS or shared links, not direct file uploads. The 'Want to Go' list is saved locally without requiring a login."
+    howto_note: "Posts are public. Please be careful with personal information. Spots, reviews, and chats can be edited from the same browser. Spot drafts are saved locally in the browser. You can directly upload image files (photos) or attach post URLs from SNS (uploaded images will be optimized automatically). The 'Want to Go' list is saved locally without requiring a login."
   }
 };
 

@@ -4517,9 +4517,17 @@ body.weather-snowy {
 }
 [data-theme="dark"] .about-hero-luxury::before {
   background:
-    radial-gradient(ellipse at center, rgba(11,15,25,0.86) 0%, rgba(11,15,25,0.74) 36%, rgba(11,15,25,0.5) 68%, rgba(11,15,25,0.38) 100%),
+    radial-gradient(ellipse at center, rgba(11,15,25,0.64) 0%, rgba(11,15,25,0.54) 36%, rgba(11,15,25,0.32) 68%, rgba(11,15,25,0.18) 100%),
     url('assets/popopo-map-visual-20260518.png') center 48% / cover no-repeat;
-  opacity: 0.6;
+  opacity: 0.85;
+  filter: saturate(1.05) contrast(0.95) brightness(1.15);
+}
+[data-theme="dark"] html[lang="en"] .about-hero-luxury::before {
+  background:
+    radial-gradient(ellipse at center, rgba(11,15,25,0.64) 0%, rgba(11,15,25,0.54) 36%, rgba(11,15,25,0.32) 68%, rgba(11,15,25,0.18) 100%),
+    url('assets/popopo-map-visual-en.jpg') center 48% / cover no-repeat;
+  opacity: 0.85;
+  filter: saturate(1.05) contrast(0.95) brightness(1.15);
 }
 [data-theme="dark"] .about-luxury-label {
   background: rgba(22,34,56,0.7);
