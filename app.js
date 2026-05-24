@@ -2133,6 +2133,87 @@ async function shareKiriban() {
   showToast('掲示板に報告しましょう！✨');
 }
 
+function getSiteShareUrl(anchor = 'spots') {
+  const base = window.location.origin && window.location.origin !== 'null'
+    ? `${window.location.origin}${window.location.pathname}`
+    : window.location.href.split('#')[0];
+  return `${base.replace(/\/index\.html$/, '/')}${anchor ? `#${anchor}` : ''}`;
+}
+
+function buildSpotShareText(spot, displayName, displayArea, displayMemo, includeUrl = true) {
+  const isEn = currentLanguage === 'en';
+  const url = getSiteShareUrl('spots');
+  if (isEn) {
+    return [
+      `I found "${displayName}" on POPOPO Outing Map.`,
+      displayArea ? `Area: ${displayArea}` : '',
+      displayMemo ? `Why it caught my eye: ${truncateText(displayMemo, 92)}` : '',
+      'A small discovery shared from person to person.',
+      includeUrl ? url : ''
+    ].filter(Boolean).join('\n');
+  }
+  return [
+    `POPOPO お出かけマップで見つけた「${displayName}」。`,
+    displayArea ? `場所：${displayArea}` : '',
+    displayMemo ? `おすすめポイント：${truncateText(displayMemo, 92)}` : '',
+    '人から人へ伝わる、ちいさなお出かけ案内です。',
+    includeUrl ? url : ''
+  ].filter(Boolean).join('\n');
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0;';
+  document.body.appendChild(textarea);
+  textarea.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } finally {
+    textarea.remove();
+  }
+  return ok;
+}
+
+async function shareSpot(spot) {
+  if (!spot) return;
+  const isEn = currentLanguage === 'en';
+  const spotTrans = SPOT_TRANSLATIONS[spot.id] || {};
+  const displayName = isEn && spotTrans.name ? spotTrans.name : spot.name;
+  const displayMemo = isEn && spotTrans.memo ? spotTrans.memo : (spot.memo || spot.reason || '');
+  const displayArea = isEn
+    ? convertToEnglishAddress(spot.area, spot.pref)
+    : `${spot.area || ''}${spot.pref && spot.pref !== '東京' && spot.pref !== '全国' && spot.pref !== 'オンライン' ? '（' + spot.pref + '）' : ''}`;
+  const text = buildSpotShareText(spot, displayName, displayArea, displayMemo, true);
+  const nativeShareText = buildSpotShareText(spot, displayName, displayArea, displayMemo, false);
+  const shareData = {
+    title: isEn ? `${displayName} | POPOPO Outing Map` : `${displayName} | POPOPO お出かけマップ`,
+    text: nativeShareText,
+    url: getSiteShareUrl('spots')
+  };
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      showToast(isEn ? 'This might become someone’s next outing.' : '誰かのお出かけのきっかけになるかも。');
+      return;
+    }
+    const copied = await copyTextToClipboard(text);
+    showToast(copied
+      ? (isEn ? 'Share text copied. It might inspire someone’s next outing.' : '共有文をコピーしました。誰かのお出かけのきっかけになるかも。')
+      : (isEn ? 'Could not copy the share text.' : '共有文をコピーできませんでした。'));
+  } catch (error) {
+    if (error && error.name === 'AbortError') return;
+    console.warn('Spot share failed:', error);
+    showToast(isEn ? 'Sharing failed. Please try again.' : '共有できませんでした。もう一度お試しください。');
+  }
+}
+
 function getIntroStorySlides() {
   return Array.from(document.querySelectorAll('[data-intro-story-slide]'));
 }
@@ -4351,6 +4432,10 @@ function renderSpotCards(cat = 'all') {
             <span class="spot-like-label">${likeLabel}</span>
             <span class="spot-like-count" id="like-count-${s.id}">${globalLikes[s.id] || isLiked || 0}</span>
           </button>
+          <button class="spot-share-btn" type="button" data-id="${s.id}" aria-label="${escHtml(isEn ? `Share ${displayName}` : `${displayName}を共有`)}">
+            <span class="spot-share-icon">↗</span>
+            <span class="spot-share-label">${isEn ? 'Share' : '共有'}</span>
+          </button>
         </div>
       </div>
       ${previewImage ? renderResourcePreviewButton(previewImage, displayName, displayMemo) : ''}
@@ -4402,6 +4487,13 @@ function renderSpotCards(cat = 'all') {
       if (icon) icon.textContent = '✅';
       if (label) label.textContent = currentLanguage === 'en' ? 'Saved' : '行きたい済み';
       updateWantListButton();
+    });
+  });
+  grid.querySelectorAll('.spot-share-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const sid = btn.dataset.id;
+      const spot = allSpots.find(s => String(s.id) === String(sid));
+      await shareSpot(spot);
     });
   });
   grid.querySelectorAll('.spot-post-btn').forEach(btn => {

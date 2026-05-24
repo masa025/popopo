@@ -468,6 +468,9 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .spot-like-btn:hover,.spot-like-btn.liked{border-color:rgba(91,141,238,0.52);color:var(--blue);background:var(--blue-light);}
 .spot-like-icon{font-size:0.88rem;}
 .spot-like-count{min-width:1.2em;text-align:center;}
+.spot-share-btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;border:1.5px dashed rgba(42,157,143,0.28);color:#2a7d74;font-size:0.8rem;font-weight:700;transition:all .2s;background:rgba(255,255,255,0.86);white-space:nowrap;}
+.spot-share-btn:hover{border-color:rgba(42,157,143,0.5);background:rgba(42,157,143,0.1);transform:translateY(-1px);}
+.spot-share-icon{font-size:0.95rem;line-height:1;}
 .spot-name{font-weight:700;font-size:1.1rem;margin-bottom:4px;color:var(--text);}
 .spot-preview-img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-sm);margin-bottom:14px;border:1px solid var(--border);background:var(--blue-light);}
 .resource-preview-button{display:block;width:100%;margin:0 0 14px;padding:0;border:0;background:transparent;border-radius:var(--r-sm);cursor:zoom-in;text-align:inherit;transition:transform .2s ease, filter .2s ease;}
@@ -4351,6 +4354,7 @@ body.weather-snowy {
   color: var(--teal-text);
 }
 [data-theme="dark"] .spot-like-btn { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .spot-share-btn { background: rgba(255,255,255,0.04); color: var(--green); border-color: rgba(42,157,143,0.32); }
 [data-theme="dark"] .spot-card-weather {
   background: var(--surface-sunken);
   border-color: rgba(96,165,250,0.2);
@@ -4647,6 +4651,7 @@ body.weather-snowy {
 [data-theme="dark"] .tab.active { background: var(--blue); color: #0B0F19; }
 [data-theme="dark"] .spot-like-btn:hover,
 [data-theme="dark"] .spot-like-btn.liked { background: var(--tint-blue); color: var(--blue); }
+[data-theme="dark"] .spot-share-btn:hover { background: rgba(42,157,143,0.18); color: var(--green); }
 [data-theme="dark"] .want-list-toggle:hover,
 [data-theme="dark"] .want-list-toggle.active { background: var(--blue); color: #0B0F19; }
 [data-theme="dark"] .barrier-free-toggle:hover,
