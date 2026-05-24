@@ -4151,6 +4151,12 @@ body.weather-snowy {
   box-shadow: 0 4px 8px rgba(79, 127, 216, 0.08);
 }
 
+.amenity-badge--budget {
+  background: rgba(207, 157, 82, 0.11);
+  color: #8a5a1f;
+  border-color: rgba(207, 157, 82, 0.24);
+}
+
 /* ============================================================
    ダークモード：主要コンポーネントの仕上げ（v20260520-dark）
    ここから下は [data-theme="dark"] 限定の上書き。

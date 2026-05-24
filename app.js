@@ -3074,6 +3074,7 @@ function getSuggestedSpotItems() {
       resources: getSuggestionResources(s),
       memo: s.reason,
       intent: s.intent || 'recommend',
+      budget: s.budget || '',
       suggested: true,
       suggestedBy: s.nickname || '匿名リスナー',
       timestamp: s.timestamp || 0,
@@ -4336,8 +4337,24 @@ function updateBarrierFreeButton() {
     : (isEn ? '♿ Accessible Outings' : '♿ やさしいお出かけ');
 }
 
+function getBudgetLabel(value, isEn = currentLanguage === 'en') {
+  const labels = {
+    free: { ja: '無料', en: 'Free' },
+    'under-1000': { ja: '〜1,000円', en: 'Under ¥1,000' },
+    '1000-2000': { ja: '1,000〜2,000円', en: '¥1,000-2,000' },
+    '2000-3000': { ja: '2,000〜3,000円', en: '¥2,000-3,000' },
+    '3000-5000': { ja: '3,000〜5,000円', en: '¥3,000-5,000' },
+    'over-5000': { ja: '5,000円〜', en: '¥5,000+' },
+    unknown: { ja: '不明', en: 'Unknown' }
+  };
+  const label = labels[value];
+  return label ? (isEn ? label.en : label.ja) : '';
+}
+
 function renderSpotAmenitiesHtml(s, isEn) {
   const badges = [];
+  const budgetLabel = getBudgetLabel(s.budget, isEn);
+  if (budgetLabel) badges.push(`<span class="amenity-badge amenity-badge--budget" title="${isEn ? 'Average budget' : '平均予算'}">💰 ${escHtml(budgetLabel)}</span>`);
   if (s.wifi) badges.push(`<span class="amenity-badge" title="${isEn ? 'Wi-Fi Available' : 'Wi-Fiあり'}">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fi'}</span>`);
   if (s.power) badges.push(`<span class="amenity-badge" title="${isEn ? 'Power Outlet Available' : '電源あり'}">${isEn ? '🔌 Power' : '🔌 電源'}</span>`);
   if (s.vegan) badges.push(`<span class="amenity-badge" title="${isEn ? 'Vegan Friendly' : 'ビーガン対応'}">${isEn ? '🌱 Vegan' : '🌱 ビーガン'}</span>`);
@@ -4883,6 +4900,7 @@ function captureAddSpotFormDraftState() {
     cityCustom: document.getElementById('asCityCustom')?.value || '',
     areaNote: document.getElementById('asAreaNote')?.value || '',
     cat: document.getElementById('asCat')?.value || '',
+    budget: document.getElementById('asBudget')?.value || '',
     intent: getAddSpotIntent(),
     reason: document.getElementById('asReason')?.value || '',
     nick: document.getElementById('asNick')?.value || '',
@@ -4904,7 +4922,7 @@ function captureAddSpotFormDraftState() {
 
 function addSpotDraftStateHasText(state) {
   if (!state) return false;
-  const parts = [state.name, state.area, state.pref, state.city, state.cityCustom, state.areaNote, state.reason, state.nick, ...(state.urls || [])];
+  const parts = [state.name, state.area, state.pref, state.city, state.cityCustom, state.areaNote, state.budget, state.reason, state.nick, ...(state.urls || [])];
   const hasText = parts.some(p => String(p || '').trim().length > 0);
   const hasAmenities = state.wifi || state.power || state.vegan || state.card || state.parking || state.pet || state.toilet || state.accessibleToilet || state.barrierFree || state.nursingRoom;
   return hasText || hasAmenities;
@@ -4970,6 +4988,7 @@ function restoreAddSpotFormDraftIfAny() {
   setVal('asAreaNote', state.areaNote);
   syncAddSpotAreaField();
   if (state.cat) setVal('asCat', state.cat);
+  if (state.budget) setVal('asBudget', state.budget);
   if (state.intent) setAddSpotIntent(state.intent);
   setVal('asReason', state.reason);
   setVal('asNick', state.nick);
@@ -5115,6 +5134,7 @@ function openAddSpotModal(id = null, clientId = null) {
       document.getElementById('asName').value = s.name || '';
       setAddSpotLocationFields(s);
       document.getElementById('asCat').value = s.cat || 'food';
+      document.getElementById('asBudget').value = s.budget || '';
       setAddSpotIntent(s.intent || 'recommend');
       document.getElementById('asReason').value = s.reason || '';
       document.getElementById('asNick').value = s.nickname || '';
@@ -6203,6 +6223,7 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     areaNote: location.areaNote,
     areaGroup: location.city || location.pref,
     cat: document.getElementById('asCat').value,
+    budget: document.getElementById('asBudget')?.value || '',
     intent: getAddSpotIntent(),
     reason,
     nickname: document.getElementById('asNick').value.trim(),

@@ -605,6 +605,20 @@
           </select>
         </div>
         <div class="form-group">
+          <label class="form-label" for="asBudget">平均予算（任意）</label>
+          <select id="asBudget" class="form-input">
+            <option value="">未設定</option>
+            <option value="free">無料</option>
+            <option value="under-1000">〜1,000円</option>
+            <option value="1000-2000">1,000〜2,000円</option>
+            <option value="2000-3000">2,000〜3,000円</option>
+            <option value="3000-5000">3,000〜5,000円</option>
+            <option value="over-5000">5,000円〜</option>
+            <option value="unknown">不明</option>
+          </select>
+          <p class="form-help">だいたいの目安で大丈夫です。未設定ならカードには表示されません。</p>
+        </div>
+        <div class="form-group">
           <label class="form-label" for="asReason">おすすめポイント <span class="req">必須</span></label>
           <textarea id="asReason" class="form-textarea" placeholder="どんな場所か教えて下さい！（150文字以内）" maxlength="150" required></textarea>
           <span class="char-count"><span id="asCharNum">0</span>/150</span>
