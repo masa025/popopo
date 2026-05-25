@@ -8431,8 +8431,26 @@ async function fetchAndRenderSpotWeather() {
 
   const isEn = typeof currentLanguage !== 'undefined' ? currentLanguage === 'en' : false;
 
+  // 現在時刻による「今日」または「明日」の判定（昼は今日、夜18時〜早朝5時前は明日）
+  const currentHour = new Date().getHours();
+  const isTomorrow = (currentHour >= 18 || currentHour < 5);
+
+  const getLocalDateString = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const date = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${date}`;
+  };
+
+  const todayStr = getLocalDateString(new Date());
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = getLocalDateString(tomorrow);
+  const targetDateStr = isTomorrow ? tomorrowStr : todayStr;
+
   const promises = weatherIds.map(async (id) => {
-    const cacheKey = `popopo_spot_weather_${id}`;
+    // 日付固有のキャッシュキーで別日程のデータ混在を完全に防止
+    const cacheKey = `popopo_spot_weather_${id}_${targetDateStr}`;
     try {
       let cached = null;
       try {
@@ -8453,10 +8471,28 @@ async function fetchAndRenderSpotWeather() {
       if (!res.ok) throw new Error(`JMA API status ${res.status}`);
       const data = await res.json();
       
-      const wCodes = data?.[0]?.timeSeries?.[0]?.areas?.[0]?.weatherCodes;
-      if (!wCodes || wCodes.length === 0) throw new Error('Invalid JSON structure or empty weatherCodes');
+      const timeSeries = data?.[0]?.timeSeries?.[0];
+      const timeDefines = timeSeries?.timeDefines;
+      const wCodes = timeSeries?.areas?.[0]?.weatherCodes;
+      if (!wCodes || wCodes.length === 0 || !timeDefines || timeDefines.length === 0) {
+        throw new Error('Invalid JSON structure or empty weather data');
+      }
       
-      const code = wCodes.length > 1 ? wCodes[1] : wCodes[0];
+      // timeDefines の中から対象日付に前方一致するインデックスを検索
+      let targetIndex = -1;
+      for (let i = 0; i < timeDefines.length; i += 1) {
+        if (timeDefines[i] && timeDefines[i].startsWith(targetDateStr)) {
+          targetIndex = i;
+          break;
+        }
+      }
+
+      // 対象日付が見つからなかった場合のフォールバック（決め打ちに流れない安全弁）
+      if (targetIndex === -1 || targetIndex >= wCodes.length) {
+        targetIndex = isTomorrow ? Math.min(1, wCodes.length - 1) : 0;
+      }
+
+      const code = wCodes[targetIndex];
       if (code) {
         try {
           sessionStorage.setItem(cacheKey, code);
@@ -8491,7 +8527,10 @@ async function fetchAndRenderSpotWeather() {
       if (code && code !== 'error') {
         const icon = (typeof getWeatherIcon !== 'undefined') ? getWeatherIcon(code) : '☁️';
         const name = getWeatherName(code, isEn);
-        badge.innerHTML = `${isEn ? 'Tomorrow' : '明日'}: ${icon} ${name}`;
+        const dayLabel = isTomorrow 
+          ? (isEn ? 'Tomorrow' : '明日') 
+          : (isEn ? 'Today' : '今日');
+        badge.innerHTML = `${dayLabel}: ${icon} ${name}`;
         badge.style.display = '';
       } else {
         badge.style.display = 'none';
