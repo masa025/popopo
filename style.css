@@ -4738,3 +4738,109 @@ body.weather-snowy {
   border-color: var(--border);
   color: var(--text);
 }
+
+/* --- 地図モーダル注釈テキスト用スタイル --- */
+.map-modal-notice {
+  margin: 4px 0 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ダークモード時の地図モーダル要素の完璧な最適化 */
+[data-theme="dark"] .map-modal-notice {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .map-modal-body {
+  background: var(--surface-sunken) !important;
+}
+
+[data-theme="dark"] .map-online-panel {
+  background: rgba(15, 23, 42, 0.78) !important;
+  border-left-color: var(--border) !important;
+}
+
+[data-theme="dark"] .map-panel-tabs {
+  background: rgba(15, 23, 42, 0.4) !important;
+}
+
+[data-theme="dark"] .map-panel-tab {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .map-panel-tab:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .map-panel-tab.active {
+  background: var(--surface-2) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+[data-theme="dark"] .map-online-header {
+  background: rgba(15, 23, 42, 0.4) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+[data-theme="dark"] .map-online-title {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .map-online-card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .map-online-card:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .map-online-card-name {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .map-online-card-memo {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .map-online-empty {
+  color: #64748b !important;
+}
+
+/* 地図上のクイックナビボタンのダークモード最適化 */
+[data-theme="dark"] .map-quick-nav {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .map-nav-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .map-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+}
+
+/* 地図ポップアップのダークモード最適化 */
+[data-theme="dark"] .map-popup-card {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .map-popup-title {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .map-popup-memo {
+  color: #cbd5e1 !important;
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
+}
