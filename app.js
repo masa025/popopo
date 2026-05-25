@@ -609,6 +609,9 @@ function renderInboundTags(s, lang) {
   if (s.card) {
     html += `<span class="inbound-tag inbound-tag--card">${isEn ? '💳 Card OK' : '💳 カード決済可'}</span>`;
   }
+  if (s.qr) {
+    html += `<span class="inbound-tag inbound-tag--qr">${isEn ? '📱 QR Pay OK' : '📱 QRコード決済可'}</span>`;
+  }
   if (s.wifi) {
     html += `<span class="inbound-tag inbound-tag--wifi">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fiあり'}</span>`;
   }
@@ -4359,6 +4362,7 @@ function renderSpotAmenitiesHtml(s, isEn) {
   if (s.power) badges.push(`<span class="amenity-badge" title="${isEn ? 'Power Outlet Available' : '電源あり'}">${isEn ? '🔌 Power' : '🔌 電源'}</span>`);
   if (s.vegan) badges.push(`<span class="amenity-badge" title="${isEn ? 'Vegan Friendly' : 'ビーガン対応'}">${isEn ? '🌱 Vegan' : '🌱 ビーガン'}</span>`);
   if (s.card) badges.push(`<span class="amenity-badge" title="${isEn ? 'Credit Card Accepted' : 'クレカ可'}">${isEn ? '💳 Credit Card' : '💳 クレカ可'}</span>`);
+  if (s.qr) badges.push(`<span class="amenity-badge" title="${isEn ? 'QR Code Payment Accepted' : 'QRコード決済可'}">${isEn ? '📱 QR Code Pay' : '📱 QRコード決済可'}</span>`);
   if (s.parking) badges.push(`<span class="amenity-badge" title="${isEn ? 'Parking Available' : '駐車場あり'}">${isEn ? '🅿️ Parking' : '🅿️ 駐車場'}</span>`);
   if (s.pet) badges.push(`<span class="amenity-badge" title="${isEn ? 'Pets Allowed' : 'ペット可'}">${isEn ? '🐾 Pet-friendly' : '🐾 ペット可'}</span>`);
   if (s.toilet) {
@@ -4910,6 +4914,7 @@ function captureAddSpotFormDraftState() {
     power: document.getElementById('asPower')?.checked || false,
     vegan: document.getElementById('asVegan')?.checked || false,
     card: document.getElementById('asCard')?.checked || false,
+    qr: document.getElementById('asQr')?.checked || false,
     parking: document.getElementById('asParking')?.checked || false,
     pet: document.getElementById('asPet')?.checked || false,
     toilet: document.getElementById('asToilet')?.checked || false,
@@ -4924,7 +4929,7 @@ function addSpotDraftStateHasText(state) {
   if (!state) return false;
   const parts = [state.name, state.area, state.pref, state.city, state.cityCustom, state.areaNote, state.budget, state.reason, state.nick, ...(state.urls || [])];
   const hasText = parts.some(p => String(p || '').trim().length > 0);
-  const hasAmenities = state.wifi || state.power || state.vegan || state.card || state.parking || state.pet || state.toilet || state.accessibleToilet || state.barrierFree || state.nursingRoom;
+  const hasAmenities = state.wifi || state.power || state.vegan || state.card || state.qr || state.parking || state.pet || state.toilet || state.accessibleToilet || state.barrierFree || state.nursingRoom;
   return hasText || hasAmenities;
 }
 
@@ -5002,6 +5007,7 @@ function restoreAddSpotFormDraftIfAny() {
   setChecked('asPower', state.power);
   setChecked('asVegan', state.vegan);
   setChecked('asCard', state.card);
+  setChecked('asQr', state.qr);
   setChecked('asParking', state.parking);
   setChecked('asPet', state.pet);
   setChecked('asToilet', state.toilet);
@@ -5145,6 +5151,7 @@ function openAddSpotModal(id = null, clientId = null) {
       document.getElementById('asPower').checked = !!s.power;
       document.getElementById('asVegan').checked = !!s.vegan;
       document.getElementById('asCard').checked = !!s.card;
+      document.getElementById('asQr').checked = !!s.qr;
       document.getElementById('asParking').checked = !!s.parking;
       document.getElementById('asPet').checked = !!s.pet;
       document.getElementById('asToilet').checked = !!s.toilet;
@@ -6231,6 +6238,7 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
     power: document.getElementById('asPower')?.checked || false,
     vegan: document.getElementById('asVegan')?.checked || false,
     card: document.getElementById('asCard')?.checked || false,
+    qr: document.getElementById('asQr')?.checked || false,
     parking: document.getElementById('asParking')?.checked || false,
     pet: document.getElementById('asPet')?.checked || false,
     toilet: document.getElementById('asToilet')?.checked || false,
@@ -7172,6 +7180,20 @@ function bindEvents() {
   document.getElementById('fComment').addEventListener('input', function () {
     document.getElementById('charNum').textContent = this.value.length;
   });
+
+  // 日付入力欄全体をクリックしただけでカレンダーピッカーを起動するアシスト
+  const dateInput = document.getElementById('fDate');
+  if (dateInput) {
+    dateInput.addEventListener('click', function () {
+      if (typeof this.showPicker === 'function') {
+        try {
+          this.showPicker();
+        } catch (err) {
+          console.warn('showPicker error:', err);
+        }
+      }
+    });
+  }
 
   // お出かけマップモーダルのイベントバインド (カード全体をトリガーに)
   const heroMapCard = document.getElementById('heroMapCard');

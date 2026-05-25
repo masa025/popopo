@@ -4483,6 +4483,23 @@ body.weather-snowy {
   color: #AEB9CF;
 }
 [data-theme="dark"] .star-btn { color: #3A4860; }
+[data-theme="dark"] .star-btn.active,
+[data-theme="dark"] .star-btn:hover {
+  color: #fbbf24 !important;
+  transform: scale(1.2);
+}
+[data-theme="dark"] .form-input[type="date"] {
+  color-scheme: dark !important;
+}
+[data-theme="dark"] .form-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9) !important;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+[data-theme="dark"] .form-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
 [data-theme="dark"] .filter-select,
 [data-theme="dark"] .btn-post-action { background: var(--surface-sunken); }
 [data-theme="dark"] .btn-post-action { border-color: var(--border); }
