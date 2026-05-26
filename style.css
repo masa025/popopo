@@ -462,7 +462,7 @@ section{padding:80px 0;scroll-margin-top:120px;}
 .spot-card.is-discovery-target::after{content:'今日の発見';position:absolute;top:12px;right:12px;padding:4px 10px;border-radius:999px;background:var(--blue);color:#fff;font-size:0.72rem;font-weight:800;box-shadow:0 8px 18px rgba(91,141,238,0.22);}
 .spot-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;}
 .spot-card-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.spot-intent-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:rgba(42,157,143,0.1);color:#2a7d74;font-size:0.74rem;font-weight:800;border:1px dashed rgba(42,157,143,0.28);}
+.spot-intent-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:rgba(42,157,143,0.1);color:#2a7d74;font-size:0.74rem;font-weight:800;border:1px dashed rgba(42,157,143,0.28);white-space:nowrap;}
 .spot-emoji{font-size:1.8rem;line-height:1;}
 .spot-like-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;border:1.5px dashed var(--border);color:var(--text-muted);font-size:0.8rem;font-weight:700;transition:all .2s;background:rgba(255,255,255,0.86);white-space:nowrap;}
 .spot-like-btn:hover,.spot-like-btn.liked{border-color:rgba(91,141,238,0.52);color:var(--blue);background:var(--blue-light);}
@@ -519,13 +519,13 @@ button.spot-link{font-family:inherit;cursor:zoom-in;}
 .spot-post-btn:hover{background:var(--blue-light);}
 .spots-empty-card{grid-column:1/-1;padding:30px 22px;border-radius:var(--r);border:1.5px dashed var(--border);background:#fff;text-align:center;color:var(--text-muted);box-shadow:var(--shadow);line-height:1.7;}
 .spots-empty-card strong{display:block;margin-bottom:6px;color:var(--text);font-size:1rem;}
-.suggest-badge{display:inline-block;padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,var(--blue-light),#f4fbf4);color:var(--blue);font-size:0.72rem;font-weight:700;border:1px dashed var(--border);}
+.suggest-badge{display:inline-block;padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,var(--blue-light),#f4fbf4);color:var(--blue);font-size:0.72rem;font-weight:700;border:1px dashed var(--border);white-space:nowrap;}
 
 .visited-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:24px;}
 .visited-card{background:rgba(255,254,250,0.92);border:1.5px solid var(--border);border-radius:26px 20px 28px 22px;overflow:hidden;transition:all .3s;box-shadow:var(--shadow);}
 .visited-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:rgba(42,157,143,0.42);}
 .visited-card-body{padding:24px;}
-.visited-category-badge{display:inline-block;padding:4px 12px;border-radius:50px;font-size:0.75rem;font-weight:600;margin-bottom:12px;}
+.visited-category-badge{display:inline-block;padding:4px 12px;border-radius:50px;font-size:0.75rem;font-weight:600;margin-bottom:12px;white-space:nowrap;}
 .visited-category-badge.food{background:#fff3ee;color:var(--cat-food);}
 .visited-category-badge.museum{background:#f5f0ff;color:var(--cat-museum);}
 .visited-name{font-size:1.25rem;font-weight:700;margin-bottom:4px;color:var(--text);}
