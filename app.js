@@ -2461,6 +2461,43 @@ function getDailyPromptInfo() {
   // キャッシュ無効または日付変更によるリセット
   activeGachaItem = null;
 
+  // 特定の日付（2026-05-26 〜 2026-05-28）の特別スケジュール割り当て
+  let scheduledText = null;
+  if (todayIdx === 20598) {
+    scheduledText = '今だから笑えるお出かけ先での「愛すべき失敗談」を教えてください。';
+  } else if (todayIdx === 20599) {
+    scheduledText = '目的地よりも記憶に残った(想定外の)寄り道の想い出はありますか？';
+  } else if (todayIdx === 20600) {
+    scheduledText = 'お散歩中に道端で見つけた「なぜこんな所に？」という意外な落とし物';
+  }
+
+  if (scheduledText && !activeGachaItem) {
+    const matchedItem = merged.find(item => item.text && item.text.includes(scheduledText));
+    if (matchedItem) {
+      return {
+        text: matchedItem.text,
+        source: 'community',
+        nickname: matchedItem.nickname || 'こん',
+        votes: getPromptVoteCount(matchedItem),
+        id: matchedItem.clientId || matchedItem.id,
+        seenId: getCommunityPromptId(matchedItem),
+        timestamp: matchedItem.timestamp || 0,
+        dayIndex: todayIdx,
+      };
+    } else {
+      return {
+        text: scheduledText,
+        source: 'community',
+        nickname: 'こん',
+        votes: 0,
+        id: 'scheduled-' + todayIdx,
+        seenId: 'scheduled-' + todayIdx,
+        timestamp: Date.now(),
+        dayIndex: todayIdx,
+      };
+    }
+  }
+
   // ③ コミュニティお題があれば、投稿順（最古＝投稿順）に並べ替えて1日ごとにローテーション
   const allCommunity = merged.filter(item => !item.isArchived)
     .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // 投稿順（古い順）
