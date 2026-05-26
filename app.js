@@ -603,29 +603,8 @@ function getGoogleMapsUrl(s) {
 function renderInboundTags(s, lang) {
   let html = '';
   const isEn = lang === 'en';
-  if (s.vegan) {
-    html += `<span class="inbound-tag inbound-tag--vegan">${isEn ? '🌱 Vegan' : '🌱 ヴィーガン対応'}</span>`;
-  }
-  if (s.card) {
-    html += `<span class="inbound-tag inbound-tag--card">${isEn ? '💳 Card OK' : '💳 カード決済可'}</span>`;
-  }
-  if (s.qr) {
-    html += `<span class="inbound-tag inbound-tag--qr">${isEn ? '📱 QR Pay OK' : '📱 QRコード決済可'}</span>`;
-  }
-  if (s.wifi) {
-    html += `<span class="inbound-tag inbound-tag--wifi">${isEn ? '📶 Wi-Fi' : '📶 Wi-Fiあり'}</span>`;
-  }
   if (s.traditional) {
     html += `<span class="inbound-tag inbound-tag--traditional">${isEn ? '⛩️ Traditional Japan' : '⛩️ 日本の伝統・文化'}</span>`;
-  }
-  if (s.accessibleToilet) {
-    html += `<span class="inbound-tag inbound-tag--accessibleToilet">${isEn ? '🚼 Accessible' : '🚼 多目的トイレあり'}</span>`;
-  }
-  if (s.barrierFree) {
-    html += `<span class="inbound-tag inbound-tag--barrierFree">${isEn ? '♿ Barrier-free' : '♿ バリアフリー対応'}</span>`;
-  }
-  if (s.nursingRoom) {
-    html += `<span class="inbound-tag inbound-tag--nursingRoom">${isEn ? '🍼 Nursing' : '🍼 授乳室あり'}</span>`;
   }
   return html ? `<div class="inbound-tags-container" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${html}</div>` : '';
 }
