@@ -4425,7 +4425,7 @@ function renderSpotCards(cat = 'all') {
           <span class="visited-category-badge" style="background:var(--blue-light);color:var(--blue);margin-bottom:0;font-size:0.8rem;">${categoryLabel}</span>
           ${s.intent === 'want' ? `<span class="spot-intent-badge">${isEn ? '🌱 Plan to Visit' : '🌱 これから行きたい'}</span>` : ''}
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div class="spot-card-actions">
           ${s.suggested ? renderPostActions(s, 'suggestion') : ''}
           <button class="spot-like-btn ${isLiked ? 'liked' : ''}" data-id="${s.id}" id="like-${s.id}" aria-pressed="${isLiked ? 'true' : 'false'}">
             <span class="spot-like-icon">${likeIcon}</span>
