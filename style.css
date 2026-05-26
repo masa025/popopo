@@ -2799,6 +2799,49 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
   position: relative;
 }
 
+/* 投票送信中（Firestore 反映待ち）— やわらかく脈打つ */
+.daily-prompt-vote-btn.is-pending .daily-prompt-vote-icon {
+  animation: votePendingPulse 1.2s ease-in-out infinite;
+}
+@keyframes votePendingPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.18); opacity: 0.78; }
+}
+
+/* 投票直後にふわっと浮かぶ「+1」 */
+.vote-plus-one {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #e85a4f;
+  text-shadow: 0 1px 0 #fff, 0 0 6px rgba(232,90,79,0.45);
+  z-index: 9999;
+  animation: votePlusOneFloat 1.2s cubic-bezier(0.25, 0.85, 0.4, 1) forwards;
+}
+@keyframes votePlusOneFloat {
+  0%   { transform: translate(-50%, -50%) scale(0.6);  opacity: 0; }
+  18%  { transform: translate(-50%, -68%) scale(1.08); opacity: 1; }
+  60%  { transform: translate(-50%, -130%) scale(1);   opacity: 0.95; }
+  100% { transform: translate(-50%, -190%) scale(0.9); opacity: 0; }
+}
+
+/* リアクション粒子用の固定オーバーレイ（再描画でも消えないように body 直下に置く） */
+.reaction-overlay {
+  position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ダークモードでの調整 */
+[data-theme="dark"] .vote-plus-one {
+  color: #ff8d8d;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 8px rgba(255,141,141,0.45);
+}
+
 /* ============================================================
    Interactive Map & Leaflet Custom Styles
    ============================================================ */

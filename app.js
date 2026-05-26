@@ -1100,6 +1100,16 @@ let localChats = JSON.parse(localStorage.getItem('popopo_chats') || '[]');
 let localPromptSuggestions = JSON.parse(localStorage.getItem('popopo_prompt_suggestions') || '[]');
 let localPromptVotes = JSON.parse(localStorage.getItem('popopo_prompt_votes') || '{}');
 let latestRemotePromptSuggestions = [];
+// 投票送信中（Firestore 反映待ち）の voteId 集合 — UI のペンディング表示と二重送信防止
+let localPendingPromptVotes = new Set();
+// 自分が提案したお題の前回確認時の票数 — 再訪時に「あなたの提案に N 票届きました 🌸」を出すため
+const PROMPT_VOTE_LAST_SEEN_KEY = 'popopo_prompt_last_seen_votes';
+let lastSeenPromptVotes = (() => {
+  try { return JSON.parse(localStorage.getItem(PROMPT_VOTE_LAST_SEEN_KEY) || '{}'); }
+  catch (e) { return {}; }
+})();
+// 最初のいいねスナップショットが届いたかどうか — 通知を出すタイミング判定用
+let _firstLikesSnapshotDone = false;
 const PROMPT_SEEN_STORAGE_KEY = 'popopo_seen_daily_prompts_v1';
 const PROMPT_SEEN_LIMIT = 240;
 const PROMPT_ARCHIVE_CUTOFF = new Date('2026-05-17T00:00:00+09:00').getTime();
@@ -1719,7 +1729,7 @@ async function saveChatReaction(reactionId) {
 function listenLikes() {
   if (db) {
     db.collection('likes').onSnapshot(snap => {
-      let touchedPromptVote = false;
+      const touchedPromptVoteIds = [];
       snap.docs.forEach(doc => {
         if (doc.id === 'page_views') return; // 除外
         globalLikes[doc.id] = doc.data().count || 0;
@@ -1727,9 +1737,19 @@ function listenLikes() {
         if (countSpan) countSpan.textContent = globalLikes[doc.id];
         if (doc.id.startsWith('review_seen_')) updateSeenReviewButton(doc.id);
         if (doc.id.startsWith('chat_')) updateChatReactionButton(doc.id);
-        if (doc.id.startsWith('prompt_vote_')) touchedPromptVote = true;
+        if (doc.id.startsWith('prompt_vote_')) {
+          localPendingPromptVotes.delete(doc.id);
+          touchedPromptVoteIds.push(doc.id);
+        }
       });
-      if (touchedPromptVote) renderDailyPrompt();
+      // お題の投票数は in-place 更新（renderDailyPrompt の innerHTML 全消しを避ける）
+      touchedPromptVoteIds.forEach(voteId => updatePromptVoteButton(voteId));
+      // 最初のスナップショット完了時に「自分の提案に新しく届いた票」を通知
+      if (!_firstLikesSnapshotDone) {
+        _firstLikesSnapshotDone = true;
+        cleanupStaleLocalPromptVotes();
+        setTimeout(checkMyPromptVoteNotifications, 900);
+      }
     });
   }
 }
@@ -2369,6 +2389,30 @@ function getDailyPrompt() {
 
 const PROMPT_SUGGESTION_TTL_DAYS = 14;
 
+function normalizePromptText(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/\s+/g, '') // 空白除去
+    .replace(/[　\s,.\/#!$%\^&\*;:{}=\-_`~()？?！!。、()（）「」『』“”'\"~〜]/g, '') // 記号・句読点・括弧除去
+    .replace(/想い出/g, '思い出')
+    .toLowerCase();
+}
+
+function getPromptRawId(suggestionOrId) {
+  if (!suggestionOrId) return '';
+  if (typeof suggestionOrId === 'string') {
+    return suggestionOrId.startsWith('prompt_vote_')
+      ? suggestionOrId.replace(/^prompt_vote_/, '')
+      : suggestionOrId;
+  }
+  return suggestionOrId.clientId || suggestionOrId.id || hashString(`${suggestionOrId.text || ''}|${suggestionOrId.timestamp || 0}`);
+}
+
+function getPromptGroupIds(suggestion) {
+  const ids = suggestion?.groupedIds || [getPromptRawId(suggestion)];
+  return Array.from(new Set(ids.filter(Boolean)));
+}
+
 function getPromptVoteId(suggestionOrId) {
   if (!suggestionOrId) return '';
   let key = '';
@@ -2377,46 +2421,127 @@ function getPromptVoteId(suggestionOrId) {
     if (suggestionOrId.startsWith('prompt_vote_')) return suggestionOrId;
     key = suggestionOrId;
   } else {
-    key = suggestionOrId.clientId || suggestionOrId.id || hashString(`${suggestionOrId.text || ''}|${suggestionOrId.timestamp || 0}`);
+    key = getPromptRawId(suggestionOrId);
   }
   return `prompt_vote_${key}`;
 }
 
 function getPromptVoteCount(suggestion) {
-  const id = getPromptVoteId(suggestion);
-  if (!id) return 0;
-  return globalLikes[id] || (localPromptVotes[id] ? 1 : 0);
+  if (!suggestion) return 0;
+  const ids = getPromptGroupIds(suggestion);
+  let total = 0;
+  ids.forEach(id => {
+    const voteId = getPromptVoteId(id);
+    if (voteId) {
+      const serverVotes = globalLikes[voteId] || 0;
+      const isPending = localPendingPromptVotes.has(voteId);
+
+      // 送信中（ペンディング）の期間のみ、楽観的に +1 を加算して表示（同期ラグ解消）
+      if (isPending) {
+        total += serverVotes + 1;
+      } else {
+        total += serverVotes;
+      }
+    }
+  });
+  return total;
 }
 
 function isPromptVoted(suggestion) {
-  return Boolean(localPromptVotes[getPromptVoteId(suggestion)]);
+  if (!suggestion) return false;
+  const ids = getPromptGroupIds(suggestion);
+  return ids.some(id => Boolean(localPromptVotes[getPromptVoteId(id)]));
+}
+
+function isPromptVotePending(suggestionOrId) {
+  if (!suggestionOrId) return false;
+  const ids = typeof suggestionOrId === 'object'
+    ? getPromptGroupIds(suggestionOrId)
+    : [getPromptRawId(suggestionOrId)];
+  return ids.some(id => localPendingPromptVotes.has(getPromptVoteId(id)));
+}
+
+function clearPromptVotePending(voteId) {
+  if (!voteId || !localPendingPromptVotes.has(voteId)) return;
+  localPendingPromptVotes.delete(voteId);
+  updatePromptVoteButton(voteId);
+}
+
+function schedulePromptVotePendingFallbackClear(voteId) {
+  if (!voteId) return;
+  window.setTimeout(() => clearPromptVotePending(voteId), 8000);
+}
+
+function cleanupStaleLocalPromptVotes() {
+  let changed = false;
+  Object.keys(localPromptVotes || {}).forEach(voteId => {
+    if (!voteId.startsWith('prompt_vote_')) return;
+    if (localPendingPromptVotes.has(voteId)) return;
+    if ((globalLikes[voteId] || 0) > 0) return;
+    delete localPromptVotes[voteId];
+    changed = true;
+  });
+  if (!changed) return;
+  try {
+    localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+  } catch (e) {}
+  renderDailyPrompt();
 }
 
 function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
-  // リモートを正として扱い、まだFirebaseに反映されていないローカル新規分のみ補完する
-  const byKey = new Map();
-
-  // ① まずリモートデータを入れる（正データ）
-  (remoteList || []).forEach(item => {
-    const key = item.clientId || item.id;
-    if (key) byKey.set(key, item);
-  });
-
-  // ② ローカルのうち、リモートにまだ届いていない新規投稿のみ補完（投稿直後のラグ対策）
+  // 重複お題をまとめるため、キーを normalizedText にして名寄せします（優しい統合）
+  const byNormalized = new Map();
   const now = Date.now();
   const threshold = 30000; // 30秒以内のローカル投稿のみ
+  const cutoff = now - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
+
+  // 全てのお題（リモート＋ローカル新規）を集める
+  const candidates = [];
+
+  // ① リモートデータを入れる
+  (remoteList || []).forEach(item => {
+    candidates.push({ ...item, source: 'remote' });
+  });
+
+  // ② ローカルの新規投稿を入れる
   localPromptSuggestions.forEach(item => {
     const key = item.clientId || item.id;
-    if (!key) return;
-    if (!byKey.has(key) && (now - (item.timestamp || 0)) < threshold) {
-      byKey.set(key, item);
+    if (key && (now - (item.timestamp || 0)) < threshold) {
+      candidates.push({ ...item, source: 'local' });
     }
   });
 
-  const cutoff = Date.now() - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
-  return Array.from(byKey.values())
-    .filter(item => (item.timestamp || 0) >= cutoff)
-    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  // 時間の降順（新しいものが先）にソートして、重複時の代表お題は「最新」または「リモート」を優先するようにする
+  candidates.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  candidates.forEach(item => {
+    if ((item.timestamp || 0) < cutoff) return;
+    const norm = normalizePromptText(item.text);
+    if (!norm) return;
+    const itemId = getPromptRawId(item);
+
+    if (!byNormalized.has(norm)) {
+      byNormalized.set(norm, {
+        ...item,
+        groupedIds: itemId ? [itemId] : [],
+      });
+    } else {
+      const group = byNormalized.get(norm);
+      if (itemId && !group.groupedIds.includes(itemId)) {
+        group.groupedIds.push(itemId);
+      }
+
+      // リモートデータを優先する（ローカルのままのものはリモートがあるなら上書き）
+      if (item.source === 'remote' && group.source === 'local') {
+        const newIds = group.groupedIds;
+        Object.assign(group, item);
+        group.groupedIds = newIds;
+        group.source = 'remote';
+      }
+    }
+  });
+
+  return Array.from(byNormalized.values());
 }
 
 let activeGachaItem = null;
@@ -2456,8 +2581,13 @@ function getDailyPromptInfo() {
   // ② キャッシュされたお題があり、かつ日付が変わっていなければそれを返す
   if (!activeGachaItem && currentDailyPromptInfo && currentDailyPromptInfo.dayIndex === todayIdx && currentDailyPromptInfo.source !== 'exhausted') {
     if (currentDailyPromptInfo.source === 'community') {
-      const voteId = `prompt_vote_${currentDailyPromptInfo.id}`;
-      currentDailyPromptInfo.votes = globalLikes[voteId] || (localPromptVotes[voteId] ? 1 : 0);
+      const fresh = merged.find(item => getPromptGroupIds(item).includes(currentDailyPromptInfo.id));
+      if (fresh) {
+        currentDailyPromptInfo.votes = getPromptVoteCount(fresh);
+      } else {
+        const voteId = getPromptVoteId(currentDailyPromptInfo.id);
+        currentDailyPromptInfo.votes = (globalLikes[voteId] || 0) + (localPendingPromptVotes.has(voteId) ? 1 : 0);
+      }
     }
     return currentDailyPromptInfo;
   }
@@ -2476,7 +2606,12 @@ function getDailyPromptInfo() {
   }
 
   if (scheduledText && !activeGachaItem) {
-    const matchedItem = merged.find(item => item.text && item.text.includes(scheduledText));
+    const normScheduled = normalizePromptText(scheduledText);
+    const matchedItem = merged.find(item => {
+      if (!item.text) return false;
+      const normItem = normalizePromptText(item.text);
+      return normItem.includes(normScheduled) || normScheduled.includes(normItem);
+    });
     if (matchedItem) {
       return {
         text: matchedItem.text,
@@ -2626,6 +2761,7 @@ function deleteLocalPromptSuggestion(clientId) {
 async function retrySyncPrompt(clientId) {
   const item = localPromptSuggestions.find(l => (l.clientId || l.id) === clientId);
   if (!item || !db) { showToast('再送信できませんでした。'); return; }
+  const voteId = getPromptVoteId(item);
   try {
     // お題本体の送信
     await db.collection('prompt_suggestions').add({
@@ -2635,13 +2771,21 @@ async function retrySyncPrompt(clientId) {
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });
     // 初期投票（1票目）の同期も試みる
-    const voteId = getPromptVoteId(item);
+    localPromptVotes[voteId] = Date.now();
+    localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+    localPendingPromptVotes.add(voteId);
+    updatePromptVoteButton(voteId);
     await db.collection('likes').doc(voteId).set({
       count: firebase.firestore.FieldValue.increment(1),
     }, { merge: true });
+    schedulePromptVotePendingFallbackClear(voteId);
 
     showToast('再送信しました！✓');
   } catch (e) {
+    delete localPromptVotes[voteId];
+    localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+    localPendingPromptVotes.delete(voteId);
+    updatePromptVoteButton(voteId);
     showToast('再送信に失敗しました。接続を確認してください。');
     console.warn('Retry sync failed:', e);
   }
@@ -2692,6 +2836,7 @@ function renderDailyPromptCandidates() {
   list.innerHTML = merged.slice(0, 10).map((item, idx) => {
     const id = item.clientId || item.id;
     const voted = isPromptVoted(item);
+    const pending = isPromptVotePending(item);
     const count = getPromptVoteCount(item);
     const isLeading = id === leadingId;
     const nick = item.nickname || '匿名リスナー';
@@ -2721,7 +2866,7 @@ function renderDailyPromptCandidates() {
           </div>
           ${myActions}
         </div>
-        <button type="button" class="daily-prompt-vote-btn${voted ? ' is-voted' : ''}" data-prompt-vote-id="${escapeHtml(id)}" aria-pressed="${voted ? 'true' : 'false'}" ${voted ? 'disabled' : ''} aria-label="このお題に共感する">
+        <button type="button" class="daily-prompt-vote-btn${voted ? ' is-voted' : ''}${pending ? ' is-pending' : ''}" data-prompt-vote-id="${escapeHtml(id)}" aria-pressed="${voted ? 'true' : 'false'}" ${voted ? 'disabled' : ''} aria-label="このお題に共感する">
           <span class="daily-prompt-vote-icon" aria-hidden="true">${voted ? '♥' : '♡'}</span>
           <span class="daily-prompt-vote-count">${count}</span>
         </button>
@@ -2742,46 +2887,229 @@ async function submitPromptSuggestion({ text, nickname }) {
   const voteId = getPromptVoteId(item);
   localPromptVotes[voteId] = Date.now();
   localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
-  globalLikes[voteId] = (globalLikes[voteId] || 0) + 1;
+  localPendingPromptVotes.add(voteId);
+  // 初回の通知ベースラインを 1 票（自分の投票分）にしておく
+  lastSeenPromptVotes[voteId] = 1;
+  try { localStorage.setItem(PROMPT_VOTE_LAST_SEEN_KEY, JSON.stringify(lastSeenPromptVotes)); } catch (e) {}
   renderDailyPrompt();
-  if (db) {
+
+  if (!db) {
+    localPendingPromptVotes.delete(voteId);
+    updatePromptVoteButton(voteId);
+    return item;
+  }
+
+  // ① お題本体の保存（失敗時は auto-vote も巻き戻す）
+  let suggestionSynced = false;
+  try {
+    await db.collection('prompt_suggestions').add({
+      clientId,
+      text: cleanText,
+      nickname: cleanNick,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    suggestionSynced = true;
+  } catch (e) {
+    console.warn('Prompt suggestion sync failed:', e);
+    showToast('お題の保存に失敗しました。「再送信」ボタンでもう一度試せます。');
+    // お題自体が出ていないなら auto-vote も成立しないのでロールバック
+    delete localPromptVotes[voteId];
+    localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+    delete lastSeenPromptVotes[voteId];
+    try { localStorage.setItem(PROMPT_VOTE_LAST_SEEN_KEY, JSON.stringify(lastSeenPromptVotes)); } catch (e2) {}
+    localPendingPromptVotes.delete(voteId);
+    updatePromptVoteButton(voteId);
+    return item;
+  }
+
+  // ② auto-vote の Firestore 反映（失敗時はその +1 だけを巻き戻す）
+  if (suggestionSynced) {
     try {
-      await db.collection('prompt_suggestions').add({
-        clientId,
-        text: cleanText,
-        nickname: cleanNick,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      });
       await db.collection('likes').doc(voteId).set({
         count: firebase.firestore.FieldValue.increment(1),
       }, { merge: true });
+      schedulePromptVotePendingFallbackClear(voteId);
     } catch (e) {
-      console.warn('Prompt suggestion sync failed:', e);
-      // セキュリティルールや通信エラーの可能性を通知
-      showToast('Firebaseへの保存に失敗しました。セキュリティルール設定を確認してください。');
+      console.warn('Prompt auto-vote sync failed:', e);
+      delete localPromptVotes[voteId];
+      localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+      delete lastSeenPromptVotes[voteId];
+      try { localStorage.setItem(PROMPT_VOTE_LAST_SEEN_KEY, JSON.stringify(lastSeenPromptVotes)); } catch (e2) {}
+      localPendingPromptVotes.delete(voteId);
+      updatePromptVoteButton(voteId);
     }
   }
   return item;
 }
 
-async function votePromptSuggestion(rawId) {
+async function votePromptSuggestion(rawId, skipOptimistic = false) {
   if (!rawId) return;
   const voteId = getPromptVoteId(rawId); // ここで確実に 'prompt_vote_pr_...' 形式にする
-  
-  if (localPromptVotes[voteId]) return;
-  localPromptVotes[voteId] = Date.now();
-  localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
-  globalLikes[voteId] = (globalLikes[voteId] || 0) + 1;
-  renderDailyPrompt();
-  
-  if (db) {
-    try {
-      await db.collection('likes').doc(voteId).set({
-        count: firebase.firestore.FieldValue.increment(1),
-      }, { merge: true });
-    } catch (e) {
-      console.warn('Prompt vote sync failed:', e);
+
+  // 楽観的にローカル状態を更新（クリックハンドラが既に同じことをしている場合は skip）
+  if (!skipOptimistic) {
+    if (localPromptVotes[voteId]) return;
+    localPromptVotes[voteId] = Date.now();
+    localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+    localPendingPromptVotes.add(voteId);
+    updatePromptVoteButton(voteId);
+  }
+
+  if (!db) {
+    localPendingPromptVotes.delete(voteId);
+    updatePromptVoteButton(voteId);
+    return;
+  }
+
+  try {
+    await db.collection('likes').doc(voteId).set({
+      count: firebase.firestore.FieldValue.increment(1),
+    }, { merge: true });
+    // 成功後も listener の確定値を待つ。届かない場合だけ数秒後にペンディング表示を解除。
+    schedulePromptVotePendingFallbackClear(voteId);
+    return true;
+  } catch (e) {
+    // 失敗 — 楽観的加算を巻き戻す（最重要バグ修正）
+    delete localPromptVotes[voteId];
+    localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes));
+    localPendingPromptVotes.delete(voteId);
+    updatePromptVoteButton(voteId);
+    showToast('投票の送信に失敗しました。少し時間を置いてもう一度お試しください。');
+    console.warn('Prompt vote sync failed:', e);
+    return false;
+  }
+}
+
+// 投票ボタンの見た目（チェック状態 / カウント / ペンディング）をその場で更新するヘルパー。
+// renderDailyPrompt のような全消し再描画を避けることで、粒子アニメや入力中フォーカスが飛ばない。
+function updatePromptVoteButton(voteId) {
+  if (!voteId) return;
+  const clientId = voteId.replace(/^prompt_vote_/, '');
+  const voted = Boolean(localPromptVotes[voteId]);
+  const pending = localPendingPromptVotes.has(voteId);
+  const merged = mergePromptSuggestions();
+  const suggestion = merged.find(m => {
+    const ids = getPromptGroupIds(m);
+    return ids.includes(clientId);
+  });
+  const count = suggestion ? getPromptVoteCount(suggestion) : ((globalLikes[voteId] || 0) + (pending ? 1 : 0));
+  const targetIds = suggestion
+    ? Array.from(new Set([getPromptRawId(suggestion), ...getPromptGroupIds(suggestion)].filter(Boolean)))
+    : [clientId];
+  const buttons = targetIds.flatMap(id => Array.from(document.querySelectorAll(`.daily-prompt-vote-btn[data-prompt-vote-id="${id}"]`)));
+  buttons.forEach(btn => {
+    const btnVoteId = getPromptVoteId(btn.dataset.promptVoteId);
+    const groupedVoted = suggestion ? isPromptVoted(suggestion) : Boolean(localPromptVotes[btnVoteId]);
+    const groupedPending = suggestion ? isPromptVotePending(suggestion) : localPendingPromptVotes.has(btnVoteId);
+    btn.classList.toggle('is-voted', groupedVoted);
+    btn.classList.toggle('is-pending', groupedPending);
+    btn.disabled = groupedVoted;
+    btn.setAttribute('aria-pressed', groupedVoted ? 'true' : 'false');
+    const icon = btn.querySelector('.daily-prompt-vote-icon');
+    if (icon) icon.textContent = groupedVoted ? '♥' : '♡';
+    const countCell = btn.querySelector('.daily-prompt-vote-count');
+    if (countCell) countCell.textContent = count;
+  });
+  // トップの「今日のお題」メタ表示も更新
+  const info = currentDailyPromptInfo;
+  if (info && info.source === 'community' && info.id === clientId) {
+    info.votes = count;
+    const meta = document.getElementById('dailyPromptMeta');
+    if (meta) {
+      const nick = (info.nickname || '匿名リスナー').replace(/[<>&]/g, '');
+      const badge = info.isGacha
+        ? '<span class="pill" style="background:rgba(232,67,147,0.12);color:#d63031;">🎲 ガチャ表示中</span>'
+        : '<span class="pill">みんなのお題</span>';
+      meta.innerHTML = `${badge}${nick} さんの提案 ・ ♡ ${count}`;
     }
+  }
+}
+
+// 投票ボタンの近くに「+1」がふわっと浮上するエフェクト
+function showFloatingPlusOne(anchorBtn) {
+  if (!anchorBtn) return;
+  const rect = anchorBtn.getBoundingClientRect();
+  const span = document.createElement('span');
+  span.className = 'vote-plus-one';
+  span.textContent = '+1';
+  span.style.left = (rect.left + rect.width / 2) + 'px';
+  span.style.top = (rect.top + rect.height / 2 - 8) + 'px';
+  document.body.appendChild(span);
+  setTimeout(() => span.remove(), 1300);
+}
+
+// 粒子・バブルを button 直下ではなく画面に固定したオーバーレイで再生する。
+// renderDailyPromptCandidates が innerHTML 全消ししても粒子が消えない。
+function triggerReactionEffectOverlay(anchorBtn) {
+  if (!anchorBtn) return;
+  const rect = anchorBtn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const overlay = document.createElement('div');
+  overlay.className = 'reaction-overlay';
+  overlay.style.cssText = `position:fixed;left:${cx}px;top:${cy}px;width:0;height:0;pointer-events:none;z-index:9998;`;
+  document.body.appendChild(overlay);
+
+  const icons = ['🌸', '✨', '💖', '🦌', '🌿', '⭐'];
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('span');
+    p.className = 'reaction-particle';
+    p.textContent = icons[Math.floor(Math.random() * icons.length)];
+    const angle = (Math.random() * 120 - 60) * (Math.PI / 180);
+    const dist = 35 + Math.random() * 45;
+    p.style.setProperty('--tx', Math.sin(angle) * dist + 'px');
+    p.style.setProperty('--ty', -Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--rot', (Math.random() * 360) + 'deg');
+    p.style.left = '0';
+    p.style.top = '0';
+    overlay.appendChild(p);
+  }
+  const messages = ['考えてくれてありがとう！', '素敵な一日になりますように✨', 'ほっこり届きました💖', '共感の輪が広がりました🌿', '温かい気持ちをありがとう🌸'];
+  const bubble = document.createElement('div');
+  bubble.className = 'reaction-bubble';
+  bubble.textContent = messages[Math.floor(Math.random() * messages.length)];
+  overlay.appendChild(bubble);
+
+  setTimeout(() => overlay.remove(), 1800);
+}
+
+// 自分が提案したお題に新しい票が届いていたら、再訪時に一度だけお礼トーストで知らせる
+function checkMyPromptVoteNotifications() {
+  if (!Array.isArray(localPromptSuggestions) || localPromptSuggestions.length === 0) return;
+  let totalNew = 0;
+  let topPrompt = null;
+  let topDelta = 0;
+  let touched = false;
+
+  localPromptSuggestions.forEach(p => {
+    const voteId = getPromptVoteId(p);
+    if (!voteId) return;
+    const current = globalLikes[voteId] || 0;
+    if (current <= 0) return;
+    // 初回の基準値は 1（提案者自身の自動投票分）。それ以降は前回確認時の値。
+    const baseline = lastSeenPromptVotes[voteId] != null ? lastSeenPromptVotes[voteId] : 1;
+    if (current > baseline) {
+      const delta = current - baseline;
+      totalNew += delta;
+      if (delta > topDelta) {
+        topDelta = delta;
+        topPrompt = p;
+      }
+    }
+    if (lastSeenPromptVotes[voteId] !== current) {
+      lastSeenPromptVotes[voteId] = current;
+      touched = true;
+    }
+  });
+
+  if (touched) {
+    try {
+      localStorage.setItem(PROMPT_VOTE_LAST_SEEN_KEY, JSON.stringify(lastSeenPromptVotes));
+    } catch (e) {}
+  }
+  if (totalNew > 0 && topPrompt) {
+    const snippet = String(topPrompt.text || '').slice(0, 22) + (String(topPrompt.text || '').length > 22 ? '…' : '');
+    showToast(`あなたの「${snippet}」に新しく ${totalNew} 票届きました 🌸`);
   }
 }
 
@@ -2815,8 +3143,6 @@ function triggerReactionEffect(btnElement) {
   setTimeout(() => bubble.remove(), 1700);
 }
 
-let _promptVotesUnsubscribe = null;
-
 // Firestoreから取得したスナップショットをパースして共通処理を行う
 function _processPromptSnap(docs) {
   // ① リモートデータをパース（orderByなしなのでJS側でソート）
@@ -2844,21 +3170,15 @@ function _processPromptSnap(docs) {
   );
   localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
 
-  // ③ 投票数は listenLikes() が全件購読しているので、
-  //    既存の重複リスナーがあれば解除する
-  if (_promptVotesUnsubscribe) {
-    _promptVotesUnsubscribe();
-    _promptVotesUnsubscribe = null;
-  }
-
   renderDailyPrompt();
 }
 
 function listenPromptSuggestions() {
   if (!db) return;
 
+  // limit 50 だと 51 件目以降が永遠に届かないので 200 に引き上げ
   const unsubscribe = db.collection('prompt_suggestions')
-    .limit(50)
+    .limit(200)
     .onSnapshot(
       snap => _processPromptSnap(snap.docs),
       async err => {
@@ -2868,7 +3188,7 @@ function listenPromptSuggestions() {
           showToast('Firebaseの権限エラーです。Security Rulesの設定を確認してください。');
         }
         try {
-          const snap = await db.collection('prompt_suggestions').limit(50).get();
+          const snap = await db.collection('prompt_suggestions').limit(200).get();
           _processPromptSnap(snap.docs);
         } catch (e2) {
           console.warn('Prompt suggestion getDocs fallback also failed:', e2);
@@ -6850,7 +7170,7 @@ function bindEvents() {
         // さらにFirestoreから最新データを再フェッチして再描画（端末間ラグ対策）
         if (db) {
           try {
-            const snap = await db.collection('prompt_suggestions').limit(50).get();
+            const snap = await db.collection('prompt_suggestions').limit(200).get();
             _processPromptSnap(snap.docs);
           } catch (e) {
             console.warn('Prompt refresh failed:', e);
@@ -6878,13 +7198,24 @@ function bindEvents() {
       if (voteBtn) {
         const id = voteBtn.dataset.promptVoteId;
         if (!id) return;
-        voteBtn.classList.add('is-voted');
-        voteBtn.setAttribute('aria-pressed', 'true');
-        voteBtn.disabled = true;
-        const icon = voteBtn.querySelector('.daily-prompt-vote-icon');
-        if (icon) icon.textContent = '♥';
-        triggerReactionEffect(voteBtn);
-        votePromptSuggestion(id);
+        if (voteBtn.disabled) return;
+        const voteId = getPromptVoteId(id);
+        if (localPromptVotes[voteId]) return; // 既に投票済み（多重防止）
+
+        // ① ローカル状態を楽観的に更新（成功前提）
+        localPromptVotes[voteId] = Date.now();
+        try { localStorage.setItem('popopo_prompt_votes', JSON.stringify(localPromptVotes)); } catch (e) {}
+        localPendingPromptVotes.add(voteId);
+
+        // ② ボタンの見た目を即時反映（数字も含む）。renderDailyPrompt は呼ばない。
+        updatePromptVoteButton(voteId);
+
+        // ③ ふわっと「+1」と粒子。粒子は overlay に出すので再描画でも消えない。
+        showFloatingPlusOne(voteBtn);
+        triggerReactionEffectOverlay(voteBtn);
+
+        // ④ Firestore へ反映（失敗時はロールバックされる）
+        votePromptSuggestion(id, /*skipOptimistic=*/true);
         return;
       }
       // 編集
