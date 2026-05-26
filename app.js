@@ -2424,28 +2424,9 @@ let currentDailyPromptInfo = null;
 
 function getDailyPromptInfo() {
   const merged = mergePromptSuggestions();
+  const todayIdx = getDayIndex();
 
-  if (!activeGachaItem && currentDailyPromptInfo && currentDailyPromptInfo.source !== 'exhausted') {
-    if (currentDailyPromptInfo.source === 'community') {
-      const stillExists = merged.some(item => getCommunityPromptId(item) === currentDailyPromptInfo.seenId);
-      if (stillExists) {
-        // 今表示中のお題より新しい未見のコミュニティお題があれば、そちらを優先して表示する
-        const hasNewerUnseen = merged.some(item => {
-          const seenId = getCommunityPromptId(item);
-          return seenId !== currentDailyPromptInfo.seenId &&
-                 !isDailyPromptSeen(seenId) &&
-                 (item.timestamp || 0) > (currentDailyPromptInfo.timestamp || 0);
-        });
-        if (!hasNewerUnseen) return currentDailyPromptInfo;
-        // 新しい未見のお題がある場合はキャッシュを無効化してフォールスルー
-      }
-    } else if (currentDailyPromptInfo.source === 'fallback') {
-      const hasUnseenCommunity = merged.some(item => !isDailyPromptSeen(getCommunityPromptId(item)));
-      if (!hasUnseenCommunity) return currentDailyPromptInfo;
-    }
-  }
-
-  // ガチャで選択中のアイテムがあればそれを優先表示
+  // ① ガチャで選択中のアイテムがあればそれを最優先表示
   if (activeGachaItem?.source === 'fallback') {
     return {
       text: activeGachaItem.text,
@@ -2453,6 +2434,7 @@ function getDailyPromptInfo() {
       id: activeGachaItem.id,
       seenId: activeGachaItem.seenId || activeGachaItem.id,
       isGacha: true,
+      dayIndex: todayIdx,
     };
   }
   if (activeGachaItem && merged.some(m => (m.clientId || m.id) === (activeGachaItem.clientId || activeGachaItem.id))) {
@@ -2467,45 +2449,59 @@ function getDailyPromptInfo() {
       seenId,
       timestamp: fresh.timestamp || 0,
       isGacha: true,
+      dayIndex: todayIdx,
     };
   }
 
-  const unseenCommunity = getUnseenPromptCandidates({ includeFallback: false })
-    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // 最新のお題を優先表示
-  const activeItem = unseenCommunity[0];
-  if (activeItem) {
+  // ② キャッシュされたお題があり、かつ日付が変わっていなければそれを返す
+  if (!activeGachaItem && currentDailyPromptInfo && currentDailyPromptInfo.dayIndex === todayIdx && currentDailyPromptInfo.source !== 'exhausted') {
+    return currentDailyPromptInfo;
+  }
+
+  // キャッシュ無効または日付変更によるリセット
+  activeGachaItem = null;
+
+  // ③ コミュニティお題があれば、投稿順（最古＝投稿順）に並べ替えて1日ごとにローテーション
+  const allCommunity = merged.filter(item => !item.isArchived)
+    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // 投稿順（古い順）
+
+  if (allCommunity.length) {
+    const activeIndex = todayIdx % allCommunity.length;
+    const activeItem = allCommunity[activeIndex];
     return {
       text: activeItem.text,
       source: 'community',
       nickname: activeItem.nickname || '匿名リスナー',
       votes: getPromptVoteCount(activeItem),
       id: activeItem.clientId || activeItem.id,
-      seenId: activeItem.seenId,
+      seenId: getCommunityPromptId(activeItem),
       timestamp: activeItem.timestamp || 0,
+      dayIndex: todayIdx,
     };
   }
 
-  const unseenFallback = FALLBACK_PROMPTS_ARE_ARCHIVED
-    ? []
-    : getFallbackPromptItems().filter(item => !isDailyPromptSeen(item.id));
-  if (unseenFallback.length) {
-    const activeIndex = getDayIndex() % unseenFallback.length;
-    const fallbackItem = unseenFallback[activeIndex];
+  // ④ コミュニティお題がない場合は、プリセットのフォールバックお題をローテーション
+  const fallbackItems = getFallbackPromptItems();
+  if (fallbackItems.length) {
+    const activeIndex = todayIdx % fallbackItems.length;
+    const fallbackItem = fallbackItems[activeIndex];
     return {
       text: fallbackItem.text,
       source: 'fallback',
       id: fallbackItem.id,
       seenId: fallbackItem.id,
       timestamp: fallbackItem.timestamp,
+      dayIndex: todayIdx,
     };
   }
 
-  activeGachaItem = null;
+  // ⑤ お題が全くない場合
   return {
-    text: 'お題をひと通り見ました。新しいお題を提案してみませんか？',
+    text: 'お題を提案してみませんか？',
     source: 'exhausted',
     id: 'prompt-exhausted',
     seenId: '',
+    dayIndex: todayIdx,
   };
 }
 
@@ -2649,6 +2645,7 @@ function renderDailyPromptCandidates() {
     return;
   }
   if (empty) empty.hidden = true;
+  const isEn = currentLanguage === 'en';
   const todayInfo = currentDailyPromptInfo || getDailyPromptInfo();
   const leadingId = todayInfo.source === 'community' ? todayInfo.id : null;
   list.innerHTML = merged.slice(0, 10).map((item, idx) => {
@@ -2677,6 +2674,9 @@ function renderDailyPromptCandidates() {
             <span class="daily-prompt-item-nick">— ${escapeHtml(nick)}</span>
             ${syncBadge}
             ${isLeading ? '<span class="daily-prompt-item-leading-tag">🌿 今日のお題に表示中</span>' : ''}
+            <button type="button" class="prompt-post-action-btn" data-prompt-text="${escapeHtml(item.text)}" title="${isEn ? 'Post with this topic' : 'このお題でつぶやく'}">
+              💬 ${isEn ? 'Use Topic' : 'つぶやく'}
+            </button>
           </div>
           ${myActions}
         </div>
@@ -6824,6 +6824,14 @@ function bindEvents() {
   const promptList = document.getElementById('dailyPromptList');
   if (promptList) {
     promptList.addEventListener('click', async (e) => {
+      // このお題でつぶやく
+      const postBtn = e.target.closest('.prompt-post-action-btn');
+      if (postBtn) {
+        const text = postBtn.dataset.promptText;
+        if (!text) return;
+        openChatModal(`今日のお題：${text}\n`);
+        return;
+      }
       // 投票
       const voteBtn = e.target.closest('.daily-prompt-vote-btn');
       if (voteBtn) {

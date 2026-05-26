@@ -4845,3 +4845,34 @@ body.weather-snowy {
   color: #cbd5e1 !important;
   border-top-color: rgba(255, 255, 255, 0.1) !important;
 }
+
+/* お題候補リストの「このお題でつぶやく」アクションボタン */
+.prompt-post-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  background: rgba(91, 141, 238, 0.08);
+  border: 1px solid rgba(91, 141, 238, 0.2);
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.prompt-post-action-btn:hover {
+  background: var(--blue-light);
+  border-color: rgba(91, 141, 238, 0.4);
+}
+[data-theme="dark"] .prompt-post-action-btn {
+  background: rgba(91, 141, 238, 0.15) !important;
+  border-color: rgba(91, 141, 238, 0.3) !important;
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .prompt-post-action-btn:hover {
+  background: rgba(91, 141, 238, 0.25) !important;
+  border-color: rgba(91, 141, 238, 0.5) !important;
+}
