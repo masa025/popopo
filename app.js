@@ -2455,6 +2455,10 @@ function getDailyPromptInfo() {
 
   // ② キャッシュされたお題があり、かつ日付が変わっていなければそれを返す
   if (!activeGachaItem && currentDailyPromptInfo && currentDailyPromptInfo.dayIndex === todayIdx && currentDailyPromptInfo.source !== 'exhausted') {
+    if (currentDailyPromptInfo.source === 'community') {
+      const voteId = `prompt_vote_${currentDailyPromptInfo.id}`;
+      currentDailyPromptInfo.votes = globalLikes[voteId] || (localPromptVotes[voteId] ? 1 : 0);
+    }
     return currentDailyPromptInfo;
   }
 
