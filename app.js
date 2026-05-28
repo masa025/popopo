@@ -2495,7 +2495,6 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
   const byNormalized = new Map();
   const now = Date.now();
   const threshold = 30000; // 30秒以内のローカル投稿のみ
-  const cutoff = now - PROMPT_SUGGESTION_TTL_DAYS * 86400000;
 
   // 全てのお題（リモート＋ローカル新規）を集める
   const candidates = [];
@@ -2517,7 +2516,6 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
   candidates.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
   candidates.forEach(item => {
-    if ((item.timestamp || 0) < cutoff) return;
     const norm = normalizePromptText(item.text);
     if (!norm) return;
     const itemId = getPromptRawId(item);
