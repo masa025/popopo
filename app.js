@@ -1364,6 +1364,9 @@ const DAILY_PROMPTS = [
   'POPOPOコミュニティらしい遊び心のアイデアはありますか？'
 ];
 const FALLBACK_PROMPTS_ARE_ARCHIVED = true;
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const PROMPT_FRESH_ROTATION_START_MS = Date.UTC(2026, 4, 29) - JST_OFFSET_MS;
+const PROMPT_FRESH_ROTATION_START_DAY_INDEX = Math.floor(PROMPT_FRESH_ROTATION_START_MS / 86400000);
 function loadSeenDailyPromptIds() {
   try {
     const raw = JSON.parse(localStorage.getItem(PROMPT_SEEN_STORAGE_KEY) || '[]');
@@ -2322,9 +2325,22 @@ function sortNewest(items = []) {
   return [...items].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
-function getDayIndex() {
-  const today = new Date();
-  return Math.floor(new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() / 86400000);
+function getJstDateParts(date = new Date()) {
+  const jst = new Date(date.getTime() + JST_OFFSET_MS);
+  return {
+    year: jst.getUTCFullYear(),
+    month: jst.getUTCMonth(),
+    day: jst.getUTCDate()
+  };
+}
+
+function getJstDayStartMs(date = new Date()) {
+  const { year, month, day } = getJstDateParts(date);
+  return Date.UTC(year, month, day) - JST_OFFSET_MS;
+}
+
+function getDayIndex(date = new Date()) {
+  return Math.floor(getJstDayStartMs(date) / 86400000);
 }
 
 function getFallbackDailyPrompt() {
@@ -2361,6 +2377,12 @@ function markDailyPromptSeen(info = {}) {
   }
 }
 
+function getPromptCandidateCutoffMs(dayIndex = getDayIndex()) {
+  return dayIndex >= PROMPT_FRESH_ROTATION_START_DAY_INDEX
+    ? PROMPT_FRESH_ROTATION_START_MS
+    : PROMPT_ARCHIVE_CUTOFF;
+}
+
 function getFallbackPromptItems() {
   return DAILY_PROMPTS.map((text, index) => ({
     text,
@@ -2371,9 +2393,10 @@ function getFallbackPromptItems() {
 }
 
 function getUnseenPromptCandidates({ includeFallback = true, excludeId = '' } = {}) {
+  const cutoffMs = getPromptCandidateCutoffMs();
   const communityItems = mergePromptSuggestions()
     .map(item => ({ ...item, source: 'community', seenId: getCommunityPromptId(item) }))
-    .filter(item => (item.timestamp || 0) >= PROMPT_ARCHIVE_CUTOFF)
+    .filter(item => (item.timestamp || 0) >= cutoffMs)
     .filter(item => item.seenId !== excludeId && !isDailyPromptSeen(item.seenId));
   const fallbackItems = includeFallback && !FALLBACK_PROMPTS_ARE_ARCHIVED
     ? getFallbackPromptItems()
@@ -2547,6 +2570,31 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
 let activeGachaItem = null;
 let currentDailyPromptInfo = null;
 let dailyPromptArchivePage = 0;
+let dailyPromptRefreshTimer = null;
+
+function getPromptWaitingInfo(dayIndex = getDayIndex()) {
+  return {
+    text: currentLanguage === 'en' ? 'Would you like to suggest a topic?' : 'お題を投稿してみませんか？',
+    source: 'exhausted',
+    id: 'prompt-waiting-for-new',
+    seenId: '',
+    dayIndex,
+  };
+}
+
+function buildFreshPromptSchedule(items = mergePromptSuggestions()) {
+  let nextDisplayDay = PROMPT_FRESH_ROTATION_START_DAY_INDEX;
+  return items
+    .filter(item => !item.isArchived)
+    .filter(item => (item.timestamp || 0) >= PROMPT_FRESH_ROTATION_START_MS)
+    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    .map(item => {
+      const submittedDay = getDayIndex(new Date(item.timestamp || Date.now()));
+      const displayDay = Math.max(nextDisplayDay, submittedDay + 1);
+      nextDisplayDay = displayDay + 1;
+      return { ...item, displayDay };
+    });
+}
 
 function getDailyPromptInfo() {
   const merged = mergePromptSuggestions();
@@ -2642,7 +2690,27 @@ function getDailyPromptInfo() {
     }
   }
 
-  // ③ コミュニティお題があれば、投稿順（最古＝投稿順）に並べ替えて1日ごとにローテーション
+  // ③ 2026-05-29以降は、新規投稿のお題を投稿順に1回ずつ日替わり表示する。
+  // その日に表示する新規お題がない場合は、古いお題を循環させず投稿を促す。
+  if (todayIdx >= PROMPT_FRESH_ROTATION_START_DAY_INDEX) {
+    const scheduledItems = buildFreshPromptSchedule(merged);
+    const activeItem = scheduledItems.find(item => item.displayDay === todayIdx);
+    if (activeItem) {
+      return {
+        text: activeItem.text,
+        source: 'community',
+        nickname: activeItem.nickname || '匿名リスナー',
+        votes: getPromptVoteCount(activeItem),
+        id: activeItem.clientId || activeItem.id,
+        seenId: getCommunityPromptId(activeItem),
+        timestamp: activeItem.timestamp || 0,
+        dayIndex: todayIdx,
+      };
+    }
+    return getPromptWaitingInfo(todayIdx);
+  }
+
+  // ④ 5/28以前は従来どおり、既存コミュニティお題を投稿順に日替わりローテーションする。
   const allCommunity = merged.filter(item => !item.isArchived)
     .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // 投稿順（古い順）
 
@@ -2661,7 +2729,7 @@ function getDailyPromptInfo() {
     };
   }
 
-  // ④ コミュニティお題がない場合は、プリセットのフォールバックお題をローテーション
+  // ⑤ コミュニティお題がない場合は、プリセットのフォールバックお題をローテーション
   const fallbackItems = getFallbackPromptItems();
   if (fallbackItems.length) {
     const activeIndex = todayIdx % fallbackItems.length;
@@ -2676,14 +2744,8 @@ function getDailyPromptInfo() {
     };
   }
 
-  // ⑤ お題が全くない場合
-  return {
-    text: 'お題を提案してみませんか？',
-    source: 'exhausted',
-    id: 'prompt-exhausted',
-    seenId: '',
-    dayIndex: todayIdx,
-  };
+  // ⑥ お題が全くない場合
+  return getPromptWaitingInfo(todayIdx);
 }
 
 function renderDailyPrompt() {
@@ -2706,13 +2768,19 @@ function renderDailyPrompt() {
     }
   }
   if (promptBtn) {
-    promptBtn.textContent = info.source === 'exhausted' ? 'お題を提案する' : 'このお題でつぶやく';
+    promptBtn.textContent = info.source === 'exhausted'
+      ? (currentLanguage === 'en' ? 'Suggest a Topic' : 'お題を投稿する')
+      : (currentLanguage === 'en' ? 'Post with this Topic' : 'このお題でつぶやく');
   }
   if (gachaBtn) {
     const remaining = getUnseenPromptCandidates({ includeFallback: true, excludeId: info.seenId }).length;
     gachaBtn.disabled = info.source === 'exhausted' || remaining === 0;
-    gachaBtn.textContent = gachaBtn.disabled ? '🎲 お題を見終えました' : '🎲 ガチャを回す';
-    gachaBtn.title = gachaBtn.disabled ? '新しいお題の提案が届くと、また表示できます' : 'まだ見ていないお題をランダムでめくります';
+    gachaBtn.textContent = gachaBtn.disabled
+      ? (currentLanguage === 'en' ? '🎲 Waiting for topics' : '🎲 新しいお題待ち')
+      : (currentLanguage === 'en' ? '🎲 Roll Topic' : '🎲 ガチャを回す');
+    gachaBtn.title = gachaBtn.disabled
+      ? (currentLanguage === 'en' ? 'New suggestions will appear here when they arrive.' : '新しいお題の提案が届くと、また表示できます')
+      : (currentLanguage === 'en' ? 'Roll a topic you have not seen yet.' : 'まだ見ていないお題をランダムでめくります');
   }
   if (meta) {
     if (info.source === 'community') {
@@ -2721,7 +2789,9 @@ function renderDailyPrompt() {
       meta.innerHTML = `${badge}${nick} さんの提案 ・ ♡ ${info.votes}`;
       meta.hidden = false;
     } else if (info.source === 'exhausted') {
-      meta.innerHTML = '<span class="pill">お題待ち</span>新しい提案が届くと、またここに表示されます。';
+      meta.innerHTML = currentLanguage === 'en'
+        ? '<span class="pill">Waiting for Topics</span>New suggestions will become future daily topics.'
+        : '<span class="pill">新しいお題待ち</span>新しい提案が届くと、明日以降のお題になります。';
       meta.hidden = false;
     } else {
       meta.innerHTML = '';
@@ -2729,6 +2799,32 @@ function renderDailyPrompt() {
     }
   }
   renderDailyPromptCandidates();
+}
+
+function getMsUntilNextJstDay(date = new Date()) {
+  const { year, month, day } = getJstDateParts(date);
+  const nextJstMidnightUtc = Date.UTC(year, month, day + 1) - JST_OFFSET_MS;
+  return Math.max(1000, nextJstMidnightUtc - date.getTime() + 1200);
+}
+
+function resetDailyPromptForDayChange() {
+  activeGachaItem = null;
+  currentDailyPromptInfo = null;
+  renderDailyPrompt();
+}
+
+function refreshDailyPromptIfDayChanged() {
+  const todayIdx = getDayIndex();
+  if (!currentDailyPromptInfo || currentDailyPromptInfo.dayIndex === todayIdx) return;
+  resetDailyPromptForDayChange();
+}
+
+function scheduleDailyPromptRefresh() {
+  window.clearTimeout(dailyPromptRefreshTimer);
+  dailyPromptRefreshTimer = window.setTimeout(() => {
+    resetDailyPromptForDayChange();
+    scheduleDailyPromptRefresh();
+  }, getMsUntilNextJstDay());
 }
 
 function escapeHtml(str) {
@@ -8832,6 +8928,7 @@ function init() {
 
   trackPageView();
   renderDailyPrompt();
+  scheduleDailyPromptRefresh();
   renderWeeklyDiscovery();
   startDiscoveryRotation();
   renderWeather();
@@ -8845,8 +8942,14 @@ function init() {
 
   // 初期言語適用は i18n.js で処理されるため削除
   window.addEventListener('languageChanged', () => {
+    renderDailyPrompt();
     renderWeeklyDiscovery();
     adjustHeroPadding();
+  });
+
+  window.addEventListener('focus', refreshDailyPromptIfDayChanged);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshDailyPromptIfDayChanged();
   });
 
   // 初期ロードとウィンドウリサイズ時にヒーローのpaddingを動的に調整
