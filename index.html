@@ -687,14 +687,11 @@
           <label class="form-label">写真アップロード（任意）</label>
           <div class="image-upload-wrapper">
             <label class="image-upload-trigger" id="asUploadTrigger">
-              <input type="file" id="asImageFile" accept="image/*" style="display:none;">
+              <input type="file" id="asImageFile" accept="image/*" multiple style="display:none;">
               <span class="upload-icon">📷</span>
-              <span class="upload-text">画像を選択する</span>
+              <span class="upload-text">画像を選択する（最大2枚）</span>
             </label>
-            <div class="image-upload-preview-container" id="asImagePreviewContainer" style="display:none;">
-              <img id="asImagePreview" class="image-upload-preview" src="" alt="プレビュー">
-              <button type="button" class="image-upload-clear-btn" id="asImageClearBtn" aria-label="画像を削除">✕</button>
-            </div>
+            <div class="image-upload-preview-list" id="asImagePreviewList" style="display:none;"></div>
           </div>
           <p class="form-help" style="margin-top:6px;font-size:0.75rem;color:var(--text-dim);" data-i18n="upload_disclaimer">※画像は自動的に最適化（縮小・圧縮）して保存されます。</p>
         </div>
@@ -846,7 +843,7 @@
     <div class="kiriban-card">
       <button class="kiriban-close" id="kiribanClose" type="button" aria-label="閉じる">✕</button>
       <p class="kiriban-kicker">POPOPO MILESTONE</p>
-      <h3 id="kiribanTitle" class="kiriban-title">おめでとうございます！<br><span>Congratulations!</span></h3>
+      <h3 id="kiribanTitle" class="kiriban-title">おめでとうございます！<br><span lang="en">Congratulations!</span></h3>
       <p class="kiriban-count"><span id="kiribanCount">0</span></p>
       <p class="kiriban-copy">あなたはPOPOPO お出かけマップのキリ番訪問者です。<br>You reached a special visitor number.</p>
       <p class="kiriban-share-note">この画面をスクリーンショットしてSNSでシェアしたり、<br>POPOPOの掲示板でみんなに報告しましょう！✨</p>

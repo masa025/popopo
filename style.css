@@ -3174,6 +3174,12 @@ button:disabled, .btn-primary:disabled, .btn-outline:disabled, .btn-ghost:disabl
   background: #fff;
   align-self: flex-start;
 }
+.image-upload-preview-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 140px));
+  gap: 12px;
+  align-items: start;
+}
 .image-upload-preview {
   width: 100%;
   height: 100%;

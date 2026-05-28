@@ -1125,7 +1125,8 @@ let latestRemoteChats = [];
 let currentReviewSpotName = '';
 let editingId = null;
 let editingClientId = null;
-let uploadedSpotImageBase64 = null;
+const MAX_SPOT_UPLOAD_IMAGES = 2;
+let uploadedSpotImageBase64List = [];
 let uploadedPostImageBase64 = null;
 const INITIAL_SPOT_COUNT = 6;
 const INITIAL_REVIEW_COUNT = 6;
@@ -5402,22 +5403,44 @@ function updateAddSpotIntentUI() {
   }
 }
 
+function renderSpotImagePreviews() {
+  const list = document.getElementById('asImagePreviewList');
+  if (!list) return;
+  const images = uploadedSpotImageBase64List.filter(Boolean).slice(0, MAX_SPOT_UPLOAD_IMAGES);
+  if (!images.length) {
+    list.innerHTML = '';
+    list.style.display = 'none';
+    return;
+  }
+  list.innerHTML = images.map((src, index) => `
+    <div class="image-upload-preview-container image-upload-preview-container--spot">
+      <img class="image-upload-preview" src="${escHtml(src)}" alt="プレビュー${index + 1}">
+      <button type="button" class="image-upload-clear-btn spot-image-clear-btn" data-spot-image-index="${index}" aria-label="画像${index + 1}を削除">✕</button>
+    </div>
+  `).join('');
+  list.style.display = 'grid';
+}
+
+function setUploadedSpotImages(images = []) {
+  uploadedSpotImageBase64List = images.filter(Boolean).slice(0, MAX_SPOT_UPLOAD_IMAGES);
+  renderSpotImagePreviews();
+}
+
+function resetSpotImageUploads() {
+  uploadedSpotImageBase64List = [];
+  const asFileInput = document.getElementById('asImageFile');
+  if (asFileInput) asFileInput.value = '';
+  renderSpotImagePreviews();
+}
+
 function applySuggestionResourcesToAddSpotRows(s) {
   const resources = getSuggestionResources(s);
-  
-  // Find the Base64 uploaded photo if exists
-  const base64Photo = resources.find(r => r.kind === 'photo' && r.url && r.url.startsWith('data:image/'));
-  if (base64Photo) {
-    uploadedSpotImageBase64 = base64Photo.url;
-    const preview = document.getElementById('asImagePreview');
-    const container = document.getElementById('asImagePreviewContainer');
-    if (preview && container) {
-      preview.src = base64Photo.url;
-      container.style.display = 'block';
-    }
-  }
+  const base64Photos = resources
+    .filter(r => r.kind === 'photo' && r.url && r.url.startsWith('data:image/'))
+    .slice(0, MAX_SPOT_UPLOAD_IMAGES);
+  setUploadedSpotImages(base64Photos.map(photo => photo.url));
 
-  // Filter out the Base64 photo from the link inputs
+  // Filter out Base64 photos from the link inputs
   const remainingResources = resources.filter(r => !(r.kind === 'photo' && r.url && r.url.startsWith('data:image/')));
   
   for (let i = 0; i < 3; i += 1) {
@@ -5450,13 +5473,7 @@ function openAddSpotModal(id = null, clientId = null) {
   document.getElementById('addSpotForm').reset();
 
   // Reset custom image upload states & previews
-  uploadedSpotImageBase64 = null;
-  const asFileInput = document.getElementById('asImageFile');
-  if (asFileInput) asFileInput.value = '';
-  const asPreview = document.getElementById('asImagePreview');
-  const asContainer = document.getElementById('asImagePreviewContainer');
-  if (asPreview) asPreview.src = '';
-  if (asContainer) asContainer.style.display = 'none';
+  resetSpotImageUploads();
 
   // Reset amenities form state
   document.querySelectorAll('.toilet-star-btn').forEach(btn => btn.classList.remove('active'));
@@ -5530,13 +5547,7 @@ function closeAddSpotModal() {
   editingClientId = null;
 
   // Cleanup spot image upload states
-  uploadedSpotImageBase64 = null;
-  const asFileInput = document.getElementById('asImageFile');
-  if (asFileInput) asFileInput.value = '';
-  const asPreview = document.getElementById('asImagePreview');
-  const asContainer = document.getElementById('asImagePreviewContainer');
-  if (asPreview) asPreview.src = '';
-  if (asContainer) asContainer.style.display = 'none';
+  resetSpotImageUploads();
 }
 
 // 掲示板投稿モーダル
@@ -6558,8 +6569,8 @@ document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
   }
   const resources = validateResourceEntries('spot');
   if (!resources) return;
-  if (uploadedSpotImageBase64) {
-    resources.unshift({ kind: 'photo', label: '写真', url: uploadedSpotImageBase64 });
+  if (uploadedSpotImageBase64List.length) {
+    resources.unshift(...uploadedSpotImageBase64List.map(url => ({ kind: 'photo', label: '写真', url })));
   }
   const btn = document.getElementById('addSpotSubmitBtn');
   btn.disabled = true; btn.textContent = currentLanguage === 'en' ? 'Sending...' : '送信中...';
@@ -7610,16 +7621,21 @@ function bindEvents() {
   const asImageFile = document.getElementById('asImageFile');
   if (asImageFile) {
     asImageFile.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+      const files = Array.from(e.target.files || []).filter(file => file && file.type.startsWith('image/'));
+      if (!files.length) return;
       try {
-        const compressed = await compressAndEncodeImage(file);
-        uploadedSpotImageBase64 = compressed;
-        const preview = document.getElementById('asImagePreview');
-        const container = document.getElementById('asImagePreviewContainer');
-        if (preview && container) {
-          preview.src = compressed;
-          container.style.display = 'block';
+        const remainingSlots = MAX_SPOT_UPLOAD_IMAGES - uploadedSpotImageBase64List.length;
+        if (remainingSlots <= 0) {
+          showToast(currentLanguage === 'en' ? 'You can upload up to 2 photos.' : '写真アップロードは2枚までです。');
+          asImageFile.value = '';
+          return;
+        }
+        const pickedFiles = files.slice(0, remainingSlots);
+        const compressedImages = await Promise.all(pickedFiles.map(file => compressAndEncodeImage(file)));
+        setUploadedSpotImages([...uploadedSpotImageBase64List, ...compressedImages]);
+        asImageFile.value = '';
+        if (files.length > remainingSlots) {
+          showToast(currentLanguage === 'en' ? 'Only the first 2 photos were added.' : '写真は最大2枚まで追加しました。');
         }
       } catch (err) {
         console.error('Image compression failed:', err);
@@ -7627,15 +7643,16 @@ function bindEvents() {
       }
     });
   }
-  const asImageClearBtn = document.getElementById('asImageClearBtn');
-  if (asImageClearBtn) {
-    asImageClearBtn.addEventListener('click', () => {
+  const asImagePreviewList = document.getElementById('asImagePreviewList');
+  if (asImagePreviewList) {
+    asImagePreviewList.addEventListener('click', (e) => {
+      const clearBtn = e.target.closest('.spot-image-clear-btn');
+      if (!clearBtn) return;
+      const index = parseInt(clearBtn.dataset.spotImageIndex || '-1', 10);
+      if (index < 0) return;
+      uploadedSpotImageBase64List.splice(index, 1);
       if (asImageFile) asImageFile.value = '';
-      uploadedSpotImageBase64 = null;
-      const preview = document.getElementById('asImagePreview');
-      const container = document.getElementById('asImagePreviewContainer');
-      if (preview) preview.src = '';
-      if (container) container.style.display = 'none';
+      renderSpotImagePreviews();
     });
   }
 

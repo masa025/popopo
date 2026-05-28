@@ -358,7 +358,6 @@ const STATIC_TEXT_TRANSLATIONS = [
   ['このスポットの感想を投稿', 'Write a Review for This Spot'],
   ['💬 みんなの感想', '💬 Guest Reviews'],
   ['掲示板に報告する 💬', 'Post to the Board 💬'],
-  ['おめでとうございます！', 'Congratulations!'],
   ['ギャラリーを閉じる', 'Close Gallery'],
   ['前の作品へ', 'Previous Art'],
   ['次の作品へ', 'Next Art'],
