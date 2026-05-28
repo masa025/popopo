@@ -2581,16 +2581,20 @@ function getDailyPromptInfo() {
 
   // ② キャッシュされたお題があり、かつ日付が変わっていなければそれを返す
   if (!activeGachaItem && currentDailyPromptInfo && currentDailyPromptInfo.dayIndex === todayIdx && currentDailyPromptInfo.source !== 'exhausted') {
-    if (currentDailyPromptInfo.source === 'community') {
-      const fresh = merged.find(item => getPromptGroupIds(item).includes(currentDailyPromptInfo.id));
-      if (fresh) {
-        currentDailyPromptInfo.votes = getPromptVoteCount(fresh);
-      } else {
-        const voteId = getPromptVoteId(currentDailyPromptInfo.id);
-        currentDailyPromptInfo.votes = (globalLikes[voteId] || 0) + (localPendingPromptVotes.has(voteId) ? 1 : 0);
+    const isFallbackScheduled = String(currentDailyPromptInfo.id || '').startsWith('scheduled-');
+    // リモートお題が読み込まれる前に生成された仮IDキャッシュがある場合、最新のリモートデータとの照合を行うためキャッシュをバイパス
+    if (!isFallbackScheduled || !latestRemotePromptSuggestions.length) {
+      if (currentDailyPromptInfo.source === 'community') {
+        const fresh = merged.find(item => getPromptGroupIds(item).includes(currentDailyPromptInfo.id));
+        if (fresh) {
+          currentDailyPromptInfo.votes = getPromptVoteCount(fresh);
+        } else {
+          const voteId = getPromptVoteId(currentDailyPromptInfo.id);
+          currentDailyPromptInfo.votes = (globalLikes[voteId] || 0) + (localPendingPromptVotes.has(voteId) ? 1 : 0);
+        }
       }
+      return currentDailyPromptInfo;
     }
-    return currentDailyPromptInfo;
   }
 
   // キャッシュ無効または日付変更によるリセット
