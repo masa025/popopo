@@ -2406,6 +2406,7 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 .daily-prompt-item-foot{
   display:flex;
   align-items:center;
+  flex-wrap:wrap;
   gap:8px;
   margin-top:4px;
   color:var(--text-muted);
@@ -2418,6 +2419,13 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
+}
+.daily-prompt-item-date{
+  display:inline-flex;
+  align-items:center;
+  color:#6a7c86;
+  font-size:0.72rem;
+  font-weight:700;
 }
 .daily-prompt-item-leading-tag{
   display:inline-flex;
@@ -2469,6 +2477,55 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   font-size:0.86rem;
   text-align:center;
   line-height:1.7;
+}
+.daily-prompt-pagination{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px dashed rgba(91,141,238,0.18);
+}
+.daily-prompt-pagination[hidden]{display:none;}
+.daily-prompt-page-numbers{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.daily-prompt-page-btn{
+  min-width:34px;
+  height:34px;
+  padding:0 11px;
+  border-radius:999px;
+  border:1px solid rgba(91,141,238,0.22);
+  background:rgba(255,255,255,0.84);
+  color:#4b5f78;
+  font-size:0.78rem;
+  font-weight:800;
+  transition:background .18s ease, color .18s ease, transform .18s ease, border-color .18s ease;
+}
+.daily-prompt-page-btn:hover:not(:disabled){
+  background:#fff;
+  color:#2a7d74;
+  border-color:rgba(42,157,143,0.32);
+  transform:translateY(-1px);
+}
+.daily-prompt-page-btn.is-current{
+  background:linear-gradient(135deg,#2a9d8f,#5b8dee);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 5px 14px rgba(42,157,143,0.18);
+}
+.daily-prompt-page-btn:disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+}
+.daily-prompt-page-status{
+  color:var(--text-muted);
+  font-size:0.74rem;
+  font-weight:700;
 }
 /* 自分の投稿 */
 .daily-prompt-item.is-mine{
@@ -2523,6 +2580,9 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   .daily-prompt-item-body{order:2;flex:1 1 100%;}
   .daily-prompt-vote-btn{order:3;margin-left:auto;}
   .daily-prompt-item-rank{order:1;}
+  .daily-prompt-pagination{justify-content:space-between;}
+  .daily-prompt-page-numbers{order:3;width:100%;justify-content:center;}
+  .daily-prompt-page-status{order:4;width:100%;text-align:center;}
 }
 
 /* ============================================================
@@ -4523,6 +4583,17 @@ body.weather-snowy {
   background: linear-gradient(135deg, var(--surface-2), rgba(79,209,197,0.12));
 }
 [data-theme="dark"] .daily-prompt-empty { background: rgba(255,255,255,0.03); }
+[data-theme="dark"] .daily-prompt-item-date,
+[data-theme="dark"] .daily-prompt-page-status { color: var(--text-dim); }
+[data-theme="dark"] .daily-prompt-page-btn {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-dim);
+  border-color: rgba(96,165,250,0.2);
+}
+[data-theme="dark"] .daily-prompt-page-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--teal-text);
+}
 
 /* --- フォーム --- */
 [data-theme="dark"] .form-input,

@@ -1112,6 +1112,7 @@ let lastSeenPromptVotes = (() => {
 let _firstLikesSnapshotDone = false;
 const PROMPT_SEEN_STORAGE_KEY = 'popopo_seen_daily_prompts_v1';
 const PROMPT_SEEN_LIMIT = 240;
+const PROMPT_ARCHIVE_PAGE_SIZE = 8;
 const PROMPT_ARCHIVE_CUTOFF = new Date('2026-05-17T00:00:00+09:00').getTime();
 const NICKNAME_STORAGE_KEY = 'popopo_last_nickname';
 const ADD_SPOT_FORM_DRAFT_KEY = 'popopo_add_spot_draft_session_v1';
@@ -2547,6 +2548,7 @@ function mergePromptSuggestions(remoteList = latestRemotePromptSuggestions) {
 
 let activeGachaItem = null;
 let currentDailyPromptInfo = null;
+let dailyPromptArchivePage = 0;
 
 function getDailyPromptInfo() {
   const merged = mergePromptSuggestions();
@@ -2736,6 +2738,63 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function getPromptArchiveItems() {
+  return mergePromptSuggestions()
+    .filter(item => !item.isArchived)
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
+function formatPromptSuggestedAt(timestamp) {
+  if (!timestamp) return currentLanguage === 'en' ? 'Suggested date unknown' : '提案日不明';
+  const d = new Date(timestamp);
+  if (Number.isNaN(d.getTime())) {
+    return currentLanguage === 'en' ? 'Suggested date unknown' : '提案日不明';
+  }
+  if (currentLanguage === 'en') {
+    return `Suggested ${d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`;
+  }
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}.${m}.${day} 提案`;
+}
+
+function renderDailyPromptPagination(totalItems, totalPages) {
+  const pager = document.getElementById('dailyPromptPagination');
+  if (!pager) return;
+  if (totalPages <= 1) {
+    pager.hidden = true;
+    pager.innerHTML = '';
+    return;
+  }
+
+  const isEn = currentLanguage === 'en';
+  const start = Math.max(0, Math.min(dailyPromptArchivePage - 2, totalPages - 5));
+  const end = Math.min(totalPages, start + 5);
+  const pageButtons = [];
+  for (let i = start; i < end; i += 1) {
+    pageButtons.push(`
+      <button type="button" class="daily-prompt-page-btn${i === dailyPromptArchivePage ? ' is-current' : ''}" data-prompt-page-index="${i}" ${i === dailyPromptArchivePage ? 'aria-current="page"' : ''}>
+        ${i + 1}
+      </button>
+    `);
+  }
+
+  pager.hidden = false;
+  pager.innerHTML = `
+    <button type="button" class="daily-prompt-page-btn" data-prompt-page-action="prev" ${dailyPromptArchivePage === 0 ? 'disabled' : ''}>
+      ${isEn ? 'Prev' : '前へ'}
+    </button>
+    <div class="daily-prompt-page-numbers" aria-label="${isEn ? 'Topic archive pages' : 'お題アーカイブのページ'}">
+      ${pageButtons.join('')}
+    </div>
+    <span class="daily-prompt-page-status">${isEn ? `${dailyPromptArchivePage + 1} / ${totalPages} · ${totalItems} topics` : `${dailyPromptArchivePage + 1} / ${totalPages} ・ 全${totalItems}件`}</span>
+    <button type="button" class="daily-prompt-page-btn" data-prompt-page-action="next" ${dailyPromptArchivePage >= totalPages - 1 ? 'disabled' : ''}>
+      ${isEn ? 'Next' : '次へ'}
+    </button>
+  `;
+}
+
 // 自分が投稿したお題かどうか判定（localPromptSuggestionsにclientIdが存在するか）
 function isMyPrompt(item) {
   if (!item) return false;
@@ -2824,9 +2883,10 @@ function renderDailyPromptCandidates() {
   const list = document.getElementById('dailyPromptList');
   const empty = document.getElementById('dailyPromptEmpty');
   if (!list) return;
-  const merged = mergePromptSuggestions();
+  const merged = getPromptArchiveItems();
   if (!merged.length) {
     list.innerHTML = '';
+    renderDailyPromptPagination(0, 0);
     if (empty) empty.hidden = false;
     return;
   }
@@ -2834,18 +2894,24 @@ function renderDailyPromptCandidates() {
   const isEn = currentLanguage === 'en';
   const todayInfo = currentDailyPromptInfo || getDailyPromptInfo();
   const leadingId = todayInfo.source === 'community' ? todayInfo.id : null;
-  list.innerHTML = merged.slice(0, 10).map((item, idx) => {
+  const totalPages = Math.max(1, Math.ceil(merged.length / PROMPT_ARCHIVE_PAGE_SIZE));
+  dailyPromptArchivePage = Math.max(0, Math.min(dailyPromptArchivePage, totalPages - 1));
+  const pageStart = dailyPromptArchivePage * PROMPT_ARCHIVE_PAGE_SIZE;
+  renderDailyPromptPagination(merged.length, totalPages);
+  list.innerHTML = merged.slice(pageStart, pageStart + PROMPT_ARCHIVE_PAGE_SIZE).map((item, idx) => {
     const id = item.clientId || item.id;
     const voted = isPromptVoted(item);
     const pending = isPromptVotePending(item);
     const count = getPromptVoteCount(item);
     const isLeading = id === leadingId;
     const nick = item.nickname || '匿名リスナー';
+    const suggestedAt = formatPromptSuggestedAt(item.timestamp);
     const isMine = isMyPrompt(item);
     const synced = isPromptSynced(item);
     const syncBadge = isMine && !synced
-      ? `<span class="prompt-sync-badge">⚠ 未反映</span>`
+      ? `<span class="prompt-sync-badge">${isEn ? '⚠ Syncing' : '⚠ 未反映'}</span>`
       : '';
+    const leadingTag = isEn ? '🌿 Today’s topic' : '🌿 今日のお題に表示中';
     const myActions = isMine ? `
       <div class="prompt-my-actions">
         ${!synced ? `<button type="button" class="prompt-action-btn prompt-retry-btn" data-prompt-retry-id="${escapeHtml(id)}" title="再送信">🔄 再送信</button>` : ''}
@@ -2854,13 +2920,14 @@ function renderDailyPromptCandidates() {
       </div>` : '';
     return `
       <li class="daily-prompt-item${isLeading ? ' is-leading' : ''}${isMine ? ' is-mine' : ''}" data-prompt-id="${escapeHtml(id)}">
-        <span class="daily-prompt-item-rank" aria-hidden="true">${idx + 1}</span>
+        <span class="daily-prompt-item-rank" aria-hidden="true">${pageStart + idx + 1}</span>
         <div class="daily-prompt-item-body">
           <p class="daily-prompt-item-text">${escapeHtml(item.text)}</p>
           <div class="daily-prompt-item-foot">
             <span class="daily-prompt-item-nick">— ${escapeHtml(nick)}</span>
+            <span class="daily-prompt-item-date">${escapeHtml(suggestedAt)}</span>
             ${syncBadge}
-            ${isLeading ? '<span class="daily-prompt-item-leading-tag">🌿 今日のお題に表示中</span>' : ''}
+            ${isLeading ? `<span class="daily-prompt-item-leading-tag">${leadingTag}</span>` : ''}
             <button type="button" class="prompt-post-action-btn" data-prompt-text="${escapeHtml(item.text)}" title="${isEn ? 'Post with this topic' : 'このお題でつぶやく'}">
               💬 ${isEn ? 'Use Topic' : 'つぶやく'}
             </button>
@@ -2884,6 +2951,7 @@ async function submitPromptSuggestion({ text, nickname }) {
   const item = { id: clientId, clientId, text: cleanText, nickname: cleanNick, timestamp: Date.now() };
   localPromptSuggestions.unshift(item);
   localStorage.setItem('popopo_prompt_suggestions', JSON.stringify(localPromptSuggestions));
+  dailyPromptArchivePage = 0;
   // 提案者は自動で1票
   const voteId = getPromptVoteId(item);
   localPromptVotes[voteId] = Date.now();
@@ -3013,7 +3081,7 @@ function updatePromptVoteButton(voteId) {
   });
   // トップの「今日のお題」メタ表示も更新
   const info = currentDailyPromptInfo;
-  if (info && info.source === 'community' && info.id === clientId) {
+  if (info && info.source === 'community' && targetIds.includes(info.id)) {
     info.votes = count;
     const meta = document.getElementById('dailyPromptMeta');
     if (meta) {
@@ -7174,8 +7242,11 @@ function bindEvents() {
       dailyPromptToggleBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
       dailyPromptCandidates.hidden = !next;
       const label = dailyPromptToggleBtn.querySelector('.daily-prompt-toggle-text');
-      if (label) label.textContent = next ? '候補を閉じる' : 'みんなの提案を見る';
+      if (label) label.textContent = next
+        ? (currentLanguage === 'en' ? 'Close Topics' : '候補を閉じる')
+        : (currentLanguage === 'en' ? 'See Suggestions' : 'みんなの提案を見る');
       if (next) {
+        dailyPromptArchivePage = 0;
         // まずキャッシュで即時レンダリング
         renderDailyPromptCandidates();
         // さらにFirestoreから最新データを再フェッチして再描画（端末間ラグ対策）
@@ -7193,6 +7264,23 @@ function bindEvents() {
   const dailyPromptSuggestBtn = document.getElementById('dailyPromptSuggestBtn');
   if (dailyPromptSuggestBtn) dailyPromptSuggestBtn.addEventListener('click', () => openPromptSuggestModal());
   bindPromptSuggestModal();
+  const promptPager = document.getElementById('dailyPromptPagination');
+  if (promptPager) {
+    promptPager.addEventListener('click', (e) => {
+      const btn = e.target.closest('.daily-prompt-page-btn');
+      if (!btn || btn.disabled) return;
+      const totalPages = Math.max(1, Math.ceil(getPromptArchiveItems().length / PROMPT_ARCHIVE_PAGE_SIZE));
+      const action = btn.dataset.promptPageAction;
+      if (action === 'prev') {
+        dailyPromptArchivePage = Math.max(0, dailyPromptArchivePage - 1);
+      } else if (action === 'next') {
+        dailyPromptArchivePage = Math.min(totalPages - 1, dailyPromptArchivePage + 1);
+      } else if (btn.dataset.promptPageIndex !== undefined) {
+        dailyPromptArchivePage = Math.max(0, Math.min(Number(btn.dataset.promptPageIndex), totalPages - 1));
+      }
+      renderDailyPromptCandidates();
+    });
+  }
   const promptList = document.getElementById('dailyPromptList');
   if (promptList) {
     promptList.addEventListener('click', async (e) => {
