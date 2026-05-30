@@ -145,6 +145,15 @@ const GALLERY_ITEMS = [
     caption: "穏やかで達観したような表情を浮かべるキャラクターが、掛け軸（かけじく）に水墨画の優しい筆致で描かれた、格調高くも心が和む和風アート作品です。",
     alt: "掛け軸に水墨画調で描かれたキャラクターのアート作品",
     type: "art"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-45.jpg",
+    title: "POPOPO用語辞典 4",
+    caption: "【検討に検討を重ね、検討を加速する】の項目が追加された辞典ページ。「絶対に嫌である」という強固な拒絶を意味する、味わい深いPOPOPOの言葉です。",
+    alt: "POPOPO用語辞典の『検討に検討を重ね、検討を加速する』のページ",
+    type: "dict_page",
+    lockAnswer: "TimTam",
+    lockHint: "ある配信者が牛乳の中に落としたお菓子は何でしょうか？"
   }
 ];
 
