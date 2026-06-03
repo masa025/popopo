@@ -1117,6 +1117,23 @@ let lastSeenPromptVotes = (() => {
   try { return JSON.parse(localStorage.getItem(PROMPT_VOTE_LAST_SEEN_KEY) || '{}'); }
   catch (e) { return {}; }
 })();
+// 自分のおすすめスポット/感想/フリートーク投稿に届いた反応の「前回確認時の数」。
+// お題と同じ仕組みで、再訪時に「新しく届いた分」だけをお礼トーストで知らせるために使う。
+const SPOT_LIKE_LAST_SEEN_KEY = 'popopo_spot_like_last_seen_v1';
+const REVIEW_SEEN_LAST_SEEN_KEY = 'popopo_review_seen_last_seen_v1';
+const CHAT_REACTION_LAST_SEEN_KEY = 'popopo_chat_reaction_last_seen_v1';
+let lastSeenSpotLikes = (() => {
+  try { return JSON.parse(localStorage.getItem(SPOT_LIKE_LAST_SEEN_KEY) || '{}'); }
+  catch (e) { return {}; }
+})();
+let lastSeenReviewSeen = (() => {
+  try { return JSON.parse(localStorage.getItem(REVIEW_SEEN_LAST_SEEN_KEY) || '{}'); }
+  catch (e) { return {}; }
+})();
+let lastSeenChatReactions = (() => {
+  try { return JSON.parse(localStorage.getItem(CHAT_REACTION_LAST_SEEN_KEY) || '{}'); }
+  catch (e) { return {}; }
+})();
 // 最初のいいねスナップショットが届いたかどうか — 通知を出すタイミング判定用
 let _firstLikesSnapshotDone = false;
 const PROMPT_SEEN_STORAGE_KEY = 'popopo_seen_daily_prompts_v1';
@@ -1762,7 +1779,7 @@ function listenLikes() {
       if (!_firstLikesSnapshotDone) {
         _firstLikesSnapshotDone = true;
         cleanupStaleLocalPromptVotes();
-        setTimeout(checkMyPromptVoteNotifications, 900);
+        setTimeout(checkMyEngagementNotifications, 900);
       }
     });
   }
@@ -3214,9 +3231,30 @@ function showFloatingPlusOne(anchorBtn) {
   setTimeout(() => span.remove(), 1300);
 }
 
+// 反応の種類ごとの「押した人へのお礼バブル」。内容に合わせた言葉にする。
+const REACTION_EFFECT_MESSAGES = {
+  spotLike: {
+    ja: ['行きたいリストに追加！', '素敵なお出かけになりますように✨', 'いつか行けますように🌸', 'メモしておきました🔖', '楽しみがひとつ増えました💖'],
+    en: ['Added to your list!', 'Hope you get to go ✨', 'Saved for someday 🌸', 'Bookmarked 🔖', 'One more thing to look forward to 💖'],
+  },
+  reviewSeen: {
+    ja: ['読んでくれてありがとう👀', '気持ち、届きました💖', '共感の輪が広がりました🌿', 'あたたかい目線をありがとう🌸', 'うれしい「見たよ」です✨'],
+    en: ['Thanks for reading 👀', 'Your appreciation landed 💖', 'Sharing the warmth 🌿', 'Thanks for the kind look 🌸', 'A lovely "Seen" ✨'],
+  },
+  chatReaction: {
+    ja: ['気持ち、届けました💐', 'やさしさが広がりました🌿', 'ありがとうのリアクション✨', 'ほっこり届きました💖', '共感の輪が広がりました🌸'],
+    en: ['Your feeling was sent 💐', 'Kindness, passed on 🌿', 'A thank-you reaction ✨', 'Warmth delivered 💖', 'Sharing the empathy 🌸'],
+  },
+};
+function reactionMessagesFor(kind) {
+  const set = REACTION_EFFECT_MESSAGES[kind];
+  if (!set) return null;
+  return currentLanguage === 'en' ? set.en : set.ja;
+}
+
 // 粒子・バブルを button 直下ではなく画面に固定したオーバーレイで再生する。
 // renderDailyPromptCandidates が innerHTML 全消ししても粒子が消えない。
-function triggerReactionEffectOverlay(anchorBtn) {
+function triggerReactionEffectOverlay(anchorBtn, customMessages) {
   if (!anchorBtn) return;
   const rect = anchorBtn.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -3240,7 +3278,8 @@ function triggerReactionEffectOverlay(anchorBtn) {
     p.style.top = '0';
     overlay.appendChild(p);
   }
-  const messages = ['考えてくれてありがとう！', '素敵な一日になりますように✨', 'ほっこり届きました💖', '共感の輪が広がりました🌿', '温かい気持ちをありがとう🌸'];
+  const defaultMessages = ['考えてくれてありがとう！', '素敵な一日になりますように✨', 'ほっこり届きました💖', '共感の輪が広がりました🌿', '温かい気持ちをありがとう🌸'];
+  const messages = Array.isArray(customMessages) && customMessages.length ? customMessages : defaultMessages;
   const bubble = document.createElement('div');
   bubble.className = 'reaction-bubble';
   bubble.textContent = messages[Math.floor(Math.random() * messages.length)];
@@ -3249,9 +3288,11 @@ function triggerReactionEffectOverlay(anchorBtn) {
   setTimeout(() => overlay.remove(), 1800);
 }
 
-// 自分が提案したお題に新しい票が届いていたら、再訪時に一度だけお礼トーストで知らせる
+// 自分が提案したお題に新しい票が届いていたら、再訪時に一度だけお礼トーストで知らせる。
+// メッセージ文字列を返す（実際の表示は checkMyEngagementNotifications がまとめて行う）。
 function checkMyPromptVoteNotifications() {
-  if (!Array.isArray(localPromptSuggestions) || localPromptSuggestions.length === 0) return;
+  if (!Array.isArray(localPromptSuggestions) || localPromptSuggestions.length === 0) return null;
+  const isEn = currentLanguage === 'en';
   let totalNew = 0;
   let topPrompt = null;
   let topDelta = 0;
@@ -3284,9 +3325,133 @@ function checkMyPromptVoteNotifications() {
     } catch (e) {}
   }
   if (totalNew > 0 && topPrompt) {
-    const snippet = String(topPrompt.text || '').slice(0, 22) + (String(topPrompt.text || '').length > 22 ? '…' : '');
-    showToast(`あなたの「${snippet}」に新しく ${totalNew} 票届きました 🌸`);
+    const raw = String(topPrompt.text || '');
+    const snippet = raw.slice(0, 22) + (raw.length > 22 ? '…' : '');
+    return isEn
+      ? `Your topic "${snippet}" received ${totalNew} new ${totalNew === 1 ? 'vote' : 'votes'} 🌸`
+      : `あなたの「${snippet}」に新しく ${totalNew} 票届きました 🌸`;
   }
+  return null;
+}
+
+// 自分が投稿したおすすめスポットに新しく「行きたい」が届いていたら知らせる
+function checkMySpotLikeNotifications() {
+  if (!Array.isArray(localSuggestions) || localSuggestions.length === 0) return null;
+  const isEn = currentLanguage === 'en';
+  let totalNew = 0;
+  let topSpot = null;
+  let topDelta = 0;
+  let touched = false;
+
+  localSuggestions.forEach(s => {
+    const id = String(s.clientId || s.id || '');
+    if (!id) return;
+    const current = globalLikes[id] || 0;
+    if (current <= 0) return;
+    // 初回の基準値は、自分が自分のスポットに付けた「行きたい」分（あれば 1）。
+    const baseline = lastSeenSpotLikes[id] != null ? lastSeenSpotLikes[id] : (localLikes[id] ? 1 : 0);
+    if (current > baseline) {
+      const delta = current - baseline;
+      totalNew += delta;
+      if (delta > topDelta) {
+        topDelta = delta;
+        topSpot = s;
+      }
+    }
+    if (lastSeenSpotLikes[id] !== current) {
+      lastSeenSpotLikes[id] = current;
+      touched = true;
+    }
+  });
+
+  if (touched) {
+    try { localStorage.setItem(SPOT_LIKE_LAST_SEEN_KEY, JSON.stringify(lastSeenSpotLikes)); } catch (e) {}
+  }
+  if (totalNew > 0 && topSpot) {
+    const raw = String(topSpot.name || '');
+    const name = raw.slice(0, 20) + (raw.length > 20 ? '…' : '');
+    return isEn
+      ? `${totalNew} ${totalNew === 1 ? 'person wants' : 'people want'} to visit your spot "${name}" 🔖`
+      : `あなたのおすすめスポット「${name}」に新しく ${totalNew} 件の「行きたい」が届きました 🔖`;
+  }
+  return null;
+}
+
+// 自分が投稿した感想に新しく「見たよ」が届いていたら知らせる
+function checkMyReviewSeenNotifications() {
+  if (!Array.isArray(localPosts) || localPosts.length === 0) return null;
+  const isEn = currentLanguage === 'en';
+  let totalNew = 0;
+  let touched = false;
+
+  localPosts.forEach(p => {
+    const id = getReviewReactionId(p, 'listener');
+    if (!id) return;
+    const current = globalLikes[id] || 0;
+    if (current <= 0) return;
+    // 初回の基準値は、自分が自分の感想に付けた「見たよ」分（あれば 1）。
+    const baseline = lastSeenReviewSeen[id] != null ? lastSeenReviewSeen[id] : (localSeenReviews[id] ? 1 : 0);
+    if (current > baseline) totalNew += current - baseline;
+    if (lastSeenReviewSeen[id] !== current) {
+      lastSeenReviewSeen[id] = current;
+      touched = true;
+    }
+  });
+
+  if (touched) {
+    try { localStorage.setItem(REVIEW_SEEN_LAST_SEEN_KEY, JSON.stringify(lastSeenReviewSeen)); } catch (e) {}
+  }
+  if (totalNew > 0) {
+    return isEn
+      ? `${totalNew} ${totalNew === 1 ? 'person' : 'people'} saw your review 👀`
+      : `あなたの感想を新しく ${totalNew} 人が見てくれました 👀`;
+  }
+  return null;
+}
+
+// 自分が投稿したフリートークに新しいリアクションが届いていたら知らせる
+function checkMyChatReactionNotifications() {
+  if (!Array.isArray(localChats) || localChats.length === 0) return null;
+  const isEn = currentLanguage === 'en';
+  let totalNew = 0;
+  let touched = false;
+
+  localChats.forEach(c => {
+    ['thanks', 'curious'].forEach(type => {
+      const id = getChatReactionId(c, type);
+      if (!id) return;
+      const current = globalLikes[id] || 0;
+      if (current <= 0) return;
+      const baseline = lastSeenChatReactions[id] != null ? lastSeenChatReactions[id] : (localChatReactions[id] ? 1 : 0);
+      if (current > baseline) totalNew += current - baseline;
+      if (lastSeenChatReactions[id] !== current) {
+        lastSeenChatReactions[id] = current;
+        touched = true;
+      }
+    });
+  });
+
+  if (touched) {
+    try { localStorage.setItem(CHAT_REACTION_LAST_SEEN_KEY, JSON.stringify(lastSeenChatReactions)); } catch (e) {}
+  }
+  if (totalNew > 0) {
+    return isEn
+      ? `Your free-talk post received ${totalNew} new ${totalNew === 1 ? 'reaction' : 'reactions'} 💐`
+      : `あなたのフリートーク投稿に新しく ${totalNew} 件のリアクションが届きました 💐`;
+  }
+  return null;
+}
+
+// 自分の投稿（お題・スポット・感想・フリートーク）に届いた新しい反応を、
+// 再訪時にまとめてお礼トーストで知らせる。複数あっても重ならないよう順番に表示する。
+function checkMyEngagementNotifications() {
+  const messages = [
+    checkMyPromptVoteNotifications(),
+    checkMySpotLikeNotifications(),
+    checkMyReviewSeenNotifications(),
+    checkMyChatReactionNotifications(),
+  ].filter(Boolean);
+  messages.forEach((msg, i) => setTimeout(() => showToast(msg), i * 3100));
 }
 
 function triggerReactionEffect(btnElement) {
@@ -5023,6 +5188,9 @@ function renderSpotCards(cat = 'all') {
       const label = btn.querySelector('.spot-like-label');
       if (icon) icon.textContent = '✅';
       if (label) label.textContent = currentLanguage === 'en' ? 'Saved' : '行きたい済み';
+      // 押した人へのご褒美：「+1」とお礼の粒子演出（お題と同じ仕組み）
+      showFloatingPlusOne(btn);
+      triggerReactionEffectOverlay(btn, reactionMessagesFor('spotLike'));
       updateWantListButton();
     });
   });
@@ -7591,12 +7759,26 @@ function bindEvents() {
   document.addEventListener('click', (e) => {
     const seenBtn = e.target.closest('.review-seen-btn');
     if (!seenBtn) return;
-    saveSeenReview(seenBtn.dataset.reviewSeenId);
+    const reviewId = seenBtn.dataset.reviewSeenId;
+    const wasSeen = Boolean(localSeenReviews[reviewId]);
+    saveSeenReview(reviewId);
+    // 初めて「見たよ」を押した時だけ、押した人へのお礼の粒子演出を出す
+    if (!wasSeen) {
+      showFloatingPlusOne(seenBtn);
+      triggerReactionEffectOverlay(seenBtn, reactionMessagesFor('reviewSeen'));
+    }
   });
   document.addEventListener('click', (e) => {
     const reactionBtn = e.target.closest('.chat-reaction-btn');
     if (!reactionBtn) return;
-    saveChatReaction(reactionBtn.dataset.chatReactionId);
+    const reactionId = reactionBtn.dataset.chatReactionId;
+    const wasReacted = Boolean(localChatReactions[reactionId]);
+    saveChatReaction(reactionId);
+    // 初めてリアクションした時だけ、押した人へのお礼の粒子演出を出す
+    if (!wasReacted) {
+      showFloatingPlusOne(reactionBtn);
+      triggerReactionEffectOverlay(reactionBtn, reactionMessagesFor('chatReaction'));
+    }
   });
 
   document.getElementById('modalClose').addEventListener('click', closeModal);
