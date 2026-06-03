@@ -8678,6 +8678,7 @@ function applyWeatherAlertResult(data, isEn) {
     applyCityWarningBadges(new Map());
     return;
   }
+  const title = isEn ? 'Weather Alerts' : '気象警報・注意報';
   const map = new Map();
   let overall = 'advisory', oRank = 0;
   const chips = [];
