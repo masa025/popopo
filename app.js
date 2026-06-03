@@ -838,7 +838,7 @@ document.addEventListener('languageChanged', (e) => {
   // Clear weather cache and re-render weather immediately
   for (let i = sessionStorage.length - 1; i >= 0; i--) {
     const key = sessionStorage.key(i);
-    if (key && key.startsWith('popopo_weather_cache_')) {
+    if (key && (key.startsWith('popopo_weather_cache_') || key.startsWith('popopo_weather_alert_'))) {
       sessionStorage.removeItem(key);
     }
   }
@@ -8224,6 +8224,68 @@ function updateWeatherBackdrop(type) {
   }
 }
 
+// 気象庁の警報・注意報コード → 表示ラベル（日英）と重大度
+// 重大度: emergency（特別警報） > warning（警報） > advisory（注意報）
+const JMA_WARNING_CODES = {
+  // 特別警報
+  '32': { ja: '暴風雪特別警報', en: 'Snowstorm Emergency', level: 'emergency' },
+  '33': { ja: '大雨特別警報', en: 'Heavy Rain Emergency', level: 'emergency' },
+  '35': { ja: '暴風特別警報', en: 'Storm Emergency', level: 'emergency' },
+  '36': { ja: '大雪特別警報', en: 'Heavy Snow Emergency', level: 'emergency' },
+  '37': { ja: '波浪特別警報', en: 'High Waves Emergency', level: 'emergency' },
+  '38': { ja: '高潮特別警報', en: 'Storm Surge Emergency', level: 'emergency' },
+  // 警報
+  '02': { ja: '暴風雪警報', en: 'Snowstorm Warning', level: 'warning' },
+  '03': { ja: '大雨警報', en: 'Heavy Rain Warning', level: 'warning' },
+  '04': { ja: '洪水警報', en: 'Flood Warning', level: 'warning' },
+  '05': { ja: '暴風警報', en: 'Storm Warning', level: 'warning' },
+  '06': { ja: '大雪警報', en: 'Heavy Snow Warning', level: 'warning' },
+  '07': { ja: '波浪警報', en: 'High Waves Warning', level: 'warning' },
+  '08': { ja: '高潮警報', en: 'Storm Surge Warning', level: 'warning' },
+  // 注意報
+  '10': { ja: '大雨注意報', en: 'Heavy Rain Advisory', level: 'advisory' },
+  '12': { ja: '大雪注意報', en: 'Heavy Snow Advisory', level: 'advisory' },
+  '13': { ja: '風雪注意報', en: 'Snowstorm Advisory', level: 'advisory' },
+  '14': { ja: '雷注意報', en: 'Thunderstorm Advisory', level: 'advisory' },
+  '15': { ja: '強風注意報', en: 'Strong Wind Advisory', level: 'advisory' },
+  '16': { ja: '波浪注意報', en: 'High Waves Advisory', level: 'advisory' },
+  '17': { ja: '融雪注意報', en: 'Snowmelt Advisory', level: 'advisory' },
+  '18': { ja: '洪水注意報', en: 'Flood Advisory', level: 'advisory' },
+  '19': { ja: '高潮注意報', en: 'Storm Surge Advisory', level: 'advisory' },
+  '20': { ja: '濃霧注意報', en: 'Dense Fog Advisory', level: 'advisory' },
+  '21': { ja: '乾燥注意報', en: 'Dry Air Advisory', level: 'advisory' },
+  '22': { ja: 'なだれ注意報', en: 'Avalanche Advisory', level: 'advisory' },
+  '23': { ja: '低温注意報', en: 'Low Temperature Advisory', level: 'advisory' },
+  '24': { ja: '霜注意報', en: 'Frost Advisory', level: 'advisory' },
+  '25': { ja: '着氷注意報', en: 'Icing Advisory', level: 'advisory' },
+  '26': { ja: '着雪注意報', en: 'Snow Accretion Advisory', level: 'advisory' },
+  '27': { ja: 'その他の注意報', en: 'Other Advisory', level: 'advisory' },
+};
+const WARNING_LEVEL_RANK = { emergency: 3, warning: 2, advisory: 1 };
+
+// 1都市分の警報・注意報を取得。areaTypes[0].areas[0] が県庁所在地など主要地域。
+async function fetchCityWarnings(city) {
+  const res = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${city.id}.json`);
+  if (!res.ok) throw new Error('Warning network error');
+  const data = await res.json();
+  const primary = data && data.areaTypes && data.areaTypes[0] && data.areaTypes[0].areas && data.areaTypes[0].areas[0];
+  const raw = (primary && Array.isArray(primary.warnings)) ? primary.warnings : [];
+  const seen = new Set();
+  const warnings = [];
+  raw.forEach(w => {
+    if (w.status !== '発表') return;          // 発表中のみ（「解除」「なし」は除外）
+    const info = w.code && JMA_WARNING_CODES[w.code];
+    if (!info || seen.has(info.ja)) return;
+    seen.add(info.ja);
+    warnings.push(info);
+  });
+  let topLevel = null, topRank = 0;
+  warnings.forEach(w => {
+    if (WARNING_LEVEL_RANK[w.level] > topRank) { topRank = WARNING_LEVEL_RANK[w.level]; topLevel = w.level; }
+  });
+  return { cityId: city.id, cityName: city.name, warnings, topLevel };
+}
+
 async function fetchCityWeather(city) {
   const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${city.id}.json`);
   if (!res.ok) throw new Error('Network error');
@@ -8320,7 +8382,7 @@ async function fetchCityWeather(city) {
   const cityName = isEn ? (ADDRESS_TRANSLATION_MAP[city.name] || city.name) : city.name;
 
   return `
-    <div class="weather-item">
+    <div class="weather-item" data-city-id="${city.id}">
       <span class="w-name">📍${cityName}</span>
       <span class="w-icon">${icon}</span>
       ${maxTemp ? `<span class="w-temp">${maxTemp}℃</span>` : ''}
@@ -8382,6 +8444,81 @@ function startWeatherMarquee() {
   _weatherRaf = requestAnimationFrame(tick);
 }
 
+// マーキー内の該当都市に ⚠️ バッジを付ける（map: cityId -> level）
+function applyCityWarningBadges(map) {
+  const isEn = currentLanguage === 'en';
+  document.querySelectorAll('.weather-item[data-city-id]').forEach(item => {
+    const prev = item.querySelector('.w-alert-badge');
+    if (prev) prev.remove();
+    const level = map.get(item.dataset.cityId);
+    if (!level) return;
+    const badge = document.createElement('span');
+    badge.className = `w-alert-badge w-alert-badge--${level}`;
+    badge.textContent = '⚠️';
+    badge.title = isEn ? 'Weather alert issued' : '警報・注意報が発表中';
+    item.appendChild(badge);
+  });
+}
+
+// 取得結果からアラート帯を描画し、都市バッジも更新する
+function applyWeatherAlertResult(data, isEn) {
+  const bar = document.getElementById('weatherAlertBar');
+  if (!bar) return;
+  if (!data || data.length === 0) {
+    bar.hidden = true;
+    bar.innerHTML = '';
+    applyCityWarningBadges(new Map());
+    return;
+  }
+  const map = new Map();
+  let overall = 'advisory', oRank = 0;
+  data.forEach(r => {
+    map.set(r.cityId, r.topLevel);
+    if (WARNING_LEVEL_RANK[r.topLevel] > oRank) { oRank = WARNING_LEVEL_RANK[r.topLevel]; overall = r.topLevel; }
+  });
+  const title = isEn ? 'Weather Alerts' : '気象警報・注意報';
+  const cityChips = data.map(r => {
+    const labels = r.warnings.map(w => isEn ? w.en : w.ja).join(isEn ? ', ' : '・');
+    const cityName = isEn ? (ADDRESS_TRANSLATION_MAP[r.cityName] || r.cityName) : r.cityName;
+    return `<span class="weather-alert-city weather-alert-city--${r.topLevel}">📍${escHtml(cityName)} <span class="weather-alert-types">${escHtml(labels)}</span></span>`;
+  }).join('');
+  bar.className = `weather-alert-bar weather-alert-bar--${overall}`;
+  bar.hidden = false;
+  bar.innerHTML =
+    `<span class="weather-alert-icon" aria-hidden="true">⚠️</span>` +
+    `<span class="weather-alert-title">${title}</span>` +
+    `<span class="weather-alert-cities">${cityChips}</span>` +
+    `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/warning/" target="_blank" rel="noopener">${isEn ? 'Details' : '詳細'}</a>`;
+  applyCityWarningBadges(map);
+}
+
+// 選択都市の警報・注意報をまとめて取得して表示（30分キャッシュ）
+async function renderWeatherAlerts() {
+  const bar = document.getElementById('weatherAlertBar');
+  if (!bar) return;
+  const isEn = currentLanguage === 'en';
+  const cities = getSelectedWeatherCities();
+  const cacheKey = `popopo_weather_alert_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
+  try {
+    const raw = sessionStorage.getItem(cacheKey);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && (Date.now() - obj.ts) < 30 * 60 * 1000) {
+        applyWeatherAlertResult(obj.data, isEn);
+        return;
+      }
+    }
+  } catch (e) {}
+  try {
+    const results = await Promise.all(cities.map(c => fetchCityWarnings(c).catch(() => null)));
+    const data = results.filter(r => r && r.warnings.length > 0);
+    try { sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
+    applyWeatherAlertResult(data, isEn);
+  } catch (e) {
+    console.warn('Weather alerts fetch failed:', e);
+  }
+}
+
 async function renderWeather() {
   const container = document.getElementById('weatherItems');
   if (!container) return;
@@ -8402,6 +8539,7 @@ async function renderWeather() {
     }
     // 少し待ってからアニメ開始（DOM描画完了を待つ）
     setTimeout(startWeatherMarquee, 100);
+    renderWeatherAlerts();
     return;
   }
 
@@ -8414,6 +8552,7 @@ async function renderWeather() {
     sessionStorage.setItem(cacheKey, html);
     // DOM描画後にアニメ開始
     setTimeout(startWeatherMarquee, 100);
+    renderWeatherAlerts();
   } catch (error) {
     console.error('Weather fetch failed:', error);
     container.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem;">${isEn ? 'Temporarily unavailable' : '一時的に取得できません'}</span>`;
@@ -8512,7 +8651,7 @@ function initWeatherCityPicker() {
     // キャッシュをクリア
     for (let i = sessionStorage.length - 1; i >= 0; i--) {
       const key = sessionStorage.key(i);
-      if (key && key.startsWith('popopo_weather_cache_')) {
+      if (key && (key.startsWith('popopo_weather_cache_') || key.startsWith('popopo_weather_alert_'))) {
         sessionStorage.removeItem(key);
       }
     }
