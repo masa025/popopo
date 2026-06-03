@@ -8768,6 +8768,7 @@ function applyWeatherAlertResult(data, isEn) {
   }
 
   applyCityWarningBadges(map);
+  setTimeout(adjustHeroPadding, 50);
 }
 
 function showWeatherDataUnavailableNotice(isEn) {
@@ -8786,6 +8787,7 @@ function showWeatherDataUnavailableNotice(isEn) {
     `<span class="weather-alert-note">${isEn ? 'Weather data from the Japan Meteorological Agency may be temporarily unavailable or delayed. Please check the JMA website for the latest official information.' : '気象庁データの取得が一時的に不安定、または遅れている可能性があります。最新の公式情報は気象庁ホームページをご確認ください。'}</span>` +
     `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener">${isEn ? 'JMA website' : '気象庁を見る'}</a>`;
   applyCityWarningBadges(new Map());
+  setTimeout(adjustHeroPadding, 50);
 }
 
 // 選択都市の警報・注意報をまとめて取得して表示（30分キャッシュ）
@@ -9741,16 +9743,22 @@ async function fetchAndRenderSpotWeather() {
 
 // ヒーローの上部余白をナビゲーションバーの実際の高さに合わせて動的に調整する
 function adjustHeroPadding() {
+  const strip = document.getElementById('navbarAlertStrip');
   const navInner = document.querySelector('.nav-inner');
   const navDiscovery = document.getElementById('weeklyDiscoveryCard');
   const hero = document.getElementById('hero');
   if (hero) {
     let totalHeight = 0;
+    if (strip && !strip.hidden && window.getComputedStyle(strip).display !== 'none') {
+      totalHeight += strip.offsetHeight;
+    }
     if (navInner) totalHeight += navInner.offsetHeight;
     if (navDiscovery && window.getComputedStyle(navDiscovery).display !== 'none') {
       totalHeight += navDiscovery.offsetHeight;
     }
-    const finalPadding = Math.max(80, totalHeight + 16);
+    const hasAlert = document.body.classList.contains('has-navbar-alert');
+    const safetyMargin = hasAlert ? 22 : 16;
+    const finalPadding = Math.max(80, totalHeight + safetyMargin);
     hero.style.paddingTop = `${finalPadding}px`;
   }
 }
