@@ -1478,6 +1478,10 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   background: #7c3aed; /* 特別警報（紫） */
   color: #ffffff;
 }
+.navbar-alert-strip--advisory {
+  background: #facc15; /* 明るい黄色 */
+  color: #422006; /* 濃い茶色 */
+}
 .navbar-alert-strip--notice {
   background: #2563eb; /* お知らせ（青） */
   color: #ffffff;
@@ -1506,7 +1510,7 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 }
 /* ナビゲーションバーに警報が表示されている場合、ヒーローセクションのpadding-topを増やして#chatTickerの隠れを防ぐ */
 .has-navbar-alert #hero {
-  padding-top: calc(104px + 36px);
+  padding-top: calc(104px + 52px);
 }
 @media (max-width: 768px) {
   .has-navbar-alert #hero {
@@ -4852,6 +4856,7 @@ body.weather-snowy {
 [data-theme="dark"] .navbar-alert-strip--warning { background: #991b1b; }
 [data-theme="dark"] .navbar-alert-strip--danger { background: #7f1d1d; }
 [data-theme="dark"] .navbar-alert-strip--emergency { background: #5b21b6; }
+[data-theme="dark"] .navbar-alert-strip--advisory { background: #a16207; color: #fef9c3; }
 [data-theme="dark"] .navbar-alert-strip--notice { background: #1e3a8a; }
 
 /* --- スマホ Bottom Nav --- */
