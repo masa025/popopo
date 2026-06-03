@@ -8355,41 +8355,132 @@ function extractJmaDangerWarnings(data, targetAreaCode) {
   return result;
 }
 
-// 1都市分の警報・注意報を取得。
-// 県内の一次細分区域（areaTypes[0].areas）すべてを走査する。先頭区域だけだと、
-// 別の細分区域（例：埼玉の北部・秩父地方）に出た大雨・土砂災害を取りこぼすため。
+// 一次細分区域コード → 区域名（日英）。気象庁 area.json の class10s から取得し長期キャッシュ。
+let _jmaAreaNames = null;
+async function ensureJmaAreaNames() {
+  if (_jmaAreaNames) return _jmaAreaNames;
+  try {
+    const raw = localStorage.getItem('popopo_jma_area_names_v1');
+    if (raw) { _jmaAreaNames = JSON.parse(raw); return _jmaAreaNames; }
+  } catch (e) {}
+  try {
+    const res = await fetch('https://www.jma.go.jp/bosai/common/const/area.json');
+    if (res.ok) {
+      const aj = await res.json();
+      const c10 = aj.class10s || {};
+      const map = {};
+      Object.keys(c10).forEach(code => {
+        map[code] = { ja: c10[code].name || '', en: c10[code].enName || c10[code].name || '' };
+      });
+      _jmaAreaNames = map;
+      try { localStorage.setItem('popopo_jma_area_names_v1', JSON.stringify(map)); } catch (e) {}
+      return _jmaAreaNames;
+    }
+  } catch (e) { console.warn('area.json load failed:', e); }
+  _jmaAreaNames = {};
+  return _jmaAreaNames;
+}
+
+// 土砂・洪水・浸水の危険度を「区域コードを保ったまま」抽出する。
+// allowedCodes（一次細分区域コードの集合）に含まれる区域だけを対象にし、細分の重複を避ける。
+function extractJmaDangerWarningsByArea(data, allowedCodes) {
+  const out = [];
+  const seen = new Set();
+  (Array.isArray(data && data.timeSeries) ? data.timeSeries : []).forEach(ts => {
+    const timeIndex = getJmaCurrentTimeIndex(ts.timeDefines);
+    (ts.areaTypes || []).forEach(areaType => {
+      (areaType.areas || []).forEach(area => {
+        if (allowedCodes && !allowedCodes.has(area.code)) return;
+        (area.warnings || []).forEach(warning => {
+          (warning.levels || []).forEach(levelInfo => {
+            const dangerType = getJmaDangerType(levelInfo.type);
+            if (!dangerType) return;
+            const localAreas = Array.isArray(levelInfo.localAreas) && levelInfo.localAreas.length > 0
+              ? levelInfo.localAreas
+              : [{ values: levelInfo.values || [] }];
+            localAreas.forEach(localArea => {
+              const level = getJmaDangerLevel(localArea.values, timeIndex);
+              if (!level) return;
+              const key = `${area.code}_${dangerType.ja}_${level}`;
+              if (seen.has(key)) return;
+              seen.add(key);
+              out.push({ areaCode: area.code, info: { ja: dangerType.ja, en: dangerType.en, level, source: 'danger' } });
+            });
+          });
+        });
+      });
+    });
+  });
+  return out;
+}
+
+// 1都市分の警報・注意報を、一次細分区域ごとに分けて取得する。
+// 発表中の区域だけを返す（「東京都 小笠原諸島」のように区域単位で表示するため）。
 async function fetchCityWarnings(city) {
   const res = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${city.id}.json`);
   if (!res.ok) throw new Error('Warning network error');
   const data = await res.json();
-  const areas = (data && data.areaTypes && data.areaTypes[0] && Array.isArray(data.areaTypes[0].areas))
+  const baseAreas = (data && data.areaTypes && data.areaTypes[0] && Array.isArray(data.areaTypes[0].areas))
     ? data.areaTypes[0].areas : [];
-  const seen = new Set();
-  const warnings = [];
-  // ① 全細分区域の警報・注意報コードを集約（種別で重複排除）
-  areas.forEach(area => {
+  const class10Codes = new Set(baseAreas.map(a => a.code));
+  const perArea = new Map(); // areaCode -> { warnings:[], seen:Set }
+  const ensureBucket = (code) => {
+    if (!perArea.has(code)) perArea.set(code, { warnings: [], seen: new Set() });
+    return perArea.get(code);
+  };
+  // ① 各区域の警報・注意報コード
+  baseAreas.forEach(area => {
     (Array.isArray(area.warnings) ? area.warnings : []).forEach(w => {
-      if (!JMA_ACTIVE_WARNING_STATUSES.has(w.status)) return;        // 発表・継続中のみ（「解除」「なし」は除外）
-      const info = w.code && JMA_WARNING_CODES[w.code];
-      if (!info || seen.has(info.ja)) return;
-      seen.add(info.ja);
-      warnings.push(info);
+      if (!JMA_ACTIVE_WARNING_STATUSES.has(w.status)) return;        // 発表・継続中のみ
+      if (!w.code || w.code === '00') return;                        // コード無し／解除相当は無視
+      // 対応表に無いコード（2026/5/29の新体系で追加された危険警報など）も
+      // 黙って捨てず、汎用ラベルで必ず表示する（取りこぼし防止）。
+      const known = JMA_WARNING_CODES[w.code];
+      if (!known) console.warn('[weather-alert] 未対応の警報コードを検出:', w.code, '区域', area.code);
+      const info = known || {
+        ja: `警報・注意報（コード${w.code}）`,
+        en: `Alert (code ${w.code})`,
+        level: 'warning'   // 重大度不明のため警報相当（赤）で目立たせる
+      };
+      const bucket = ensureBucket(area.code);
+      if (bucket.seen.has(info.ja)) return;
+      bucket.seen.add(info.ja);
+      bucket.warnings.push({ ja: info.ja, en: info.en, level: info.level });
     });
   });
-  // ② 土砂災害・洪水・浸水の危険度を時系列から（全区域を走査）。同種別は最大レベルを採用。
-  extractJmaDangerWarnings(data, null).forEach(info => {
-    const idx = warnings.findIndex(w => w.ja === info.ja);
+  // ② 区域ごとの土砂・洪水・浸水の危険度（同種別は最大レベルを採用）
+  extractJmaDangerWarningsByArea(data, class10Codes).forEach(({ areaCode, info }) => {
+    const bucket = ensureBucket(areaCode);
+    const idx = bucket.warnings.findIndex(w => w.ja === info.ja);
     if (idx === -1) {
-      warnings.push(info);
-    } else if (WARNING_LEVEL_RANK[info.level] > WARNING_LEVEL_RANK[warnings[idx].level]) {
-      warnings[idx] = info;
+      bucket.seen.add(info.ja);
+      bucket.warnings.push(info);
+    } else if (WARNING_LEVEL_RANK[info.level] > WARNING_LEVEL_RANK[bucket.warnings[idx].level]) {
+      bucket.warnings[idx] = info;
     }
   });
-  let topLevel = null, topRank = 0;
-  warnings.forEach(w => {
-    if (WARNING_LEVEL_RANK[w.level] > topRank) { topRank = WARNING_LEVEL_RANK[w.level]; topLevel = w.level; }
+  // ③ 区域名を付けて、発表中の区域だけを JMA の並び順で配列化
+  const names = await ensureJmaAreaNames();
+  const areasOut = [];
+  let cityTop = null, cityRank = 0;
+  baseAreas.forEach(area => {
+    const bucket = perArea.get(area.code);
+    if (!bucket || bucket.warnings.length === 0) return;
+    let topLevel = null, topRank = 0;
+    bucket.warnings.forEach(w => {
+      if (WARNING_LEVEL_RANK[w.level] > topRank) { topRank = WARNING_LEVEL_RANK[w.level]; topLevel = w.level; }
+    });
+    const nm = names[area.code] || {};
+    areasOut.push({
+      areaCode: area.code,
+      areaName: nm.ja || '',
+      areaNameEn: nm.en || nm.ja || '',
+      warnings: bucket.warnings,
+      topLevel
+    });
+    if (topRank > cityRank) { cityRank = topRank; cityTop = topLevel; }
   });
-  return { cityId: city.id, cityName: city.name, warnings, topLevel };
+  return { cityId: city.id, cityName: city.name, areas: areasOut, topLevel: cityTop };
 }
 
 async function fetchCityWeather(city) {
@@ -8589,16 +8680,20 @@ function applyWeatherAlertResult(data, isEn) {
   }
   const map = new Map();
   let overall = 'advisory', oRank = 0;
+  const chips = [];
   data.forEach(r => {
+    if (!Array.isArray(r.areas) || r.areas.length === 0) return;
     map.set(r.cityId, r.topLevel);
     if (WARNING_LEVEL_RANK[r.topLevel] > oRank) { oRank = WARNING_LEVEL_RANK[r.topLevel]; overall = r.topLevel; }
+    const prefName = isEn ? (ADDRESS_TRANSLATION_MAP[r.cityName] || r.cityName) : r.cityName;
+    r.areas.forEach(area => {
+      const labels = area.warnings.map(w => renderWeatherAlertType(w, isEn)).join('');
+      const areaName = isEn ? (area.areaNameEn || area.areaName) : area.areaName;
+      const place = areaName ? `${escHtml(prefName)} ${escHtml(areaName)}` : escHtml(prefName);
+      chips.push(`<span class="weather-alert-city weather-alert-city--${area.topLevel}"><span class="weather-alert-city-name">📍${place}</span><span class="weather-alert-types">${labels}</span></span>`);
+    });
   });
-  const title = isEn ? 'Weather Alerts' : '気象警報・注意報';
-  const cityChips = data.map(r => {
-    const labels = r.warnings.map(w => renderWeatherAlertType(w, isEn)).join('');
-    const cityName = isEn ? (ADDRESS_TRANSLATION_MAP[r.cityName] || r.cityName) : r.cityName;
-    return `<span class="weather-alert-city weather-alert-city--${r.topLevel}"><span class="weather-alert-city-name">📍${escHtml(cityName)}</span><span class="weather-alert-types">${labels}</span></span>`;
-  }).join('');
+  const cityChips = chips.join('');
   bar.className = `weather-alert-bar weather-alert-bar--${overall}`;
   bar.hidden = false;
   bar.innerHTML =
@@ -8616,7 +8711,7 @@ async function renderWeatherAlerts() {
   if (!bar) return;
   const isEn = currentLanguage === 'en';
   const cities = getSelectedWeatherCities();
-  const cacheKey = `popopo_weather_alert_v3_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
+  const cacheKey = `popopo_weather_alert_v5_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
   try {
     const raw = sessionStorage.getItem(cacheKey);
     if (raw) {
@@ -8629,7 +8724,7 @@ async function renderWeatherAlerts() {
   } catch (e) {}
   try {
     const results = await Promise.all(cities.map(c => fetchCityWarnings(c).catch(() => null)));
-    const data = results.filter(r => r && r.warnings.length > 0);
+    const data = results.filter(r => r && Array.isArray(r.areas) && r.areas.length > 0);
     try { sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
     applyWeatherAlertResult(data, isEn);
   } catch (e) {
