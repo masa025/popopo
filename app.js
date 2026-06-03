@@ -8724,13 +8724,22 @@ function applyWeatherAlertResult(data, isEn) {
       // 注意報・警報を収集
       area.warnings.forEach(w => {
         const wLabel = isEn ? w.en : w.ja;
-        activeAlerts.push(`${place}: ${wLabel}`);
+        activeAlerts.push({
+          text: `${place}: ${wLabel}`,
+          level: w.level,
+          rank: WARNING_LEVEL_RANK[w.level] || 0
+        });
         if (w.level === 'warning' || w.level === 'danger' || w.level === 'emergency') {
           activeHighLevelAlerts.push(`${place}: ${wLabel}`);
         }
       });
     });
   });
+
+  // 重大度（警告レベルのランク）が高い順にソートする
+  activeAlerts.sort((a, b) => b.rank - a.rank);
+  const activeAlertTexts = activeAlerts.map(a => a.text);
+
   const cityChips = chips.join('');
   bar.className = `weather-alert-bar weather-alert-bar--${overall}`;
   bar.hidden = false;
@@ -8743,7 +8752,7 @@ function applyWeatherAlertResult(data, isEn) {
 
   // ヘッダー緊急バナーの制御 (注意報・警報の両方を表示)
   if (strip && stripText) {
-    if (activeAlerts.length > 0) {
+    if (activeAlertTexts.length > 0) {
       strip.className = `navbar-alert-strip navbar-alert-strip--${overall}`;
       strip.hidden = false;
       document.body.classList.add('has-navbar-alert');
@@ -8751,13 +8760,13 @@ function applyWeatherAlertResult(data, isEn) {
       let alertSummary = '';
       if (isEn) {
         const isWarning = activeHighLevelAlerts.length > 0;
-        alertSummary = `${isWarning ? 'Weather Warning' : 'Weather Advisory'}: ${activeAlerts.slice(0, 2).join(', ')}`;
-        if (activeAlerts.length > 2) alertSummary += ' etc.';
+        alertSummary = `${isWarning ? 'Weather Warning' : 'Weather Advisory'}: ${activeAlertTexts.slice(0, 2).join(', ')}`;
+        if (activeAlertTexts.length > 2) alertSummary += ' etc.';
       } else {
         const alertTypeName = (activeHighLevelAlerts.length > 0) ? '気象警報' : '気象注意報';
-        alertSummary = `【${alertTypeName}】${activeAlerts.slice(0, 2).join('、')} などが発表されています。`;
-        if (activeAlerts.length <= 2) {
-          alertSummary = `【${alertTypeName}】${activeAlerts.join('、')} が発表されています。`;
+        alertSummary = `【${alertTypeName}】${activeAlertTexts.slice(0, 2).join('、')} などが発表されています。`;
+        if (activeAlertTexts.length <= 2) {
+          alertSummary = `【${alertTypeName}】${activeAlertTexts.join('、')} が発表されています。`;
         }
       }
       stripText.textContent = alertSummary;
