@@ -8706,6 +8706,19 @@ function applyWeatherAlertResult(data, isEn) {
   applyCityWarningBadges(map);
 }
 
+function showWeatherDataUnavailableNotice(isEn) {
+  const bar = document.getElementById('weatherAlertBar');
+  if (!bar) return;
+  bar.className = 'weather-alert-bar weather-alert-bar--notice';
+  bar.hidden = false;
+  bar.innerHTML =
+    `<span class="weather-alert-icon" aria-hidden="true">ℹ️</span>` +
+    `<span class="weather-alert-title">${isEn ? 'Weather Data Notice' : '気象データについて'}</span>` +
+    `<span class="weather-alert-note">${isEn ? 'Weather data from the Japan Meteorological Agency may be temporarily unavailable or delayed. Please check the JMA website for the latest official information.' : '気象庁データの取得が一時的に不安定、または遅れている可能性があります。最新の公式情報は気象庁ホームページをご確認ください。'}</span>` +
+    `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener">${isEn ? 'JMA website' : '気象庁を見る'}</a>`;
+  applyCityWarningBadges(new Map());
+}
+
 // 選択都市の警報・注意報をまとめて取得して表示（30分キャッシュ）
 async function renderWeatherAlerts() {
   const bar = document.getElementById('weatherAlertBar');
@@ -8730,6 +8743,7 @@ async function renderWeatherAlerts() {
     applyWeatherAlertResult(data, isEn);
   } catch (e) {
     console.warn('Weather alerts fetch failed:', e);
+    showWeatherDataUnavailableNotice(isEn);
   }
 }
 
@@ -8769,7 +8783,8 @@ async function renderWeather() {
     renderWeatherAlerts();
   } catch (error) {
     console.error('Weather fetch failed:', error);
-    container.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem;">${isEn ? 'Temporarily unavailable' : '一時的に取得できません'}</span>`;
+    container.innerHTML = `<span class="weather-unavailable">${isEn ? 'Weather data may be temporarily unavailable. Please check JMA.' : '気象データの取得が一時的に不安定です。気象庁をご確認ください。'}</span>`;
+    showWeatherDataUnavailableNotice(isEn);
   }
 }
 
