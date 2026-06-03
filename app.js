@@ -8689,10 +8689,14 @@ function renderWeatherAlertType(info, isEn) {
 // 取得結果からアラート帯を描画し、都市バッジも更新する
 function applyWeatherAlertResult(data, isEn) {
   const bar = document.getElementById('weatherAlertBar');
+  const strip = document.getElementById('navbarAlertStrip');
+  const stripText = document.getElementById('navbarAlertText');
+  
   if (!bar) return;
   if (!data || data.length === 0) {
     bar.hidden = true;
     bar.innerHTML = '';
+    if (strip) strip.hidden = true;
     applyCityWarningBadges(new Map());
     return;
   }
@@ -8700,6 +8704,8 @@ function applyWeatherAlertResult(data, isEn) {
   const map = new Map();
   let overall = 'advisory', oRank = 0;
   const chips = [];
+  const activeHighLevelAlerts = []; // 警報以上の名前を収集 (warning, danger, emergency)
+
   data.forEach(r => {
     if (!Array.isArray(r.areas) || r.areas.length === 0) return;
     map.set(r.cityId, r.topLevel);
@@ -8710,6 +8716,14 @@ function applyWeatherAlertResult(data, isEn) {
       const areaName = isEn ? (area.areaNameEn || area.areaName) : area.areaName;
       const place = areaName ? `${escHtml(prefName)} ${escHtml(areaName)}` : escHtml(prefName);
       chips.push(`<span class="weather-alert-city weather-alert-city--${area.topLevel}"><span class="weather-alert-city-name">📍${place}</span><span class="weather-alert-types">${labels}</span></span>`);
+      
+      // Warning以上の警報があれば、その名前を収集
+      area.warnings.forEach(w => {
+        if (w.level === 'warning' || w.level === 'danger' || w.level === 'emergency') {
+          const wLabel = isEn ? (JMA_WARNING_CODES[w.code]?.en || w.name) : (JMA_WARNING_CODES[w.code]?.ja || w.name);
+          activeHighLevelAlerts.push(`${place}: ${wLabel}`);
+        }
+      });
     });
   });
   const cityChips = chips.join('');
@@ -8721,11 +8735,36 @@ function applyWeatherAlertResult(data, isEn) {
     `<span class="weather-alert-cities">${cityChips}</span>` +
     `<span class="weather-alert-note">${isEn ? 'Please check the Japan Meteorological Agency website for the latest details.' : '最新情報は気象庁ホームページをご確認ください。'}</span>` +
     `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/warning/" target="_blank" rel="noopener">${isEn ? 'Details' : '詳細'}</a>`;
+
+  // ヘッダー緊急バナーの制御 (Warning, Danger, Emergencyのみ表示)
+  if (strip && stripText) {
+    if (activeHighLevelAlerts.length > 0) {
+      strip.className = `navbar-alert-strip navbar-alert-strip--${overall}`;
+      strip.hidden = false;
+      
+      let alertSummary = '';
+      if (isEn) {
+        alertSummary = `Weather Warning: ${activeHighLevelAlerts.slice(0, 2).join(', ')}`;
+        if (activeHighLevelAlerts.length > 2) alertSummary += ' etc.';
+      } else {
+        alertSummary = `【気象警報】${activeHighLevelAlerts.slice(0, 2).join('、')} などが発表されています。`;
+        if (activeHighLevelAlerts.length <= 2) {
+          alertSummary = `【気象警報】${activeHighLevelAlerts.join('、')} が発表されています。`;
+        }
+      }
+      stripText.textContent = alertSummary;
+    } else {
+      strip.hidden = true;
+    }
+  }
+
   applyCityWarningBadges(map);
 }
 
 function showWeatherDataUnavailableNotice(isEn) {
   const bar = document.getElementById('weatherAlertBar');
+  const strip = document.getElementById('navbarAlertStrip');
+  if (strip) strip.hidden = true; // エラー時は上部緊急バナーは出さない
   if (!bar) return;
   bar.className = 'weather-alert-bar weather-alert-bar--notice';
   bar.hidden = false;

@@ -1445,6 +1445,65 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 .weather-alert-bar--emergency { background: rgba(146,64,190,0.14); border-color: rgba(124,46,170,0.6); color: #6b2596; }
 .weather-alert-bar--notice { background: rgba(91,141,238,0.12); border-color: rgba(91,141,238,0.38); color: #31558f; }
 .w-alert-badge { margin-left: 5px; font-size: 0.82em; }
+
+/* 緊急警報グローバルバナー (Warning以上のみ最上部に表示) */
+.navbar-alert-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  animation: alertSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  z-index: 1001;
+}
+.navbar-alert-strip[hidden] {
+  display: none !important;
+}
+.navbar-alert-strip--warning {
+  background: #dc2626; /* 鮮やかな赤 */
+  color: #ffffff;
+}
+.navbar-alert-strip--danger {
+  background: #991b1b; /* 濃い赤 */
+  color: #ffffff;
+}
+.navbar-alert-strip--emergency {
+  background: #7c3aed; /* 特別警報（紫） */
+  color: #ffffff;
+}
+.navbar-alert-strip--notice {
+  background: #2563eb; /* お知らせ（青） */
+  color: #ffffff;
+}
+.alert-strip-icon {
+  font-size: 0.9rem;
+}
+.alert-strip-text {
+  flex-grow: 0;
+}
+.alert-strip-link {
+  color: #ffffff;
+  text-decoration: underline;
+  margin-left: 8px;
+  font-size: 0.72rem;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+.alert-strip-link:hover {
+  opacity: 1;
+  text-decoration: none;
+}
+@keyframes alertSlideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 @media (max-width: 768px) {
   .weather-alert-bar { font-size: 0.76rem; padding: 8px 12px; }
   .weather-level-chip { font-size: 0.64rem; }
@@ -4776,6 +4835,10 @@ body.weather-snowy {
 [data-theme="dark"] .weather-level-chip { background: rgba(255,255,255,0.2); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); color: inherit; }
 [data-theme="dark"] .weather-alert-note { opacity: 0.92; }
 [data-theme="dark"] .weather-unavailable { color: #b9c7dc; }
+[data-theme="dark"] .navbar-alert-strip--warning { background: #991b1b; }
+[data-theme="dark"] .navbar-alert-strip--danger { background: #7f1d1d; }
+[data-theme="dark"] .navbar-alert-strip--emergency { background: #5b21b6; }
+[data-theme="dark"] .navbar-alert-strip--notice { background: #1e3a8a; }
 
 /* --- スマホ Bottom Nav --- */
 [data-theme="dark"] .bottom-nav {
