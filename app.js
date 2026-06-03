@@ -8750,23 +8750,21 @@ function applyWeatherAlertResult(data, isEn) {
     `<span class="weather-alert-note">${isEn ? 'Please check the Japan Meteorological Agency website for the latest details.' : '最新情報は気象庁ホームページをご確認ください。'}</span>` +
     `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/warning/" target="_blank" rel="noopener">${isEn ? 'Details' : '詳細'}</a>`;
 
-  // ヘッダー緊急バナーの制御 (注意報・警報の両方を表示)
+  // ヘッダー緊急バナーの制御 (Warning, Danger, Emergencyのみ表示)
   if (strip && stripText) {
-    if (activeAlertTexts.length > 0) {
+    if (activeHighLevelAlerts.length > 0) {
       strip.className = `navbar-alert-strip navbar-alert-strip--${overall}`;
       strip.hidden = false;
       document.body.classList.add('has-navbar-alert');
       
       let alertSummary = '';
       if (isEn) {
-        const isWarning = activeHighLevelAlerts.length > 0;
-        alertSummary = `${isWarning ? 'Weather Warning' : 'Weather Advisory'}: ${activeAlertTexts.slice(0, 2).join(', ')}`;
-        if (activeAlertTexts.length > 2) alertSummary += ' etc.';
+        alertSummary = `Weather Warning: ${activeHighLevelAlerts.slice(0, 2).join(', ')}`;
+        if (activeHighLevelAlerts.length > 2) alertSummary += ' etc.';
       } else {
-        const alertTypeName = (activeHighLevelAlerts.length > 0) ? '気象警報' : '気象注意報';
-        alertSummary = `【${alertTypeName}】${activeAlertTexts.slice(0, 2).join('、')} などが発表されています。`;
-        if (activeAlertTexts.length <= 2) {
-          alertSummary = `【${alertTypeName}】${activeAlertTexts.join('、')} が発表されています。`;
+        alertSummary = `【気象警報】${activeHighLevelAlerts.slice(0, 2).join('、')} などが発表されています。`;
+        if (activeHighLevelAlerts.length <= 2) {
+          alertSummary = `【気象警報】${activeHighLevelAlerts.join('、')} が発表されています。`;
         }
       }
       stripText.textContent = alertSummary;
