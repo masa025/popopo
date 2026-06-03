@@ -137,6 +137,23 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;}
   align-items: flex-end;
   gap: 8px;
 }
+.add-spot-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.btn-add-want {
+  border-color: rgba(42,157,143,0.45);
+  color: #2a7d74;
+  background: rgba(237,250,247,0.92);
+  box-shadow: 0 2px 10px rgba(42,157,143,0.1);
+}
+.btn-add-want:hover {
+  border-color: #1f6f66;
+  color: #1f6f66;
+  box-shadow: 0 8px 24px rgba(42,157,143,0.22);
+}
 .add-spot-hint {
   font-size: 0.72rem;
   color: var(--text-muted);
@@ -147,6 +164,10 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;}
 @media (max-width: 768px) {
   .add-spot-container {
     align-items: center;
+    width: 100%;
+  }
+  .add-spot-buttons {
+    justify-content: center;
     width: 100%;
   }
 }
@@ -4392,6 +4413,8 @@ body.weather-snowy {
 [data-theme="dark"] .btn-ghost:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 [data-theme="dark"] .btn-add-spot { background: var(--tint-blue); }
 [data-theme="dark"] .btn-add-spot:hover { background: var(--surface-2); }
+[data-theme="dark"] .btn-add-want { background: rgba(42,157,143,0.16); color: #7fd4c9; border-color: rgba(42,157,143,0.5); }
+[data-theme="dark"] .btn-add-want:hover { background: rgba(42,157,143,0.26); color: #a6e6dd; border-color: rgba(42,157,143,0.7); }
 [data-theme="dark"] .btn-gallery-all { background: var(--surface-1); }
 [data-theme="dark"] .btn-gallery-all:hover { background: var(--surface-2); }
 

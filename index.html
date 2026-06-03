@@ -233,7 +233,10 @@
           <p class="sec-sub" data-i18n="sec_spots_sub">『これ良かったよ』の気持ちをみんなでシェア。あなたの好きも、ぜひ教えてください。</p>
         </div>
         <div class="add-spot-container">
-          <button class="btn-add-spot" id="addSpotBtn"><span class="btn-icon">✨</span> <span data-i18n="btn_add_spot">スポットを追加する</span></button>
+          <div class="add-spot-buttons">
+            <button class="btn-add-spot" id="addSpotBtn"><span class="btn-icon">✨</span> <span data-i18n="btn_add_spot">スポットを追加する</span></button>
+            <button type="button" class="btn-add-spot btn-add-want" id="wantAddSpotBtn" data-i18n="btn_add_want">🌱 これから行きたい場所を追加</button>
+          </div>
           <p class="add-spot-hint" data-i18n="add_spot_hint">「ここ気になる」「行ってみたい」そんな一言からで大丈夫！</p>
         </div>
       </div>
@@ -277,7 +280,6 @@
       <div class="spot-list-actions">
         <button type="button" class="want-list-toggle" id="wantListToggleBtn" aria-pressed="false" data-i18n="btn_want_list">🔖 行きたいリスト（0）</button>
         <button type="button" class="barrier-free-toggle" id="barrierFreeFilterBtn" aria-pressed="false" data-i18n="♿ やさしいお出かけ">♿ やさしいお出かけ</button>
-        <button type="button" class="want-list-toggle want-add-btn" id="wantAddSpotBtn" data-i18n="btn_add_want">🌱 これから行きたい場所を追加</button>
       </div>
       <div class="want-list-hint" id="wantListHint" hidden>
         <span data-i18n="want_hint_text">行ってみた場所があれば、感想を残してみませんか？</span>
