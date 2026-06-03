@@ -8225,7 +8225,7 @@ function updateWeatherBackdrop(type) {
 }
 
 // 気象庁の警報・注意報コード → 表示ラベル（日英）と重大度
-// 重大度: emergency（特別警報） > warning（警報） > advisory（注意報）
+// 重大度: emergency（特別警報） > danger（土砂災害等の危険） > warning（警報） > advisory（注意報）
 const JMA_WARNING_CODES = {
   // 特別警報
   '32': { ja: '暴風雪特別警報', en: 'Snowstorm Emergency', level: 'emergency' },
@@ -8237,7 +8237,7 @@ const JMA_WARNING_CODES = {
   // 警報
   '02': { ja: '暴風雪警報', en: 'Snowstorm Warning', level: 'warning' },
   '03': { ja: '大雨警報', en: 'Heavy Rain Warning', level: 'warning' },
-  '04': { ja: '洪水警報', en: 'Flood Warning', level: 'warning' },
+  '04': { ja: '氾濫（洪水）警報', en: 'Flood / Overflow Warning', level: 'warning' },
   '05': { ja: '暴風警報', en: 'Storm Warning', level: 'warning' },
   '06': { ja: '大雪警報', en: 'Heavy Snow Warning', level: 'warning' },
   '07': { ja: '波浪警報', en: 'High Waves Warning', level: 'warning' },
@@ -8250,7 +8250,7 @@ const JMA_WARNING_CODES = {
   '15': { ja: '強風注意報', en: 'Strong Wind Advisory', level: 'advisory' },
   '16': { ja: '波浪注意報', en: 'High Waves Advisory', level: 'advisory' },
   '17': { ja: '融雪注意報', en: 'Snowmelt Advisory', level: 'advisory' },
-  '18': { ja: '洪水注意報', en: 'Flood Advisory', level: 'advisory' },
+  '18': { ja: '氾濫（洪水）注意報', en: 'Flood / Overflow Advisory', level: 'advisory' },
   '19': { ja: '高潮注意報', en: 'Storm Surge Advisory', level: 'advisory' },
   '20': { ja: '濃霧注意報', en: 'Dense Fog Advisory', level: 'advisory' },
   '21': { ja: '乾燥注意報', en: 'Dry Air Advisory', level: 'advisory' },
@@ -8261,7 +8261,99 @@ const JMA_WARNING_CODES = {
   '26': { ja: '着雪注意報', en: 'Snow Accretion Advisory', level: 'advisory' },
   '27': { ja: 'その他の注意報', en: 'Other Advisory', level: 'advisory' },
 };
-const WARNING_LEVEL_RANK = { emergency: 3, warning: 2, advisory: 1 };
+const WARNING_LEVEL_RANK = { emergency: 4, danger: 3, warning: 2, advisory: 1 };
+const JMA_ACTIVE_WARNING_STATUSES = new Set(['発表', '継続']);
+const JMA_ALERT_LEVEL_LABELS = {
+  advisory: { ja: '警戒レベル2相当', en: 'Level 2 equiv.' },
+  warning: { ja: '警戒レベル3相当', en: 'Level 3 equiv.' },
+  danger: { ja: '警戒レベル4相当', en: 'Level 4 equiv.' },
+  emergency: { ja: '警戒レベル5相当', en: 'Level 5 equiv.' }
+};
+const JMA_DANGER_LEVEL_BY_VALUE = {
+  '10': 'advisory',
+  '20': 'warning',
+  '30': 'danger',
+  '40': 'emergency',
+  '50': 'emergency'
+};
+const JMA_DANGER_TYPES = [
+  { keys: ['土砂災害', '土砂'], ja: '土砂災害危険度', en: 'Landslide risk' },
+  { keys: ['洪水', '氾濫'], ja: '氾濫（洪水）危険度', en: 'Flood / overflow risk' },
+  { keys: ['浸水害', '浸水'], ja: '浸水害危険度', en: 'Inundation risk' }
+];
+
+function getJmaAlertLevelLabel(level, isEn) {
+  const label = JMA_ALERT_LEVEL_LABELS[level];
+  if (!label) return '';
+  return isEn ? label.en : label.ja;
+}
+
+function getJmaCurrentTimeIndex(timeDefines) {
+  if (!Array.isArray(timeDefines) || timeDefines.length === 0) return 0;
+  const now = Date.now();
+  let currentIndex = 0;
+  timeDefines.forEach((time, index) => {
+    const parsed = Date.parse(time);
+    if (!Number.isNaN(parsed) && parsed <= now) currentIndex = index;
+  });
+  return Math.min(currentIndex, timeDefines.length - 1);
+}
+
+function normalizeJmaLevelValue(value) {
+  if (value == null) return '';
+  if (typeof value === 'object') {
+    return String(value.value || value.level || value.code || '').trim();
+  }
+  return String(value).trim();
+}
+
+function getJmaDangerType(typeText) {
+  const text = String(typeText || '');
+  return JMA_DANGER_TYPES.find(type => type.keys.some(key => text.includes(key)));
+}
+
+function getJmaDangerLevel(values, timeIndex) {
+  if (!Array.isArray(values) || values.length === 0) return null;
+  const value = normalizeJmaLevelValue(values[Math.min(timeIndex, values.length - 1)]);
+  return JMA_DANGER_LEVEL_BY_VALUE[value] || null;
+}
+
+function extractJmaDangerWarnings(data, targetAreaCode) {
+  const result = [];
+  const seen = new Set();
+  const series = Array.isArray(data && data.timeSeries) ? data.timeSeries : [];
+  series.forEach(ts => {
+    const timeIndex = getJmaCurrentTimeIndex(ts.timeDefines);
+    (ts.areaTypes || []).forEach(areaType => {
+      (areaType.areas || []).forEach(area => {
+        if (targetAreaCode && area.code !== targetAreaCode) return;
+        (area.warnings || []).forEach(warning => {
+          (warning.levels || []).forEach(levelInfo => {
+            const dangerType = getJmaDangerType(levelInfo.type);
+            if (!dangerType) return;
+            const localAreas = Array.isArray(levelInfo.localAreas) && levelInfo.localAreas.length > 0
+              ? levelInfo.localAreas
+              : [{ values: levelInfo.values || [] }];
+            localAreas.forEach(localArea => {
+              const level = getJmaDangerLevel(localArea.values, timeIndex);
+              if (!level) return;
+              const key = `${dangerType.ja}_${level}`;
+              if (seen.has(key)) return;
+              seen.add(key);
+              result.push({
+                ja: dangerType.ja,
+                en: dangerType.en,
+                level,
+                source: 'danger'
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+  return result;
+}
 
 // 1都市分の警報・注意報を取得。areaTypes[0].areas[0] が県庁所在地など主要地域。
 async function fetchCityWarnings(city) {
@@ -8273,9 +8365,14 @@ async function fetchCityWarnings(city) {
   const seen = new Set();
   const warnings = [];
   raw.forEach(w => {
-    if (w.status !== '発表') return;          // 発表中のみ（「解除」「なし」は除外）
+    if (!JMA_ACTIVE_WARNING_STATUSES.has(w.status)) return;          // 発表・継続中のみ（「解除」「なし」は除外）
     const info = w.code && JMA_WARNING_CODES[w.code];
     if (!info || seen.has(info.ja)) return;
+    seen.add(info.ja);
+    warnings.push(info);
+  });
+  extractJmaDangerWarnings(data, primary && primary.code).forEach(info => {
+    if (seen.has(info.ja)) return;
     seen.add(info.ja);
     warnings.push(info);
   });
@@ -8460,6 +8557,17 @@ function applyCityWarningBadges(map) {
   });
 }
 
+function renderWeatherAlertType(info, isEn) {
+  const label = isEn ? info.en : info.ja;
+  const levelLabel = getJmaAlertLevelLabel(info.level, isEn);
+  return (
+    `<span class="weather-alert-type weather-alert-type--${escHtml(info.level)}">` +
+      `<span class="weather-alert-type-name">${escHtml(label)}</span>` +
+      (levelLabel ? `<span class="weather-level-chip weather-level-chip--${escHtml(info.level)}">${escHtml(levelLabel)}</span>` : '') +
+    `</span>`
+  );
+}
+
 // 取得結果からアラート帯を描画し、都市バッジも更新する
 function applyWeatherAlertResult(data, isEn) {
   const bar = document.getElementById('weatherAlertBar');
@@ -8478,9 +8586,9 @@ function applyWeatherAlertResult(data, isEn) {
   });
   const title = isEn ? 'Weather Alerts' : '気象警報・注意報';
   const cityChips = data.map(r => {
-    const labels = r.warnings.map(w => isEn ? w.en : w.ja).join(isEn ? ', ' : '・');
+    const labels = r.warnings.map(w => renderWeatherAlertType(w, isEn)).join('');
     const cityName = isEn ? (ADDRESS_TRANSLATION_MAP[r.cityName] || r.cityName) : r.cityName;
-    return `<span class="weather-alert-city weather-alert-city--${r.topLevel}">📍${escHtml(cityName)} <span class="weather-alert-types">${escHtml(labels)}</span></span>`;
+    return `<span class="weather-alert-city weather-alert-city--${r.topLevel}"><span class="weather-alert-city-name">📍${escHtml(cityName)}</span><span class="weather-alert-types">${labels}</span></span>`;
   }).join('');
   bar.className = `weather-alert-bar weather-alert-bar--${overall}`;
   bar.hidden = false;
@@ -8488,6 +8596,7 @@ function applyWeatherAlertResult(data, isEn) {
     `<span class="weather-alert-icon" aria-hidden="true">⚠️</span>` +
     `<span class="weather-alert-title">${title}</span>` +
     `<span class="weather-alert-cities">${cityChips}</span>` +
+    `<span class="weather-alert-note">${isEn ? 'Please check the Japan Meteorological Agency website for the latest details.' : '最新情報は気象庁ホームページをご確認ください。'}</span>` +
     `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/warning/" target="_blank" rel="noopener">${isEn ? 'Details' : '詳細'}</a>`;
   applyCityWarningBadges(map);
 }
@@ -8498,7 +8607,7 @@ async function renderWeatherAlerts() {
   if (!bar) return;
   const isEn = currentLanguage === 'en';
   const cities = getSelectedWeatherCities();
-  const cacheKey = `popopo_weather_alert_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
+  const cacheKey = `popopo_weather_alert_v2_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
   try {
     const raw = sessionStorage.getItem(cacheKey);
     if (raw) {

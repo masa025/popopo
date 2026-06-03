@@ -1403,17 +1403,51 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
 .weather-alert-bar[hidden] { display: none; }
 .weather-alert-icon { font-size: 1rem; }
 .weather-alert-title { font-weight: 800; white-space: nowrap; }
-.weather-alert-cities { display: flex; flex-wrap: wrap; gap: 5px 14px; }
-.weather-alert-city { display: inline-flex; align-items: center; gap: 5px; }
-.weather-alert-types { font-weight: 600; opacity: 0.95; }
+.weather-alert-cities { display: flex; flex-wrap: wrap; gap: 7px 14px; min-width: 0; }
+.weather-alert-city { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px 7px; min-width: 0; }
+.weather-alert-city-name { white-space: nowrap; }
+.weather-alert-types { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; font-weight: 600; opacity: 0.95; min-width: 0; }
+.weather-alert-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.42);
+}
+.weather-alert-type-name {
+  overflow-wrap: anywhere;
+}
+.weather-level-chip {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  background: rgba(255,255,255,0.72);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+}
+.weather-alert-note {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.45;
+  opacity: 0.82;
+  overflow-wrap: anywhere;
+}
 .weather-alert-more { margin-left: auto; font-size: 0.76rem; font-weight: 700; color: inherit; text-decoration: underline; white-space: nowrap; }
-/* 重大度カラー: 注意報=黄 / 警報=赤 / 特別警報=赤紫 */
+/* 重大度カラー: 注意報=黄 / 警報=赤 / 危険=濃赤 / 特別警報=赤紫 */
 .weather-alert-bar--advisory { background: rgba(245,200,66,0.15); border-color: rgba(214,158,46,0.5); color: #8a6d1a; }
 .weather-alert-bar--warning { background: rgba(229,90,67,0.12); border-color: rgba(214,69,46,0.55); color: #a33222; }
+.weather-alert-bar--danger { background: rgba(194,48,48,0.14); border-color: rgba(178,34,34,0.58); color: #8f1f1f; }
 .weather-alert-bar--emergency { background: rgba(146,64,190,0.14); border-color: rgba(124,46,170,0.6); color: #6b2596; }
 .w-alert-badge { margin-left: 5px; font-size: 0.82em; }
 @media (max-width: 768px) {
   .weather-alert-bar { font-size: 0.76rem; padding: 8px 12px; }
+  .weather-level-chip { font-size: 0.64rem; }
+  .weather-alert-note { flex-basis: 100%; font-size: 0.68rem; }
   .weather-alert-more { margin-left: 0; }
 }
 .weather-bar {
@@ -4727,9 +4761,13 @@ body.weather-snowy {
   border-color: rgba(96,165,250,0.22);
 }
 [data-theme="dark"] .weather-city-chip { background: var(--surface-sunken); }
-[data-theme="dark"] .weather-alert-bar--advisory { background: rgba(245,200,66,0.16); border-color: rgba(245,200,66,0.45); color: #f3d27a; }
-[data-theme="dark"] .weather-alert-bar--warning { background: rgba(229,90,67,0.18); border-color: rgba(229,90,67,0.5); color: #f7a594; }
-[data-theme="dark"] .weather-alert-bar--emergency { background: rgba(167,139,250,0.18); border-color: rgba(167,139,250,0.5); color: #cdb4fe; }
+[data-theme="dark"] .weather-alert-bar--advisory { background: rgb(69,53,18); border-color: rgba(245,200,66,0.62); color: #ffe7a3; }
+[data-theme="dark"] .weather-alert-bar--warning { background: rgb(72,32,28); border-color: rgba(248,113,113,0.62); color: #ffd5cb; }
+[data-theme="dark"] .weather-alert-bar--danger { background: rgb(74,26,31); border-color: rgba(248,113,113,0.7); color: #ffe0d9; }
+[data-theme="dark"] .weather-alert-bar--emergency { background: rgb(48,34,83); border-color: rgba(196,181,253,0.68); color: #eadcff; }
+[data-theme="dark"] .weather-alert-type { background: rgba(255,255,255,0.12); }
+[data-theme="dark"] .weather-level-chip { background: rgba(255,255,255,0.2); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); color: inherit; }
+[data-theme="dark"] .weather-alert-note { opacity: 0.92; }
 
 /* --- スマホ Bottom Nav --- */
 [data-theme="dark"] .bottom-nav {
