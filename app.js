@@ -8355,26 +8355,35 @@ function extractJmaDangerWarnings(data, targetAreaCode) {
   return result;
 }
 
-// 1都市分の警報・注意報を取得。areaTypes[0].areas[0] が県庁所在地など主要地域。
+// 1都市分の警報・注意報を取得。
+// 県内の一次細分区域（areaTypes[0].areas）すべてを走査する。先頭区域だけだと、
+// 別の細分区域（例：埼玉の北部・秩父地方）に出た大雨・土砂災害を取りこぼすため。
 async function fetchCityWarnings(city) {
   const res = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${city.id}.json`);
   if (!res.ok) throw new Error('Warning network error');
   const data = await res.json();
-  const primary = data && data.areaTypes && data.areaTypes[0] && data.areaTypes[0].areas && data.areaTypes[0].areas[0];
-  const raw = (primary && Array.isArray(primary.warnings)) ? primary.warnings : [];
+  const areas = (data && data.areaTypes && data.areaTypes[0] && Array.isArray(data.areaTypes[0].areas))
+    ? data.areaTypes[0].areas : [];
   const seen = new Set();
   const warnings = [];
-  raw.forEach(w => {
-    if (!JMA_ACTIVE_WARNING_STATUSES.has(w.status)) return;          // 発表・継続中のみ（「解除」「なし」は除外）
-    const info = w.code && JMA_WARNING_CODES[w.code];
-    if (!info || seen.has(info.ja)) return;
-    seen.add(info.ja);
-    warnings.push(info);
+  // ① 全細分区域の警報・注意報コードを集約（種別で重複排除）
+  areas.forEach(area => {
+    (Array.isArray(area.warnings) ? area.warnings : []).forEach(w => {
+      if (!JMA_ACTIVE_WARNING_STATUSES.has(w.status)) return;        // 発表・継続中のみ（「解除」「なし」は除外）
+      const info = w.code && JMA_WARNING_CODES[w.code];
+      if (!info || seen.has(info.ja)) return;
+      seen.add(info.ja);
+      warnings.push(info);
+    });
   });
-  extractJmaDangerWarnings(data, primary && primary.code).forEach(info => {
-    if (seen.has(info.ja)) return;
-    seen.add(info.ja);
-    warnings.push(info);
+  // ② 土砂災害・洪水・浸水の危険度を時系列から（全区域を走査）。同種別は最大レベルを採用。
+  extractJmaDangerWarnings(data, null).forEach(info => {
+    const idx = warnings.findIndex(w => w.ja === info.ja);
+    if (idx === -1) {
+      warnings.push(info);
+    } else if (WARNING_LEVEL_RANK[info.level] > WARNING_LEVEL_RANK[warnings[idx].level]) {
+      warnings[idx] = info;
+    }
   });
   let topLevel = null, topRank = 0;
   warnings.forEach(w => {
@@ -8607,7 +8616,7 @@ async function renderWeatherAlerts() {
   if (!bar) return;
   const isEn = currentLanguage === 'en';
   const cities = getSelectedWeatherCities();
-  const cacheKey = `popopo_weather_alert_v2_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
+  const cacheKey = `popopo_weather_alert_v3_${cities.map(c => c.id).join('_')}_${currentLanguage}`;
   try {
     const raw = sessionStorage.getItem(cacheKey);
     if (raw) {
