@@ -1504,6 +1504,20 @@ footer{background:linear-gradient(160deg,#1e2845 0%,#243954 58%,#234d53 100%);pa
   from { transform: translateY(-100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+/* ナビゲーションバーに警報が表示されている場合、ヒーローセクションのpadding-topを増やして#chatTickerの隠れを防ぐ */
+.has-navbar-alert #hero {
+  padding-top: calc(104px + 36px);
+}
+@media (max-width: 768px) {
+  .has-navbar-alert #hero {
+    padding-top: calc(104px + 52px);
+  }
+}
+@media (max-width: 480px) {
+  .has-navbar-alert #hero {
+    padding-top: calc(104px + 72px);
+  }
+}
 @media (max-width: 768px) {
   .weather-alert-bar { font-size: 0.76rem; padding: 8px 12px; }
   .weather-level-chip { font-size: 0.64rem; }

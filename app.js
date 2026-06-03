@@ -8696,7 +8696,10 @@ function applyWeatherAlertResult(data, isEn) {
   if (!data || data.length === 0) {
     bar.hidden = true;
     bar.innerHTML = '';
-    if (strip) strip.hidden = true;
+    if (strip) {
+      strip.hidden = true;
+      document.body.classList.remove('has-navbar-alert');
+    }
     applyCityWarningBadges(new Map());
     return;
   }
@@ -8720,7 +8723,7 @@ function applyWeatherAlertResult(data, isEn) {
       // Warning以上の警報があれば、その名前を収集
       area.warnings.forEach(w => {
         if (w.level === 'warning' || w.level === 'danger' || w.level === 'emergency') {
-          const wLabel = isEn ? (JMA_WARNING_CODES[w.code]?.en || w.name) : (JMA_WARNING_CODES[w.code]?.ja || w.name);
+          const wLabel = isEn ? w.en : w.ja;
           activeHighLevelAlerts.push(`${place}: ${wLabel}`);
         }
       });
@@ -8741,6 +8744,7 @@ function applyWeatherAlertResult(data, isEn) {
     if (activeHighLevelAlerts.length > 0) {
       strip.className = `navbar-alert-strip navbar-alert-strip--${overall}`;
       strip.hidden = false;
+      document.body.classList.add('has-navbar-alert');
       
       let alertSummary = '';
       if (isEn) {
@@ -8755,6 +8759,7 @@ function applyWeatherAlertResult(data, isEn) {
       stripText.textContent = alertSummary;
     } else {
       strip.hidden = true;
+      document.body.classList.remove('has-navbar-alert');
     }
   }
 
@@ -8764,7 +8769,10 @@ function applyWeatherAlertResult(data, isEn) {
 function showWeatherDataUnavailableNotice(isEn) {
   const bar = document.getElementById('weatherAlertBar');
   const strip = document.getElementById('navbarAlertStrip');
-  if (strip) strip.hidden = true; // エラー時は上部緊急バナーは出さない
+  if (strip) {
+    strip.hidden = true;
+    document.body.classList.remove('has-navbar-alert');
+  }
   if (!bar) return;
   bar.className = 'weather-alert-bar weather-alert-bar--notice';
   bar.hidden = false;
