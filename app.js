@@ -154,6 +154,15 @@ const GALLERY_ITEMS = [
     type: "dict_page",
     lockAnswer: "TimTam",
     lockHint: "ある配信者が牛乳の中に落としたお菓子は何でしょうか？"
+  },
+  {
+    image: "assets/listener-gallery/listener-art-46.jpg",
+    title: "POPOPO用語辞典 5",
+    caption: "【全世界待望の】の項目が追加された辞典ページ。小さな出来事を壮大に盛り上げる、POPOPOらしい言葉の一枚です。",
+    alt: "POPOPO用語辞典の『全世界待望の』のページ",
+    type: "dict_page",
+    lockAnswer: "TimTam",
+    lockHint: "ある配信者が牛乳の中に落としたお菓子は何でしょうか？"
   }
 ];
 
