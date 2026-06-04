@@ -8741,14 +8741,66 @@ function applyWeatherAlertResult(data, isEn) {
   const activeAlertTexts = activeAlerts.map(a => a.text);
 
   const cityChips = chips.join('');
-  bar.className = `weather-alert-bar weather-alert-bar--${overall}`;
-  bar.hidden = false;
-  bar.innerHTML =
-    `<span class="weather-alert-icon" aria-hidden="true">⚠️</span>` +
-    `<span class="weather-alert-title">${title}</span>` +
-    `<span class="weather-alert-cities">${cityChips}</span>` +
-    `<span class="weather-alert-note">${isEn ? 'Please check the Japan Meteorological Agency website for the latest details.' : '最新情報は気象庁ホームページをご確認ください。'}</span>` +
-    `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/warning/" target="_blank" rel="noopener">${isEn ? 'Details' : '詳細'}</a>`;
+  const hasOnlyAdvisory = overall === 'advisory'; // 注意報（advisory）のみかどうか
+
+  if (hasOnlyAdvisory) {
+    bar.className = `weather-alert-bar weather-alert-bar--advisory weather-alert-bar--collapsible`;
+    bar.hidden = false;
+    bar.innerHTML =
+      `<button class="weather-alert-toggle" aria-expanded="false" type="button">` +
+        `<span class="weather-alert-toggle-left">` +
+          `<span class="weather-alert-icon" aria-hidden="true">⚠️</span>` +
+          `<span class="weather-alert-title">${isEn ? 'Weather Advisory Issued' : '気象注意報が発表されています'}</span>` +
+        `</span>` +
+        `<span class="weather-alert-toggle-right">` +
+          `<span class="weather-alert-toggle-msg">${isEn ? 'Tap to view details' : 'タップして詳細を表示'}</span>` +
+          `<span class="weather-alert-toggle-arrow">▾</span>` +
+        `</span>` +
+      `</button>` +
+      `<div class="weather-alert-details">` +
+        `<div class="weather-alert-details-inner">` +
+          `<div class="weather-alert-cities">${cityChips}</div>` +
+          `<div class="weather-alert-meta" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; font-size: 0.72rem;">` +
+            `<span class="weather-alert-note">${isEn ? 'Please check the Japan Meteorological Agency website for the latest details.' : '最新情報は気象庁ホームページをご確認ください。'}</span>` +
+            `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/warning/" target="_blank" rel="noopener" style="margin-left: auto;">${isEn ? 'Details' : '詳細'}</a>` +
+          `</div>` +
+        `</div>` +
+      `</div>`;
+
+    // トグルイベントをバインド
+    const toggleBtn = bar.querySelector('.weather-alert-toggle');
+    const details = bar.querySelector('.weather-alert-details');
+    if (toggleBtn && details) {
+      toggleBtn.addEventListener('click', () => {
+        const isExpanded = bar.classList.contains('weather-alert-bar--expanded');
+        if (isExpanded) {
+          bar.classList.remove('weather-alert-bar--expanded');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+          toggleBtn.querySelector('.weather-alert-toggle-msg').textContent = isEn ? 'Tap to view details' : 'タップして詳細を表示';
+          details.style.maxHeight = '0px';
+        } else {
+          bar.classList.add('weather-alert-bar--expanded');
+          toggleBtn.setAttribute('aria-expanded', 'true');
+          toggleBtn.querySelector('.weather-alert-toggle-msg').textContent = isEn ? 'Tap to close' : 'タップして閉じる';
+          details.style.maxHeight = details.scrollHeight + 'px';
+        }
+      });
+    }
+  } else {
+    // 警報以上がある場合はアコーディオンにせず全開表示
+    bar.className = `weather-alert-bar weather-alert-bar--${overall}`;
+    bar.hidden = false;
+    bar.innerHTML =
+      `<div style="display: flex; align-items: center; gap: 8px; width: 100%; font-weight: 800; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 6px; margin-bottom: 6px;">` +
+        `<span class="weather-alert-icon" aria-hidden="true">⚠️</span>` +
+        `<span class="weather-alert-title">${title}</span>` +
+      `</div>` +
+      `<div class="weather-alert-cities" style="width: 100%;">${cityChips}</div>` +
+      `<div class="weather-alert-meta" style="width: 100%; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; font-size: 0.72rem; margin-top: 4px;">` +
+        `<span class="weather-alert-note">${isEn ? 'Please check the Japan Meteorological Agency website for the latest details.' : '最新情報は気象庁ホームページをご確認ください。'}</span>` +
+        `<a class="weather-alert-more" href="https://www.jma.go.jp/bosai/warning/" target="_blank" rel="noopener" style="margin-left: auto;">${isEn ? 'Details' : '詳細'}</a>` +
+      `</div>`;
+  }
 
   // ヘッダー緊急バナーの制御 (Warning, Danger, Emergencyのみ表示)
   if (strip && stripText) {
