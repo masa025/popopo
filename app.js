@@ -8621,23 +8621,19 @@ function hasFinePointer() {
 function handleCursorTrailMove(e) {
   if (!cursorTrailEnabled || prefersReducedDiscoveryMotion()) return;
   const now = performance.now();
-  if (now - _lastTrailAt < 55) return;
+  if (now - _lastTrailAt < 40) return;
   _lastTrailAt = now;
-  if (document.querySelectorAll('.cursor-trail-blob').length > 14) return;
-  const colors = [
-    'rgba(255,209,220,0.45)', 'rgba(205,228,250,0.45)',
-    'rgba(213,240,222,0.45)', 'rgba(232,222,248,0.45)'
-  ];
+  if (document.querySelectorAll('.cursor-trail-blob').length > 18) return;
   const blob = document.createElement('div');
-  blob.className = 'cursor-trail-blob';
-  const sizePx = 14 + Math.random() * 12;
+  // 色はCSS側で定義（ライト/ダークモードで自動切替）
+  blob.className = `cursor-trail-blob trail-c${1 + Math.floor(Math.random() * 4)}`;
+  const sizePx = 20 + Math.random() * 16;
   blob.style.width = `${sizePx}px`;
   blob.style.height = `${sizePx}px`;
   blob.style.left = `${e.clientX}px`;
   blob.style.top = `${e.clientY}px`;
-  blob.style.background = `radial-gradient(circle, ${colors[Math.floor(Math.random() * colors.length)]} 0%, rgba(255,255,255,0) 70%)`;
   document.body.appendChild(blob);
-  setTimeout(() => blob.remove(), 1100);
+  setTimeout(() => blob.remove(), 1400);
 }
 
 function initCursorTrail() {

@@ -5428,18 +5428,34 @@ html.vt-modal::view-transition-new(root) {
   pointer-events: none;
   z-index: 11999;
   border-radius: 50% 45% 55% 50% / 50% 55% 45% 50%;
-  transform: translate(-50%, -50%) scale(0.5);
-  opacity: 0.85;
-  animation: cursorTrailFade 1.05s ease-out forwards;
+  transform: translate(-50%, -50%) scale(0.55);
+  opacity: 1;
+  /* ライトモード: 絵の具が紙に染みるイメージ */
+  mix-blend-mode: multiply;
+  animation: cursorTrailFade 1.3s ease-out forwards;
   will-change: transform, opacity;
 }
+/* 色バリエーション（ライトモード: しっかり発色する顔料カラー） */
+.cursor-trail-blob.trail-c1 { background: radial-gradient(circle, rgba(255, 140, 172, 0.6) 0%, rgba(255, 255, 255, 0) 72%); }
+.cursor-trail-blob.trail-c2 { background: radial-gradient(circle, rgba(110, 165, 235, 0.6) 0%, rgba(255, 255, 255, 0) 72%); }
+.cursor-trail-blob.trail-c3 { background: radial-gradient(circle, rgba(110, 195, 145, 0.55) 0%, rgba(255, 255, 255, 0) 72%); }
+.cursor-trail-blob.trail-c4 { background: radial-gradient(circle, rgba(175, 145, 230, 0.55) 0%, rgba(255, 255, 255, 0) 72%); }
 @keyframes cursorTrailFade {
-  30% { opacity: 0.6; }
+  25% { opacity: 0.85; }
   100% {
-    transform: translate(-50%, -40%) scale(1.5);
+    transform: translate(-50%, -42%) scale(1.7);
     opacity: 0;
   }
 }
+/* ダークモード: 加算系ブレンドでふわっと光る筆あとに切替 */
+[data-theme="dark"] .cursor-trail-blob {
+  mix-blend-mode: screen;
+  filter: blur(0.5px);
+}
+[data-theme="dark"] .cursor-trail-blob.trail-c1 { background: radial-gradient(circle, rgba(255, 158, 190, 0.5) 0%, rgba(0, 0, 0, 0) 72%); }
+[data-theme="dark"] .cursor-trail-blob.trail-c2 { background: radial-gradient(circle, rgba(135, 190, 255, 0.5) 0%, rgba(0, 0, 0, 0) 72%); }
+[data-theme="dark"] .cursor-trail-blob.trail-c3 { background: radial-gradient(circle, rgba(135, 225, 175, 0.45) 0%, rgba(0, 0, 0, 0) 72%); }
+[data-theme="dark"] .cursor-trail-blob.trail-c4 { background: radial-gradient(circle, rgba(195, 165, 250, 0.45) 0%, rgba(0, 0, 0, 0) 72%); }
 
 /* --- フッターの筆あとトグル --- */
 .cursor-trail-toggle {
