@@ -8642,7 +8642,8 @@ function handleCursorTrailMove(e) {
 
 function initCursorTrail() {
   if (!hasFinePointer()) return;
-  cursorTrailEnabled = localStorage.getItem(CURSOR_TRAIL_STORAGE_KEY) === '1';
+  // デフォルトON（明示的にOFFにした場合のみ無効）
+  cursorTrailEnabled = localStorage.getItem(CURSOR_TRAIL_STORAGE_KEY) !== '0';
   document.addEventListener('pointermove', handleCursorTrailMove, { passive: true });
 
   // フッターにトグルを設置
