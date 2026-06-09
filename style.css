@@ -5247,3 +5247,237 @@ body.weather-snowy {
   background: rgba(91, 141, 238, 0.25) !important;
   border-color: rgba(91, 141, 238, 0.5) !important;
 }
+
+/* ==========================================================================
+   WATERCOLOR FX 追加スタイル
+   (時間帯パレット / クリックにじみ / 水彩スタンプ / reduced-motion対応)
+   ========================================================================== */
+
+/* --- 時間帯パレット: bodyの水彩背景の上にうっすら色調を重ねる --- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: transparent;
+  transition: background 1.5s ease;
+}
+body.time-morning::before {
+  background: linear-gradient(180deg, rgba(255, 219, 176, 0.16), rgba(255, 238, 214, 0.05) 60%, transparent);
+}
+body.time-evening::before {
+  background: linear-gradient(180deg, rgba(255, 178, 128, 0.16), rgba(150, 110, 180, 0.08));
+}
+body.time-night::before {
+  background: linear-gradient(180deg, rgba(38, 56, 104, 0.12), rgba(24, 34, 64, 0.07));
+}
+/* ダークテーマでは時間帯の色重ねは行わない（夜の暗さと干渉するため） */
+[data-theme="dark"] body::before {
+  background: transparent !important;
+}
+
+/* --- クリック時の水彩にじみ --- */
+.ink-bleed {
+  position: fixed;
+  pointer-events: none;
+  z-index: 12000;
+  border-radius: 47% 53% 50% 50% / 52% 48% 52% 48%;
+  transform: translate(-50%, -50%) scale(0.35);
+  opacity: 0.9;
+  animation: inkBleedSpread 0.8s ease-out forwards;
+  will-change: transform, opacity;
+}
+@keyframes inkBleedSpread {
+  60% { opacity: 0.55; }
+  100% {
+    transform: translate(-50%, -50%) scale(1.7) rotate(8deg);
+    opacity: 0;
+  }
+}
+
+/* --- 行きたい登録時の水彩スタンプ --- */
+.watercolor-stamp {
+  position: fixed;
+  pointer-events: none;
+  z-index: 12001;
+  font-size: 30px;
+  line-height: 1;
+  transform: translate(-50%, -50%) scale(0.2) rotate(-14deg);
+  animation: watercolorStampPop 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  filter: drop-shadow(0 2px 6px rgba(43, 67, 120, 0.25));
+}
+@keyframes watercolorStampPop {
+  35% { transform: translate(-50%, -80%) scale(1.15) rotate(6deg); opacity: 1; }
+  70% { transform: translate(-50%, -110%) scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: translate(-50%, -150%) scale(0.95) rotate(0deg); opacity: 0; }
+}
+
+/* --- アクセシビリティ: 動きを減らす設定では装飾アニメーションを無効化 --- */
+@media (prefers-reduced-motion: reduce) {
+  .ink-bleed,
+  .watercolor-stamp {
+    display: none !important;
+  }
+  .weather-particle {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  body::before {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   WATERCOLOR FX 第2弾
+   (セクション境界のにじみ / View Transitions / ローディングウォッシュ /
+    カーソル筆跡 / トグルボタン)
+   ========================================================================== */
+
+/* --- セクション境界: 上端を水彩の縁のような不規則な形に --- */
+#spots, #visited, #community {
+  position: relative;
+}
+#spots::before, #visited::before, #community::before {
+  content: '';
+  position: absolute;
+  top: -23px;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: inherit;
+  pointer-events: none;
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='24' viewBox='0 0 1200 24'><path d='M0,24 L0,12 C40,4 80,16 120,9 C160,3 200,15 240,8 C280,2 320,14 360,10 C400,5 440,16 480,9 C520,3 560,13 600,8 C640,4 680,15 720,10 C760,4 800,14 840,8 C880,3 920,15 960,10 C1000,5 1040,16 1080,9 C1120,4 1160,13 1200,11 L1200,24 Z' fill='black'/><ellipse cx='150' cy='4' rx='7' ry='2.5' fill='black'/><ellipse cx='520' cy='3' rx='5' ry='2' fill='black'/><ellipse cx='880' cy='4' rx='8' ry='2.5' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='24' viewBox='0 0 1200 24'><path d='M0,24 L0,12 C40,4 80,16 120,9 C160,3 200,15 240,8 C280,2 320,14 360,10 C400,5 440,16 480,9 C520,3 560,13 600,8 C640,4 680,15 720,10 C760,4 800,14 840,8 C880,3 920,15 960,10 C1000,5 1040,16 1080,9 C1120,4 1160,13 1200,11 L1200,24 Z' fill='black'/><ellipse cx='150' cy='4' rx='7' ry='2.5' fill='black'/><ellipse cx='520' cy='3' rx='5' ry='2' fill='black'/><ellipse cx='880' cy='4' rx='8' ry='2.5' fill='black'/></svg>");
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: 1200px 24px;
+  mask-size: 1200px 24px;
+  -webkit-mask-position: bottom;
+  mask-position: bottom;
+}
+
+/* --- View Transitions: ページ間は「紙に水が広がる」、モーダルはやわらかなフェード --- */
+@view-transition {
+  navigation: auto;
+}
+@keyframes vtPaperFadeOut {
+  to { opacity: 0; }
+}
+@keyframes vtWaterSpread {
+  from {
+    clip-path: circle(0% at 50% 30%);
+    opacity: 0.4;
+    filter: blur(8px) saturate(1.25);
+  }
+  60% { filter: blur(2px) saturate(1.1); }
+  to {
+    clip-path: circle(135% at 50% 30%);
+    opacity: 1;
+    filter: blur(0) saturate(1);
+  }
+}
+@keyframes vtModalFadeIn {
+  from { opacity: 0.4; filter: blur(3px); }
+  to { opacity: 1; filter: blur(0); }
+}
+html::view-transition-old(root) {
+  animation: vtPaperFadeOut 0.4s ease both;
+}
+html::view-transition-new(root) {
+  animation: vtWaterSpread 0.6s ease-out both;
+}
+/* モーダル開閉(同一ページ内)は短いフェードに留める */
+html.vt-modal::view-transition-old(root) {
+  animation: vtPaperFadeOut 0.22s ease both;
+}
+html.vt-modal::view-transition-new(root) {
+  animation: vtModalFadeIn 0.28s ease both;
+}
+
+/* --- ローディング: 水彩ウォッシュがじわっと流れるスケルトン --- */
+.watercolor-loading {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  border-radius: 10px;
+  padding: 2px 12px;
+}
+.watercolor-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg,
+    transparent 15%,
+    rgba(180, 205, 235, 0.28) 35%,
+    rgba(255, 214, 224, 0.28) 50%,
+    rgba(213, 240, 222, 0.28) 65%,
+    transparent 85%);
+  background-size: 250% 100%;
+  animation: watercolorWash 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes watercolorWash {
+  0% { background-position: 110% 0; }
+  100% { background-position: -110% 0; }
+}
+
+/* --- カーソル筆跡 (PCのみ・トグルON時) --- */
+.cursor-trail-blob {
+  position: fixed;
+  pointer-events: none;
+  z-index: 11999;
+  border-radius: 50% 45% 55% 50% / 50% 55% 45% 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0.85;
+  animation: cursorTrailFade 1.05s ease-out forwards;
+  will-change: transform, opacity;
+}
+@keyframes cursorTrailFade {
+  30% { opacity: 0.6; }
+  100% {
+    transform: translate(-50%, -40%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* --- フッターの筆あとトグル --- */
+.cursor-trail-toggle {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  color: var(--text-muted, #6b7a99);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(91, 141, 238, 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.cursor-trail-toggle:hover {
+  border-color: rgba(91, 141, 238, 0.55);
+}
+.cursor-trail-toggle.is-on {
+  color: var(--blue, #5b8dee);
+  background: rgba(205, 228, 250, 0.45);
+  border-color: rgba(91, 141, 238, 0.6);
+}
+[data-theme="dark"] .cursor-trail-toggle {
+  background: rgba(17, 24, 39, 0.55);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+/* --- reduced-motion: 第2弾の装飾も無効化 --- */
+@media (prefers-reduced-motion: reduce) {
+  html::view-transition-old(root),
+  html::view-transition-new(root),
+  html.vt-modal::view-transition-old(root),
+  html.vt-modal::view-transition-new(root) {
+    animation: none !important;
+  }
+  .watercolor-loading::after,
+  .cursor-trail-blob {
+    animation: none !important;
+    display: none;
+  }
+}

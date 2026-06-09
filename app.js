@@ -4089,6 +4089,11 @@ function showGachaResult(outcome) {
         firstCard.focus();
       }
     }
+    // 結果に水彩スタンプをポンと押す
+    if (firstCard) {
+      const stampEmoji = (outcome.items[0] && outcome.items[0].emoji) || (outcome.mode === 'jackpot' ? '🎉' : '🌸');
+      spawnWatercolorStamp(firstCard, stampEmoji);
+    }
   });
 }
 
@@ -5200,6 +5205,7 @@ function renderSpotCards(cat = 'all') {
       // 押した人へのご褒美：「+1」とお礼の粒子演出（お題と同じ仕組み）
       showFloatingPlusOne(btn);
       triggerReactionEffectOverlay(btn, reactionMessagesFor('spotLike'));
+      spawnWatercolorStamp(btn, '🔖');
       updateWantListButton();
     });
   });
@@ -6808,8 +6814,10 @@ function openModal(preselect = '', id = null, clientId = null) {
   const title = modal.querySelector('.modal-title') || modal.querySelector('h2');
   const btn = document.getElementById('submitBtn');
   
-  modal.classList.add('is-open');
-  document.body.style.overflow = 'hidden';
+  withViewTransition(() => {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  });
   resetForm();
   populateModalSpotSelect(preselect);
   
@@ -6872,8 +6880,10 @@ function updateStars() {
 }
 
 function closeModal() {
-  document.getElementById('postModal').classList.remove('is-open');
-  document.body.style.overflow = '';
+  withViewTransition(() => {
+    document.getElementById('postModal').classList.remove('is-open');
+    document.body.style.overflow = '';
+  });
   editingId = null;
   editingClientId = null;
 
@@ -8168,70 +8178,501 @@ function getWeatherType(code) {
   return 'sunny';
 }
 
-function updateWeatherBackdrop(type) {
+// ==========================================================================
+// 水彩ウェザーFXエンジン
+// 単一canvasでパーティクル・雨のにじみ・雷・霧・季節(花びら/落ち葉)を描画。
+// prefers-reduced-motion時は描画せず、タブ非表示・ヒーロー画面外では停止。
+// ==========================================================================
+const WeatherFX = (() => {
+  let canvas = null, ctx = null, raf = null, lastT = 0;
+  let particles = [], blots = [], fogBanks = [];
+  let flashAlpha = 0, nextFlashAt = Infinity;
+  let current = { type: null, secondary: null, thunder: false, fog: false };
+  let tabVisible = typeof document !== 'undefined' ? !document.hidden : true;
+  let heroVisible = true, ioReady = false;
+
+  const SEASON_COLORS = {
+    petal: ['rgba(255,196,210,', 'rgba(255,214,224,', 'rgba(250,182,200,'],
+    leaf:  ['rgba(222,140,64,',  'rgba(200,110,50,',  'rgba(190,90,60,']
+  };
+
+  function reduced() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function size() {
+    return { w: canvas ? canvas.clientWidth : 0, h: canvas ? canvas.clientHeight : 0 };
+  }
+
+  function resize() {
+    if (!canvas || !canvas.parentElement || !ctx) return;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function ensureCanvas() {
+    const host = document.getElementById('heroWeatherCanvas');
+    if (!host) return false;
+    if (canvas && canvas.isConnected) return true;
+    host.innerHTML = '';
+    canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+    host.appendChild(canvas);
+    ctx = canvas.getContext('2d');
+    window.addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', () => {
+      tabVisible = !document.hidden;
+      tabVisible ? start() : stop();
+    });
+    if (!ioReady && 'IntersectionObserver' in window) {
+      const hero = document.getElementById('hero');
+      if (hero) {
+        new IntersectionObserver((entries) => {
+          heroVisible = entries[0].isIntersecting;
+          heroVisible ? start() : stop();
+        }, { threshold: 0 }).observe(hero);
+        ioReady = true;
+      }
+    }
+    resize();
+    return true;
+  }
+
+  function getSeasonParticleKind() {
+    const m = new Date().getMonth() + 1;
+    if (m === 3 || m === 4) return 'petal';  // 桜
+    if (m === 10 || m === 11) return 'leaf'; // 紅葉
+    return null;
+  }
+
+  function makeParticle(kind) {
+    const { w, h } = size();
+    const p = { kind, x: rand(0, w), y: rand(0, h) };
+    if (kind === 'sun') {
+      p.r = rand(2, 5); p.vy = -rand(6, 16); p.sway = rand(10, 40);
+      p.phase = rand(0, Math.PI * 2); p.alpha = rand(0.35, 0.8);
+    } else if (kind === 'cloud') {
+      p.rx = rand(180, 320); p.ry = rand(60, 110);
+      p.vx = rand(4, 10); p.y = rand(h * 0.05, h * 0.6);
+      p.x = rand(-p.rx, w + p.rx); p.alpha = rand(0.10, 0.20);
+    } else if (kind === 'rain') {
+      p.len = rand(18, 34); p.vy = rand(380, 560); p.vx = -rand(40, 90);
+      p.y = rand(-h, 0); p.alpha = rand(0.25, 0.5);
+    } else if (kind === 'snow') {
+      p.r = rand(1.6, 3.4); p.vy = rand(22, 48); p.sway = rand(14, 44);
+      p.phase = rand(0, Math.PI * 2); p.y = rand(-h, 0); p.alpha = rand(0.5, 0.95);
+    } else if (kind === 'petal' || kind === 'leaf') {
+      p.rx = rand(3.5, 6.5); p.ry = p.rx * rand(0.5, 0.75);
+      p.vy = rand(18, 38); p.sway = rand(20, 60); p.phase = rand(0, Math.PI * 2);
+      p.rot = rand(0, Math.PI * 2); p.vrot = rand(-1.5, 1.5);
+      p.color = SEASON_COLORS[kind][Math.floor(Math.random() * SEASON_COLORS[kind].length)];
+      p.alpha = rand(0.45, 0.8); p.y = rand(-h, 0);
+    }
+    return p;
+  }
+
+  function buildParticles() {
+    particles = [];
+    blots = [];
+    const base = { sunny: ['sun', 20], cloudy: ['cloud', 3], rainy: ['rain', 36], snowy: ['snow', 26] };
+    const spec = [];
+    if (current.type && base[current.type]) {
+      spec.push([base[current.type][0], base[current.type][1]]);
+    }
+    // 「のち/時々」の複合天気: 主天気を少し減らし、従天気を薄く混ぜる
+    if (current.secondary && base[current.secondary] && current.secondary !== current.type) {
+      if (spec[0]) spec[0][1] = Math.round(spec[0][1] * 0.75);
+      spec.push([base[current.secondary][0], Math.max(2, Math.round(base[current.secondary][1] * 0.4))]);
+    }
+    const season = getSeasonParticleKind();
+    if (season) spec.push([season, 10]);
+    spec.forEach(([kind, n]) => {
+      for (let i = 0; i < n; i++) particles.push(makeParticle(kind));
+    });
+
+    fogBanks = [];
+    if (current.fog) {
+      for (let i = 0; i < 3; i++) {
+        fogBanks.push({
+          x: rand(0, 1), y: rand(0.15, 0.85), vx: rand(0.006, 0.018),
+          rx: rand(0.45, 0.7), ry: rand(0.18, 0.3), alpha: rand(0.10, 0.18)
+        });
+      }
+    }
+    flashAlpha = 0;
+    nextFlashAt = current.thunder ? performance.now() + rand(2500, 7000) : Infinity;
+  }
+
+  function spawnBlot(x, y) {
+    if (blots.length > 14) return;
+    blots.push({ x, y, r: rand(2, 5), max: rand(14, 34), life: 0, ttl: rand(1.6, 2.6) });
+  }
+
+  function drawBlot(b, w) {
+    const t = b.life / b.ttl;
+    const alpha = 0.30 * (1 - t);
+    if (alpha <= 0.01) return;
+    for (let i = 0; i < 3; i++) {
+      const ox = (i - 1) * b.r * 0.35;
+      const oy = Math.abs(i - 1) * b.r * 0.18;
+      const g = ctx.createRadialGradient(b.x + ox, b.y + oy, 0, b.x + ox, b.y + oy, b.r);
+      g.addColorStop(0, `rgba(120,155,195,${alpha * 0.55})`);
+      g.addColorStop(1, 'rgba(120,155,195,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(b.x + ox, b.y + oy, b.r, b.r * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function tick(t) {
+    raf = null;
+    if (!ctx || !canvas) return;
+    const dt = Math.min((t - lastT) / 1000 || 0.016, 0.05);
+    lastT = t;
+    const { w, h } = size();
+    ctx.clearRect(0, 0, w, h);
+
+    // 霧: 大きな半透明ウォッシュがゆっくり流れる
+    fogBanks.forEach(f => {
+      f.x += f.vx * dt;
+      if (f.x - f.rx > 1.1) f.x = -f.rx;
+      const cx = f.x * w, cy = f.y * h, rx = f.rx * w, ry = f.ry * h;
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+      g.addColorStop(0, `rgba(235,240,246,${f.alpha})`);
+      g.addColorStop(1, 'rgba(235,240,246,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    particles.forEach(p => {
+      if (p.kind === 'sun') {
+        p.y += p.vy * dt;
+        p.phase += dt;
+        const x = p.x + Math.sin(p.phase) * p.sway * 0.3;
+        if (p.y < -10) { p.y = h + 10; p.x = rand(0, w); }
+        const tw = p.alpha * (0.7 + 0.3 * Math.sin(p.phase * 2));
+        const g = ctx.createRadialGradient(x, p.y, 0, x, p.y, p.r * 2.2);
+        g.addColorStop(0, `rgba(255,225,140,${tw})`);
+        g.addColorStop(1, 'rgba(255,210,100,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, p.y, p.r * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.kind === 'cloud') {
+        p.x += p.vx * dt;
+        if (p.x - p.rx > w) p.x = -p.rx;
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.rx);
+        g.addColorStop(0, `rgba(226,235,246,${p.alpha})`);
+        g.addColorStop(1, 'rgba(226,235,246,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.kind === 'rain') {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        if (p.y > h * 0.92) {
+          spawnBlot(p.x, h * rand(0.92, 0.99));
+          p.y = rand(-60, -10); p.x = rand(0, w * 1.15);
+        }
+        const grad = ctx.createLinearGradient(p.x, p.y - p.len, p.x, p.y);
+        grad.addColorStop(0, 'rgba(140,170,205,0)');
+        grad.addColorStop(1, `rgba(140,170,205,${p.alpha})`);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(p.x - p.vx * (p.len / p.vy), p.y - p.len);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      } else if (p.kind === 'snow') {
+        p.phase += dt;
+        p.y += p.vy * dt;
+        p.x += Math.cos(p.phase) * p.sway * dt;
+        if (p.y > h + 6) { p.y = -6; p.x = rand(0, w); }
+        ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.kind === 'petal' || p.kind === 'leaf') {
+        p.phase += dt;
+        p.rot += p.vrot * dt;
+        p.y += p.vy * dt;
+        p.x += Math.sin(p.phase) * p.sway * dt;
+        if (p.y > h + 10) { p.y = -10; p.x = rand(0, w); }
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = `${p.color}${p.alpha})`;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.rx, p.ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+
+    // 雨のにじみ（着地点に水彩がじわっと広がる）
+    for (let i = blots.length - 1; i >= 0; i--) {
+      const b = blots[i];
+      b.life += dt;
+      b.r += (b.max - b.r) * dt * 2.2;
+      if (b.life >= b.ttl) { blots.splice(i, 1); continue; }
+      drawBlot(b, w);
+    }
+
+    // 雷: 不定期な白いフラッシュ（たまに二段発光）
+    if (current.thunder && t >= nextFlashAt) {
+      flashAlpha = rand(0.5, 0.8);
+      nextFlashAt = t + (Math.random() < 0.3 ? rand(120, 220) : rand(4000, 9000));
+    }
+    if (flashAlpha > 0.01) {
+      ctx.fillStyle = `rgba(255,255,250,${flashAlpha * 0.55})`;
+      ctx.fillRect(0, 0, w, h);
+      flashAlpha = Math.max(0, flashAlpha - dt * 2.5);
+    }
+
+    if (running()) raf = requestAnimationFrame(tick);
+  }
+
+  function running() {
+    return tabVisible && heroVisible && !reduced() &&
+      (particles.length > 0 || fogBanks.length > 0 || current.thunder);
+  }
+
+  function start() {
+    if (raf || !canvas || !running()) return;
+    lastT = performance.now();
+    raf = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+  }
+
+  function setWeather(info) {
+    current = {
+      type: info.type || 'sunny',
+      secondary: info.secondary || null,
+      thunder: !!info.thunder,
+      fog: !!info.fog
+    };
+    if (!ensureCanvas()) return;
+    if (reduced()) {
+      stop();
+      const { w, h } = size();
+      if (ctx) ctx.clearRect(0, 0, w, h);
+      return;
+    }
+    buildParticles();
+    start();
+  }
+
+  return { setWeather };
+})();
+
+// 天気テキスト(例:「くもり 時々 晴れ」「雨 で雷を伴う」)から複合天気・雷・霧を抽出
+function parseWeatherInfo(code, text) {
+  const type = getWeatherType(code);
+  const t = String(text || '');
+  const typeOf = (s) =>
+    /雪/.test(s) ? 'snowy' :
+    /雨/.test(s) ? 'rainy' :
+    /(曇|くもり)/.test(s) ? 'cloudy' :
+    /(晴|はれ)/.test(s) ? 'sunny' : null;
+  let secondary = null;
+  const m = t.match(/(のち|時々|一時|所により)([\s\S]+)/);
+  if (m) {
+    const sec = typeOf(m[2]);
+    if (sec && sec !== type) secondary = sec;
+  }
+  return { type, secondary, thunder: /雷/.test(t), fog: /霧/.test(t) };
+}
+
+function updateWeatherBackdrop(weather) {
+  const info = (typeof weather === 'string' || !weather)
+    ? { type: weather || 'sunny', secondary: null, thunder: false, fog: false }
+    : weather;
   const WEATHER_CLASSES = ['weather-sunny', 'weather-cloudy', 'weather-rainy', 'weather-snowy'];
 
   // サイト全体（body）の水彩背景を天気に連動させる
   if (document.body) {
     document.body.classList.remove(...WEATHER_CLASSES);
-    document.body.classList.add(`weather-${type}`);
+    document.body.classList.add(`weather-${info.type}`);
   }
 
   const hero = document.getElementById('hero');
-  const canvas = document.getElementById('heroWeatherCanvas');
-  if (!hero || !canvas) return;
+  if (hero) {
+    hero.classList.remove(...WEATHER_CLASSES);
+    hero.classList.add(`weather-${info.type}`);
+  }
 
-  hero.classList.remove(...WEATHER_CLASSES);
-  hero.classList.add(`weather-${type}`);
+  WeatherFX.setWeather(info);
+}
 
-  canvas.innerHTML = '';
+// ==========================================================================
+// 時間帯パレット（朝・昼・夕・夜でサイト全体の色調をうっすら変化）
+// ==========================================================================
+const TIME_OF_DAY_CLASSES = ['time-morning', 'time-daytime', 'time-evening', 'time-night'];
 
-  if (type === 'sunny') {
-    const count = 24;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'weather-particle sunny-particle';
-      p.style.left = `${Math.random() * 100}%`;
-      p.style.animationDelay = `${Math.random() * 12}s`;
-      p.style.animationDuration = `${8 + Math.random() * 8}s`;
-      p.style.setProperty('--drift-x', `${(Math.random() - 0.5) * 80}px`);
-      canvas.appendChild(p);
-    }
-  } else if (type === 'cloudy') {
-    const count = 3;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'weather-particle cloudy-particle';
-      p.style.top = `${5 + Math.random() * 60}%`;
-      p.style.animationDelay = `${Math.random() * -48}s`;
-      p.style.animationDuration = `${40 + Math.random() * 20}s`;
-      p.style.setProperty('--drift-y', `${(Math.random() - 0.5) * 60}px`);
-      canvas.appendChild(p);
-    }
-  } else if (type === 'rainy') {
-    const count = 40;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'weather-particle rainy-particle';
-      p.style.left = `${Math.random() * 110}%`;
-      p.style.animationDelay = `${Math.random() * 2}s`;
-      p.style.animationDuration = `${0.9 + Math.random() * 0.6}s`;
-      p.style.setProperty('--drift-x', `${-40 - Math.random() * 40}px`);
-      canvas.appendChild(p);
-    }
-  } else if (type === 'snowy') {
-    const count = 30;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'weather-particle snowy-particle';
-      p.style.left = `${Math.random() * 100}%`;
-      p.style.animationDelay = `${Math.random() * 8}s`;
-      p.style.animationDuration = `${6 + Math.random() * 5}s`;
-      p.style.setProperty('--drift-x', `${20 + Math.random() * 60}px`);
-      canvas.appendChild(p);
-    }
+function getTimeOfDaySlot() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 10) return 'morning';
+  if (h >= 10 && h < 16) return 'daytime';
+  if (h >= 16 && h < 19) return 'evening';
+  return 'night';
+}
+
+function applyTimeOfDayPalette() {
+  if (!document.body) return;
+  document.body.classList.remove(...TIME_OF_DAY_CLASSES);
+  document.body.classList.add(`time-${getTimeOfDaySlot()}`);
+}
+
+// ==========================================================================
+// 水彩マイクロインタラクション（クリック時のにじみ・行きたいスタンプ）
+// ==========================================================================
+let _lastInkBleedAt = 0;
+
+function spawnInkBleed(x, y, opts = {}) {
+  if (prefersReducedDiscoveryMotion()) return;
+  const now = performance.now();
+  if (!opts.force && now - _lastInkBleedAt < 80) return;
+  _lastInkBleedAt = now;
+  if (document.querySelectorAll('.ink-bleed').length > 6) return;
+  const colors = [
+    'rgba(255,209,220,0.75)', 'rgba(205,228,250,0.75)', 'rgba(213,240,222,0.75)',
+    'rgba(247,233,209,0.75)', 'rgba(232,222,248,0.75)'
+  ];
+  const blob = document.createElement('div');
+  blob.className = 'ink-bleed';
+  const sizePx = opts.size || (36 + Math.random() * 26);
+  blob.style.width = `${sizePx}px`;
+  blob.style.height = `${sizePx}px`;
+  blob.style.left = `${x}px`;
+  blob.style.top = `${y}px`;
+  blob.style.background = `radial-gradient(circle, ${opts.color || colors[Math.floor(Math.random() * colors.length)]} 0%, rgba(255,255,255,0) 72%)`;
+  document.body.appendChild(blob);
+  setTimeout(() => blob.remove(), 900);
+}
+
+function spawnWatercolorStamp(el, emoji = '🔖') {
+  if (prefersReducedDiscoveryMotion() || !el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const stamp = document.createElement('div');
+  stamp.className = 'watercolor-stamp';
+  stamp.textContent = emoji;
+  stamp.style.left = `${cx}px`;
+  stamp.style.top = `${rect.top}px`;
+  document.body.appendChild(stamp);
+  spawnInkBleed(cx, rect.top, { size: 90, color: 'rgba(255,196,210,0.8)', force: true });
+  setTimeout(() => stamp.remove(), 1100);
+}
+
+function initWatercolorInteractions() {
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const target = e.target && e.target.closest
+      ? e.target.closest('button, a, .spot-card, .chip, .map-online-card, [role="button"]')
+      : null;
+    if (!target) return;
+    spawnInkBleed(e.clientX, e.clientY);
+  }, { passive: true });
+}
+
+// ==========================================================================
+// View Transitions ヘルパー（非対応ブラウザ・reduced-motion時は即時実行）
+// ==========================================================================
+function withViewTransition(fn) {
+  if (!document.startViewTransition || prefersReducedDiscoveryMotion()) {
+    fn();
+    return;
+  }
+  const root = document.documentElement;
+  root.classList.add('vt-modal');
+  try {
+    const vt = document.startViewTransition(fn);
+    vt.finished.finally(() => root.classList.remove('vt-modal'));
+  } catch (e) {
+    root.classList.remove('vt-modal');
+    fn();
   }
 }
+
+// ==========================================================================
+// カーソル筆跡（PCのみ・トグル付き・デフォルトOFF）
+// ==========================================================================
+const CURSOR_TRAIL_STORAGE_KEY = 'popopo_cursor_trail';
+let cursorTrailEnabled = false;
+let _lastTrailAt = 0;
+
+function hasFinePointer() {
+  return window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+}
+
+function handleCursorTrailMove(e) {
+  if (!cursorTrailEnabled || prefersReducedDiscoveryMotion()) return;
+  const now = performance.now();
+  if (now - _lastTrailAt < 55) return;
+  _lastTrailAt = now;
+  if (document.querySelectorAll('.cursor-trail-blob').length > 14) return;
+  const colors = [
+    'rgba(255,209,220,0.45)', 'rgba(205,228,250,0.45)',
+    'rgba(213,240,222,0.45)', 'rgba(232,222,248,0.45)'
+  ];
+  const blob = document.createElement('div');
+  blob.className = 'cursor-trail-blob';
+  const sizePx = 14 + Math.random() * 12;
+  blob.style.width = `${sizePx}px`;
+  blob.style.height = `${sizePx}px`;
+  blob.style.left = `${e.clientX}px`;
+  blob.style.top = `${e.clientY}px`;
+  blob.style.background = `radial-gradient(circle, ${colors[Math.floor(Math.random() * colors.length)]} 0%, rgba(255,255,255,0) 70%)`;
+  document.body.appendChild(blob);
+  setTimeout(() => blob.remove(), 1100);
+}
+
+function initCursorTrail() {
+  if (!hasFinePointer()) return;
+  cursorTrailEnabled = localStorage.getItem(CURSOR_TRAIL_STORAGE_KEY) === '1';
+  document.addEventListener('pointermove', handleCursorTrailMove, { passive: true });
+
+  // フッターにトグルを設置
+  const footer = document.querySelector('.footer-inner');
+  if (!footer) return;
+  const isEn = typeof currentLanguage !== 'undefined' && currentLanguage === 'en';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'cursor-trail-toggle';
+  const labelText = () =>
+    `🖌️ ${isEn ? 'Brush cursor trail' : 'カーソルの筆あと'}: ${cursorTrailEnabled ? 'ON' : 'OFF'}`;
+  btn.textContent = labelText();
+  btn.setAttribute('aria-pressed', String(cursorTrailEnabled));
+  btn.addEventListener('click', () => {
+    cursorTrailEnabled = !cursorTrailEnabled;
+    localStorage.setItem(CURSOR_TRAIL_STORAGE_KEY, cursorTrailEnabled ? '1' : '0');
+    btn.textContent = labelText();
+    btn.setAttribute('aria-pressed', String(cursorTrailEnabled));
+    btn.classList.toggle('is-on', cursorTrailEnabled);
+  });
+  btn.classList.toggle('is-on', cursorTrailEnabled);
+  footer.appendChild(btn);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyTimeOfDayPalette();
+  setInterval(applyTimeOfDayPalette, 5 * 60 * 1000);
+  initWatercolorInteractions();
+  initCursorTrail();
+});
 
 // 気象庁の警報・注意報コード → 表示ラベル（日英）と重大度
 // 重大度: emergency（特別警報） > danger（土砂災害等の危険） > warning（警報） > advisory（注意報）
@@ -8521,13 +8962,15 @@ async function fetchCityWeather(city) {
   const wCodes = data[0].timeSeries[0].areas[0].weatherCodes;
   const weatherCode = (isTomorrow && wCodes.length > 1) ? wCodes[1] : wCodes[0];
   const icon = getWeatherIcon(weatherCode);
+  const wTexts = data[0].timeSeries[0].areas[0].weathers || [];
+  const weatherText = (isTomorrow && wTexts.length > 1) ? wTexts[1] : (wTexts[0] || '');
 
   const cities = getSelectedWeatherCities();
   const isFirstCity = cities.length > 0 && city.id === cities[0].id;
   if (isFirstCity) {
-    const weatherType = getWeatherType(weatherCode);
-    sessionStorage.setItem(`popopo_weather_type_${city.id}`, weatherType);
-    updateWeatherBackdrop(weatherType);
+    const weatherInfo = parseWeatherInfo(weatherCode, weatherText);
+    sessionStorage.setItem(`popopo_weather_type_${city.id}`, JSON.stringify(weatherInfo));
+    updateWeatherBackdrop(weatherInfo);
   }
 
   const getLocalDateString = (d) => {
@@ -8901,7 +9344,12 @@ async function renderWeather() {
     if (cities.length > 0) {
       const cachedType = sessionStorage.getItem(`popopo_weather_type_${cities[0].id}`);
       if (cachedType) {
-        updateWeatherBackdrop(cachedType);
+        let info = cachedType; // 旧形式(文字列)との互換
+        try {
+          const parsed = JSON.parse(cachedType);
+          if (parsed && parsed.type) info = parsed;
+        } catch (e) {}
+        updateWeatherBackdrop(info);
       }
     }
     // 少し待ってからアニメ開始（DOM描画完了を待つ）
@@ -8910,7 +9358,7 @@ async function renderWeather() {
     return;
   }
 
-  container.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem;">${isEn ? 'Fetching weather...' : '天気を取得中...'}</span>`;
+  container.innerHTML = `<span class="watercolor-loading" style="color:var(--text-muted); font-size:0.85rem;">${isEn ? 'Fetching weather...' : '天気を取得中...'}</span>`;
 
   try {
     const results = await Promise.all(cities.map(fetchCityWeather));
@@ -9236,6 +9684,22 @@ function getLandmarkCoordsForSpot(spot = {}) {
 }
 
 // カテゴリ別カラーパレット (style.cssのバッジ色と調和)
+function getCategoryEmoji(cat) {
+  const emojis = {
+    food: '🍴',
+    mohinga: '🍜',
+    museum: '🎨',
+    event: '🌿',
+    nature: '🌳',
+    book: '📚',
+    shop: '🛒',
+    view: '✨',
+    relax: '🛁',
+    entertainment: '🎬'
+  };
+  return emojis[cat] || '📍';
+}
+
 function getMarkerBorderColor(cat) {
   const colors = {
     food: '#ff7e8e',         // 飲食店 (ソフトピンク)
@@ -9255,8 +9719,10 @@ function getMarkerBorderColor(cat) {
 function openMapModal() {
   const modal = document.getElementById('mapModal');
   if (!modal) return;
-  modal.classList.add('is-open');
-  document.body.style.overflow = 'hidden';
+  withViewTransition(() => {
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  });
 
   // 初回表示時にマップを初期化
   if (!leafletMapInstance) {
@@ -9273,8 +9739,10 @@ function openMapModal() {
 function closeMapModal() {
   const modal = document.getElementById('mapModal');
   if (!modal) return;
-  modal.classList.remove('is-open');
-  document.body.style.overflow = '';
+  withViewTransition(() => {
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  });
 }
 
 function initLeafletMap() {
@@ -9420,7 +9888,7 @@ function loadMapMarkers() {
     if (coords) {
       const iconHtml = `
         <div class="custom-marker" style="--border-color: ${getMarkerBorderColor(spot.cat)};" title="${spot.name}">
-          <span>${spot.emoji || '📍'}</span>
+          <span>${spot.emoji || getCategoryEmoji(spot.cat)}</span>
         </div>
       `;
 
@@ -9560,7 +10028,7 @@ function renderMapOnlinePanel() {
     card.type = 'button';
     card.className = `map-online-card category-${spot.cat}`;
     card.innerHTML = `
-      <div class="map-online-card-emoji">${spot.emoji || (activeMapPanelTab === 'online' ? '🌐' : '🇯🇵')}</div>
+      <div class="map-online-card-emoji">${spot.emoji || (spot.cat && getCategoryEmoji(spot.cat) !== '📍' ? getCategoryEmoji(spot.cat) : (activeMapPanelTab === 'online' ? '🌐' : '🇯🇵'))}</div>
       <div class="map-online-card-content">
         <div class="map-online-card-meta">
           <span class="map-online-card-cat" style="color: ${getMarkerBorderColor(spot.cat)}">${catLabel}</span>
