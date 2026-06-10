@@ -592,7 +592,7 @@ function updateThemeUI() {
   }
 }
 
-function toggleTheme() {
+function toggleTheme(evt) {
   const savedTheme = localStorage.getItem('popopo_theme') || 'system';
   let nextTheme = 'system';
   if (savedTheme === 'system') {
@@ -610,9 +610,39 @@ function toggleTheme() {
   if (nextTheme === 'system') {
     activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
-  document.documentElement.setAttribute('data-theme', activeTheme);
 
-  updateThemeUI();
+  const applyTheme = () => {
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    updateThemeUI();
+  };
+
+  // View Transitions対応ブラウザでは、押したボタンから新テーマが円形に広がる
+  const prevTheme = document.documentElement.getAttribute('data-theme');
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (document.startViewTransition && !reducedMotion && prevTheme !== activeTheme) {
+    const root = document.documentElement;
+    let originX = '50%';
+    let originY = '0%';
+    const btn = (evt && evt.currentTarget && evt.currentTarget.getBoundingClientRect)
+      ? evt.currentTarget : null;
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      originX = `${Math.round(r.left + r.width / 2)}px`;
+      originY = `${Math.round(r.top + r.height / 2)}px`;
+    }
+    root.style.setProperty('--vt-origin-x', originX);
+    root.style.setProperty('--vt-origin-y', originY);
+    root.classList.add('vt-theme');
+    try {
+      const vt = document.startViewTransition(applyTheme);
+      vt.finished.finally(() => root.classList.remove('vt-theme'));
+    } catch (e) {
+      root.classList.remove('vt-theme');
+      applyTheme();
+    }
+  } else {
+    applyTheme();
+  }
 }
 
 function setupTheme() {

@@ -5088,6 +5088,14 @@ function renderSpotCards(cat = 'all') {
   if (showingBarrierFreeOnly) {
     filtered = filtered.filter(s => s.accessibleToilet || s.barrierFree || s.nursingRoom);
   }
+  // 検索クエリ（名前・エリア・都道府県・メモを横断、スペース区切りAND）
+  if (typeof spotSearchQuery === 'string' && spotSearchQuery) {
+    const terms = spotSearchQuery.split(/\s+/).filter(Boolean);
+    filtered = filtered.filter(s => {
+      const hay = `${s.name || ''} ${s.area || ''} ${s.pref || ''} ${s.memo || s.reason || ''}`.toLowerCase();
+      return terms.every(t => hay.includes(t));
+    });
+  }
   const visibleSpots = filtered.slice(0, visibleSpotCount);
   updateWantListButton();
   updateBarrierFreeButton();
@@ -5102,6 +5110,20 @@ function renderSpotCards(cat = 'all') {
     `;
     setStatText('statSpots', allSpots.length);
     updateMoreButton('spotsMoreBtn', 0, 0, INITIAL_SPOT_COUNT);
+    if (typeof updateSpotFilterStatus === 'function') updateSpotFilterStatus(0, allSpots.length, cat);
+    return;
+  }
+  // 検索・フィルタで0件になった場合の空表示
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="spots-empty-card">
+        <strong>${isEn ? 'No spots match your filters' : '条件に合うスポットが見つかりません'}</strong>
+        <span>${isEn ? 'Try adjusting the search or removing some filters.' : '検索ワードを変えるか、フィルタを解除してみてください。'}</span>
+      </div>
+    `;
+    setStatText('statSpots', allSpots.length);
+    updateMoreButton('spotsMoreBtn', 0, 0, INITIAL_SPOT_COUNT);
+    if (typeof updateSpotFilterStatus === 'function') updateSpotFilterStatus(0, allSpots.length, cat);
     return;
   }
   grid.innerHTML = visibleSpots.map(s => {
@@ -5228,6 +5250,8 @@ function renderSpotCards(cat = 'all') {
 
   setStatText('statSpots', allSpots.length);
   updateMoreButton('spotsMoreBtn', filtered.length, Math.min(visibleSpotCount, filtered.length), INITIAL_SPOT_COUNT);
+  if (typeof updateSpotFilterStatus === 'function') updateSpotFilterStatus(filtered.length, allSpots.length, cat);
+  if (typeof initScrollReveal === 'function') initScrollReveal(grid);
   queueAutoTranslateVisibleContent();
   fetchAndRenderSpotWeather();
 }
@@ -8664,11 +8688,178 @@ function initCursorTrail() {
   footer.appendChild(btn);
 }
 
+// ==========================================================================
+// スポット検索 + フィルタ状態の可視化（JSで#spotsに注入）
+// ==========================================================================
+let spotSearchQuery = '';
+
+function initSpotSearchUI() {
+  const tabsWrapper = document.getElementById('tabsOuterWrapper');
+  if (!tabsWrapper || document.getElementById('spotSearchInput')) return;
+  const isEn = currentLanguage === 'en';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'spot-search-wrap';
+  wrap.innerHTML = `
+    <div class="spot-search-box">
+      <span class="spot-search-icon" aria-hidden="true">🔍</span>
+      <input type="search" id="spotSearchInput" class="spot-search-input"
+        placeholder="${isEn ? 'Search spots (name, area, notes)…' : 'スポットを検索（名前・エリア・メモ）…'}"
+        aria-label="${isEn ? 'Search spots' : 'スポットを検索'}" autocomplete="off">
+      <kbd class="spot-search-kbd" aria-hidden="true">⌘K</kbd>
+    </div>
+    <div class="spot-filter-status" id="spotFilterStatus" aria-live="polite"></div>
+  `;
+  tabsWrapper.parentNode.insertBefore(wrap, tabsWrapper);
+
+  const input = wrap.querySelector('#spotSearchInput');
+  let debounceTimer = null;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      spotSearchQuery = input.value.trim().toLowerCase();
+      visibleSpotCount = INITIAL_SPOT_COUNT;
+      renderSpotCards(getActiveSpotCategory());
+    }, 160);
+  });
+
+  // ⌘K / Ctrl+K でどこからでも検索へ
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input.focus({ preventScroll: true });
+    }
+  });
+
+  // フィルタピルの解除（委譲）
+  const status = wrap.querySelector('#spotFilterStatus');
+  status.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-filter-key]');
+    if (!btn) return;
+    const k = btn.dataset.filterKey;
+    if (k === 'cat' || k === 'all') setActiveSpotCategory('all');
+    if (k === 'area' || k === 'all') activeSpotArea = 'all';
+    if (k === 'want' || k === 'all') showingWantList = false;
+    if (k === 'bf' || k === 'all') showingBarrierFreeOnly = false;
+    if (k === 'q' || k === 'all') {
+      spotSearchQuery = '';
+      input.value = '';
+    }
+    visibleSpotCount = INITIAL_SPOT_COUNT;
+    renderSpotCards(getActiveSpotCategory());
+  });
+}
+
+function updateSpotFilterStatus(shown, total, cat) {
+  const el = document.getElementById('spotFilterStatus');
+  if (!el) return;
+  const isEn = currentLanguage === 'en';
+  const pills = [];
+  if (cat && cat !== 'all') pills.push({ k: 'cat', label: getCatLabel(cat) });
+  if (activeSpotArea !== 'all') pills.push({ k: 'area', label: `📍 ${activeSpotArea}` });
+  if (showingWantList) pills.push({ k: 'want', label: isEn ? '🔖 Want list' : '🔖 行きたいリスト' });
+  if (showingBarrierFreeOnly) pills.push({ k: 'bf', label: isEn ? '♿ Accessible' : '♿ やさしいお出かけ' });
+  if (spotSearchQuery) pills.push({ k: 'q', label: `🔍 ${spotSearchQuery}` });
+
+  const count = isEn ? `${shown} of ${total} spots` : `${total}件中 ${shown}件を表示`;
+  if (!pills.length) {
+    el.innerHTML = `<span class="spot-filter-count">${count}</span>`;
+    return;
+  }
+  el.innerHTML =
+    `<span class="spot-filter-count">${count}</span>` +
+    pills.map(p =>
+      `<button type="button" class="spot-filter-pill" data-filter-key="${p.k}" aria-label="${isEn ? 'Remove filter' : 'この条件を解除'}: ${escHtml(p.label)}">${escHtml(p.label)}<span class="spot-filter-pill-x" aria-hidden="true">✕</span></button>`
+    ).join('') +
+    `<button type="button" class="spot-filter-clear" data-filter-key="all">${isEn ? 'Clear all' : 'すべて解除'}</button>`;
+}
+
+// ==========================================================================
+// スクロール連動フェードイン（カードが視界に入るたび順番にふわっと）
+// ==========================================================================
+let _scrollRevealObserver = null;
+
+function initScrollReveal(scopeEl) {
+  if (prefersReducedDiscoveryMotion() || !('IntersectionObserver' in window)) return;
+  if (!_scrollRevealObserver) {
+    _scrollRevealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          en.target.classList.add('is-revealed');
+          _scrollRevealObserver.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -6% 0px' });
+  }
+  const scope = scopeEl || document;
+  let order = 0;
+  scope.querySelectorAll('.spot-card:not(.scroll-reveal), .gallery-grid-item:not(.scroll-reveal)').forEach(el => {
+    el.classList.add('scroll-reveal');
+    el.style.transitionDelay = `${(order % 6) * 50}ms`;
+    order += 1;
+    _scrollRevealObserver.observe(el);
+  });
+}
+
+// ==========================================================================
+// モバイル下部タブバー（スマホのみ・scrollspy付き）
+// ==========================================================================
+function initMobileTabBar() {
+  if (document.getElementById('mobileTabBar') || !document.getElementById('spots')) return;
+  const isEn = currentLanguage === 'en';
+  const bar = document.createElement('nav');
+  bar.id = 'mobileTabBar';
+  bar.className = 'mobile-tab-bar';
+  bar.setAttribute('aria-label', isEn ? 'Quick navigation' : 'クイックナビゲーション');
+  bar.innerHTML = `
+    <a href="#spots" class="mobile-tab" data-tab="spots"><span aria-hidden="true">📍</span><small>${isEn ? 'Spots' : 'スポット'}</small></a>
+    <button type="button" class="mobile-tab" data-tab="map"><span aria-hidden="true">🗺️</span><small>${isEn ? 'Map' : '地図'}</small></button>
+    <button type="button" class="mobile-tab" data-tab="gacha"><span aria-hidden="true">✨</span><small>${isEn ? 'Gacha' : 'ガチャ'}</small></button>
+    <a href="#visited" class="mobile-tab" data-tab="visited"><span aria-hidden="true">💬</span><small>${isEn ? 'Reviews' : '感想'}</small></a>
+  `;
+  document.body.appendChild(bar);
+  bar.querySelector('[data-tab="map"]').addEventListener('click', () => openMapModal());
+  bar.querySelector('[data-tab="gacha"]').addEventListener('click', () => openGachaModal());
+
+  // scrollspy: 表示中のセクションをアクティブに
+  if ('IntersectionObserver' in window) {
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        bar.querySelectorAll('.mobile-tab').forEach(t =>
+          t.classList.toggle('is-active', t.dataset.tab === en.target.id));
+      });
+    }, { rootMargin: '-35% 0px -55% 0px' });
+    ['spots', 'visited'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) spy.observe(el);
+    });
+  }
+}
+
+// ==========================================================================
+// PWA: サービスワーカー登録
+// ==========================================================================
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyTimeOfDayPalette();
   setInterval(applyTimeOfDayPalette, 5 * 60 * 1000);
   initWatercolorInteractions();
   initCursorTrail();
+  initSpotSearchUI();
+  initMobileTabBar();
+  initScrollReveal(document);
+  registerServiceWorker();
+  // 検索UI注入後に件数表示を反映
+  if (document.getElementById('spotsGrid')) {
+    renderSpotCards(getActiveSpotCategory());
+  }
 });
 
 // 気象庁の警報・注意報コード → 表示ラベル（日英）と重大度

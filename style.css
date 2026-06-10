@@ -5497,3 +5497,193 @@ html.vt-modal::view-transition-new(root) {
     display: none;
   }
 }
+
+/* ==========================================================================
+   モダンUX 追加スタイル
+   (スポット検索 / フィルタピル / スクロールリビール / モバイルタブバー /
+    テーマ切替円形ワイプ)
+   ========================================================================== */
+
+/* --- スポット検索 --- */
+.spot-search-wrap {
+  margin: 14px 0 10px;
+}
+.spot-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 480px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1.5px solid rgba(79, 127, 216, 0.22);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.spot-search-box:focus-within {
+  border-color: rgba(79, 127, 216, 0.6);
+  box-shadow: 0 6px 20px rgba(43, 67, 120, 0.12);
+}
+.spot-search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  outline: none;
+  min-width: 0;
+}
+.spot-search-input::placeholder { color: var(--text-muted, #8a97b5); }
+.spot-search-kbd {
+  font-size: 0.68rem;
+  color: var(--text-muted, #8a97b5);
+  border: 1px solid rgba(79, 127, 216, 0.25);
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.6);
+}
+@media (max-width: 768px) { .spot-search-kbd { display: none; } }
+[data-theme="dark"] .spot-search-box {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(96, 165, 250, 0.28);
+}
+[data-theme="dark"] .spot-search-kbd {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(96, 165, 250, 0.25);
+}
+
+/* --- フィルタ状態ピル＋件数 --- */
+.spot-filter-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  min-height: 26px;
+}
+.spot-filter-count {
+  font-size: 0.78rem;
+  color: var(--text-muted, #6b7a99);
+}
+.spot-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--blue, #5b8dee);
+  background: rgba(205, 228, 250, 0.45);
+  border: 1px solid rgba(91, 141, 238, 0.4);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.spot-filter-pill:hover { background: rgba(205, 228, 250, 0.75); transform: translateY(-1px); }
+.spot-filter-pill-x { font-size: 0.68rem; opacity: 0.7; }
+.spot-filter-clear {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7a99);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+[data-theme="dark"] .spot-filter-pill {
+  background: rgba(30, 58, 95, 0.5);
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #93c5fd;
+}
+
+/* --- スクロールリビール --- */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.scroll-reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- モバイル下部タブバー --- */
+.mobile-tab-bar {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 990;
+    justify-content: space-around;
+    align-items: stretch;
+    padding: 6px 8px;
+    background: rgba(255, 254, 250, 0.86);
+    border: 1.5px solid rgba(79, 127, 216, 0.2);
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(43, 67, 120, 0.18);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .mobile-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    flex: 1;
+    padding: 6px 4px;
+    border: none;
+    background: none;
+    border-radius: 16px;
+    color: var(--text-muted, #6b7a99);
+    text-decoration: none;
+    font-family: inherit;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .mobile-tab span { font-size: 1.15rem; line-height: 1.2; }
+  .mobile-tab small { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.5px; }
+  .mobile-tab.is-active {
+    color: var(--blue, #5b8dee);
+    background: rgba(205, 228, 250, 0.5);
+  }
+  /* タブバーに隠れないよう下部に余白を確保 */
+  body { padding-bottom: 84px; }
+  [data-theme="dark"] .mobile-tab-bar {
+    background: rgba(13, 18, 30, 0.85);
+    border-color: rgba(96, 165, 250, 0.25);
+  }
+  [data-theme="dark"] .mobile-tab.is-active {
+    background: rgba(30, 58, 95, 0.6);
+    color: #93c5fd;
+  }
+}
+
+/* --- テーマ切替: ボタン位置から新テーマが円形に広がる --- */
+@keyframes vtThemeWipe {
+  from { clip-path: circle(0 at var(--vt-origin-x, 50%) var(--vt-origin-y, 0%)); }
+  to { clip-path: circle(150% at var(--vt-origin-x, 50%) var(--vt-origin-y, 0%)); }
+}
+html.vt-theme::view-transition-old(root) {
+  animation: none;
+}
+html.vt-theme::view-transition-new(root) {
+  animation: vtThemeWipe 0.55s ease-out both;
+}
+
+/* --- reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  html.vt-theme::view-transition-old(root),
+  html.vt-theme::view-transition-new(root) {
+    animation: none !important;
+  }
+}
