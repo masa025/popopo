@@ -154,18 +154,20 @@ const TRANSLATIONS = {
     howto_step1_title: "今日の発見を見る",
     howto_step1_desc: "ページ上部には、おすすめスポットやみんなの感想がゆっくり入れ替わって表示されます。気になる名前を押すと、該当のスポットや感想を開けます。",
     howto_step2_title: "ポポッと選ぶ",
-    howto_step2_desc: "トップの「ポポッと選ぶ」や、ナビのピックアップ行のスパークル（スマホではアイコンのみ）から、おすすめスポットとみんなの感想の中から案内を受け取れます。多めに並ぶこともありますが、基本はひとつずつ。気になるカードをタップすると、そのスポットや感想の詳細が開きます。迷ったときの、ささやかなきっかけとして使えます。",
+    howto_step2_desc: "トップの「ポポッと選ぶ」や、ナビのピックアップ行のスパークル（スマホでは画面下の「ガチャ」からも）から、おすすめスポットとみんなの感想の中から案内を受け取れます。多めに並ぶこともありますが、基本はひとつずつ。複数並んだときは、横にスワイプしてめくれます。気になるカードをタップすると、そのスポットや感想の詳細が開きます。迷ったときの、ささやかなきっかけとして使えます。",
     howto_step3_title: "リスナー作品を楽しむ",
     howto_step3_desc: "トップの小さな作品アイコンは、配信中に届いた作品です。右から左へ流れるアイコンを押すと大きく表示されます。「すべての作品・辞典を見る」から一覧でも楽しめます。",
     howto_step4_title: "スポットを探す",
-    howto_step4_desc: "POPOPOで紹介された場所や、リスナーおすすめの場所をカテゴリ別に見られます。気になる場所は「行きたい」を押すと、同じ端末の「行きたいリスト」に集められます。また、「♿ やさしいお出かけ」フィルターを使うと、多目的トイレやバリアフリー、授乳室が整ったスポットだけを簡単に絞り込めます。",
+    howto_step4_desc: "POPOPOで紹介された場所や、リスナーおすすめの場所をカテゴリ別に見られます。気になる場所は「行きたい」を押すと、同じ端末の「行きたいリスト」に集められます。また、「♿ やさしいお出かけ」フィルターを使うと、多目的トイレやバリアフリー、授乳室が整ったスポットだけを簡単に絞り込めます。カテゴリタブの上の検索欄では、名前・エリア・メモから横断して探せます（PCは ⌘K / Ctrl+K でも開けます）。",
     howto_step5_title: "感想を見る・投稿する",
     howto_step5_desc: "スポットカードの「みんなの感想」から、その場所の感想一覧を見られます。読んだ感想には「見たよ」でリアクションできます。行ってみた場所は「行ってみた！」から評価やコメントを投稿できます。感想を投稿する際は、車椅子やベビーカーでの行きやすさ、多目的トイレ情報などもぜひ詳しく共有してみてください。",
     howto_step6_title: "スポットを追加する",
     howto_step6_desc: "おすすめしたい場所や気になっている場所があれば、「スポットを追加する」から提案できます。参考URL・写真・情報を3件まで種類つきで登録でき、画像URLならカードにプレビューも表示されます。設備対応サービス（多目的トイレ、バリアフリー、授乳室など）も設定でき、カードや詳細にバリアフリーの目安として表示されます。入力中の下書き保存にも対応しています。",
     howto_step7_title: "フリートークで話す",
     howto_step7_desc: "POPOPOの感想、サイトへのご意見、今度行きたい場所、ちょっとしたお出かけメモなどを自由に投稿できます。返信のあったスレッドは、掲示板の上の方に近づきやすくなっています。必要な分だけ「もっと見る」で広げられます。",
-    howto_note: "投稿内容は公開されます。個人情報の取り扱い等には十分に注意してください。スポット・感想・つぶやきは、同じ端末のブラウザでは投稿後に編集できます。スポット追加フォームは、未送信の内容を端末内に一時保存します（別のタブで開き直したときなどに復元できます）。画像は直接ファイル（写真）をアップロードできるほか、SNS等の投稿URLを添付することも可能です（アップロードされた画像は自動的に最適化されます）。「行きたいリスト」はログイン不要で使えるよう、同じ端末のブラウザに保存されます。"
+    howto_step8_title: "地図でながめる",
+    howto_step8_desc: "トップの地図イラストや、スマホは画面下の「地図」から、デジタルお出かけマップを開けます。スポットがカテゴリの絵文字ピンで表示され、ピンを押すと詳細カードへ移動できます。",
+    howto_note: "投稿内容は公開されます。個人情報の取り扱い等には十分に注意してください。スポット・感想・つぶやきは、同じ端末のブラウザでは投稿後に編集できます。スポット追加フォームは、未送信の内容を端末内に一時保存します（別のタブで開き直したときなどに復元できます）。画像は直接ファイル（写真）をアップロードできるほか、SNS等の投稿URLを添付することも可能です（アップロードされた画像は自動的に最適化されます）。「行きたいリスト」はログイン不要で使えるよう、同じ端末のブラウザに保存されます。また、スマホのブラウザメニューから「ホーム画面に追加」すると、このサイトをアプリのように開けます。"
   },
   en: {
     logo_sub: "Outing Map",
@@ -265,18 +267,20 @@ const TRANSLATIONS = {
     howto_step1_title: "See Today's Discoveries",
     howto_step1_desc: "Recommended spots and reviews slowly cycle at the top of the page. Tap a name to open that spot or review.",
     howto_step2_title: "Pop & Pick",
-    howto_step2_desc: "Tap 'Pop & Pick' to get a random suggestion from recommended spots and reviews. Tap the card to open details. Great for when you can't decide where to go.",
+    howto_step2_desc: "Tap 'Pop & Pick' at the top (or 'Gacha' in the bottom bar on mobile) to get a random suggestion from recommended spots and reviews. When several cards appear, swipe sideways to flip through them. Tap a card to open details. Great for when you can't decide where to go.",
     howto_step3_title: "Enjoy Listener Art",
     howto_step3_desc: "The small art icons at the top are works received during the stream. Tap the flowing icons to enlarge them. You can also view them all from the gallery.",
     howto_step4_title: "Find Spots",
-    howto_step4_desc: "Browse spots introduced on POPOPO or recommended by listeners by category. Tap 'Want to Go' to save them to your device's list. You can also use the \"♿ Accessible Outings\" filter to easily find spots with accessible restrooms, wheelchair access, or nursing rooms.",
+    howto_step4_desc: "Browse spots introduced on POPOPO or recommended by listeners by category. Tap 'Want to Go' to save them to your device's list. You can also use the \"♿ Accessible Outings\" filter to easily find spots with accessible restrooms, wheelchair access, or nursing rooms. You can also search by name, area, or notes using the search box above the category tabs (press Cmd/Ctrl+K on desktop).",
     howto_step5_title: "Read & Post Reviews",
     howto_step5_desc: "Check out the guest reviews for each spot. Leave a 'Seen' reaction if you read one. If you've visited, post your own rating and comment! When writing a review, we highly encourage you to share accessibility details like stroller/wheelchair access or restroom availability.",
     howto_step6_title: "Add a Spot",
     howto_step6_desc: "Suggest a spot you want to recommend or are curious about. You can add up to 3 links, photos, or info. You can also check accessibility amenities (accessible restrooms, wheelchair access, nursing rooms) to display on cards and details. Drafts are temporarily saved in your browser.",
     howto_step7_title: "Talk in Free Talk",
     howto_step7_desc: "Freely post your thoughts on POPOPO, site feedback, or outing plans. Threads with replies stay near the top. Tap 'See More' to expand.",
-    howto_note: "Posts are public. Please be careful with personal information. Spots, reviews, and chats can be edited from the same browser. Spot drafts are saved locally in the browser. You can directly upload image files (photos) or attach post URLs from SNS (uploaded images will be optimized automatically). The 'Want to Go' list is saved locally without requiring a login."
+    howto_step8_title: "Browse on the Map",
+    howto_step8_desc: "Open the digital outing map from the top illustration, or via 'Map' in the mobile bottom bar. Spots appear as emoji pins by category — tap a pin to jump to its detail card.",
+    howto_note: "Posts are public. Please be careful with personal information. Spots, reviews, and chats can be edited from the same browser. Spot drafts are saved locally in the browser. You can directly upload image files (photos) or attach post URLs from SNS (uploaded images will be optimized automatically). The 'Want to Go' list is saved locally without requiring a login. You can also add this site to your home screen from your mobile browser menu to use it like an app."
   }
 };
 

@@ -1205,6 +1205,18 @@ const CARROT_GUIDE_HINTS = {
       href: '#spots'
     },
     {
+      title: '迷ったらポポッと',
+      text: 'トップや画面下の「ガチャ」から、おすすめスポットとみんなの感想をひとつお届けします。複数並んだときは、横にスワイプしてめくれます。',
+      actionLabel: 'ポポッと選ぶ',
+      href: '#open-gacha'
+    },
+    {
+      title: '地図でながめる',
+      text: 'トップの地図イラストや、スマホは画面下の「地図」から、スポットをカテゴリの絵文字ピンで見渡せます。ピンを押すと詳細へ飛べます。',
+      actionLabel: '地図を開く',
+      href: '#open-map'
+    },
+    {
       title: '今日の発見は入れ替わります',
       text: '上の小さな発見欄は、投稿されたスポットや感想から少しずつ入れ替わります。名前を押すと、そのカードを開けます。',
       actionLabel: '発見を見る',
@@ -1224,6 +1236,12 @@ const CARROT_GUIDE_HINTS = {
     }
   ],
   spots: [
+    {
+      title: '検索でさがせます',
+      text: 'カテゴリタブの上にある検索欄から、名前・エリア・メモで探せます。絞り込み中の条件は、下に出るピルの✕でいつでも外せます。',
+      actionLabel: '検索してみる',
+      href: '#spots'
+    },
     {
       title: '気になる場所は保存できます',
       text: 'スポットカードの「行きたい」を押すと、同じ端末の行きたいリストに集められます。',
@@ -1295,6 +1313,18 @@ const CARROT_GUIDE_HINTS_EN = {
       href: '#spots'
     },
     {
+      title: "Can't decide? Pop & Pick",
+      text: 'Tap "Pop & Pick" at the top (or "Gacha" in the bottom bar on mobile) to get one suggestion from spots and reviews. When several cards appear, swipe sideways to flip through.',
+      actionLabel: 'Pop & Pick',
+      href: '#open-gacha'
+    },
+    {
+      title: 'Browse on the map',
+      text: 'Tap the map illustration at the top (or "Map" in the bottom bar on mobile) to see every spot as an emoji pin. Tap a pin to jump to its details.',
+      actionLabel: 'Open the Map',
+      href: '#open-map'
+    },
+    {
       title: "Today's Discoveries rotate",
       text: 'The "Today\'s Discovery" section at the top slowly rotates through shared spots and reviews. Tap a name to open its detail card.',
       actionLabel: 'View Discoveries',
@@ -1314,6 +1344,12 @@ const CARROT_GUIDE_HINTS_EN = {
     }
   ],
   spots: [
+    {
+      title: 'Search for spots',
+      text: 'Use the search box above the category tabs to find spots by name, area, or notes. Active filters appear as pills below — tap ✕ to remove them anytime.',
+      actionLabel: 'Try Search',
+      href: '#spots'
+    },
     {
       title: 'Save places you like',
       text: 'Tap "Want" on any spot card to save it to your local want-list on this device.',
@@ -4076,6 +4112,7 @@ function showGachaResult(outcome) {
     ${outcome.sub ? `<span class="gacha-badge-sub">${escHtml(outcome.sub)}</span>` : ''}
   `;
   grid.innerHTML = outcome.items.map((item, i) => gachaResultCardHtml(item, i)).join('');
+  setupGachaResultCarousel(grid, outcome.items.length);
   if (foot) {
     foot.textContent = outcome.foot || '';
     foot.hidden = !outcome.foot;
@@ -4095,6 +4132,56 @@ function showGachaResult(outcome) {
       spawnWatercolorStamp(firstCard, stampEmoji);
     }
   });
+}
+
+// 複数結果のときは横スワイプでめくれるカルーセルにする（縦に伸びてスクロール不能になる問題の対策）
+function setupGachaResultCarousel(grid, itemCount) {
+  if (!grid) return;
+  const isMulti = itemCount > 1;
+  grid.classList.toggle('is-carousel', isMulti);
+
+  let dotsEl = document.getElementById('gachaResultDots');
+  if (!dotsEl) {
+    dotsEl = document.createElement('div');
+    dotsEl.id = 'gachaResultDots';
+    dotsEl.className = 'gacha-result-dots';
+    grid.parentNode.insertBefore(dotsEl, grid.nextSibling);
+  }
+
+  if (!isMulti) {
+    dotsEl.innerHTML = '';
+    return;
+  }
+
+  const isEn = currentLanguage === 'en';
+  dotsEl.innerHTML =
+    Array.from({ length: itemCount }, (_, i) =>
+      `<span class="gacha-result-dot${i === 0 ? ' is-active' : ''}"></span>`
+    ).join('') +
+    `<span class="gacha-result-swipe-hint">${isEn ? '→ swipe to flip through' : '→ スワイプでめくれます'}</span>`;
+  grid.scrollLeft = 0;
+
+  if (!grid._carouselBound) {
+    grid._carouselBound = true;
+    let scrollRaf = null;
+    grid.addEventListener('scroll', () => {
+      if (scrollRaf) return;
+      scrollRaf = window.requestAnimationFrame(() => {
+        scrollRaf = null;
+        const cards = grid.querySelectorAll('.gacha-result-card');
+        if (!cards.length) return;
+        const center = grid.scrollLeft + grid.clientWidth / 2;
+        let best = 0;
+        let bestDist = Infinity;
+        cards.forEach((c, i) => {
+          const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center);
+          if (d < bestDist) { bestDist = d; best = i; }
+        });
+        const liveDots = document.querySelectorAll('#gachaResultDots .gacha-result-dot');
+        liveDots.forEach((d, i) => d.classList.toggle('is-active', i === best));
+      });
+    }, { passive: true });
+  }
 }
 
 function triggerWatercolorSplash() {
@@ -7349,10 +7436,19 @@ function bindCarrotGuideEvents() {
   if (closeBtn) closeBtn.addEventListener('click', closeCarrotGuide);
   if (action) action.addEventListener('click', closeCarrotGuide);
   if (action) action.addEventListener('click', (e) => {
-    if (action.getAttribute('href') === '#add-spot') {
+    const href = action.getAttribute('href');
+    if (href === '#add-spot') {
       e.preventDefault();
       closeCarrotGuide();
       openAddSpotModal();
+    } else if (href === '#open-map') {
+      e.preventDefault();
+      closeCarrotGuide();
+      openMapModal();
+    } else if (href === '#open-gacha') {
+      e.preventDefault();
+      closeCarrotGuide();
+      openGachaModal();
     }
   });
   maybeShowCarrotGuideOnce();
@@ -8803,38 +8899,37 @@ function initScrollReveal(scopeEl) {
 }
 
 // ==========================================================================
-// モバイル下部タブバー（スマホのみ・scrollspy付き）
+// 既存のモバイル下部ナビ(bottom-nav)に 地図・ガチャ を統合
+// ※ スポット/感想/つぶやく/掲示板 は既存HTMLのまま活かす
 // ==========================================================================
 function initMobileTabBar() {
-  if (document.getElementById('mobileTabBar') || !document.getElementById('spots')) return;
+  const nav = document.getElementById('bottomNav');
+  if (!nav || nav.querySelector('[data-action="map"]')) return;
   const isEn = currentLanguage === 'en';
-  const bar = document.createElement('nav');
-  bar.id = 'mobileTabBar';
-  bar.className = 'mobile-tab-bar';
-  bar.setAttribute('aria-label', isEn ? 'Quick navigation' : 'クイックナビゲーション');
-  bar.innerHTML = `
-    <a href="#spots" class="mobile-tab" data-tab="spots"><span aria-hidden="true">📍</span><small>${isEn ? 'Spots' : 'スポット'}</small></a>
-    <button type="button" class="mobile-tab" data-tab="map"><span aria-hidden="true">🗺️</span><small>${isEn ? 'Map' : '地図'}</small></button>
-    <button type="button" class="mobile-tab" data-tab="gacha"><span aria-hidden="true">✨</span><small>${isEn ? 'Gacha' : 'ガチャ'}</small></button>
-    <a href="#visited" class="mobile-tab" data-tab="visited"><span aria-hidden="true">💬</span><small>${isEn ? 'Reviews' : '感想'}</small></a>
-  `;
-  document.body.appendChild(bar);
-  bar.querySelector('[data-tab="map"]').addEventListener('click', () => openMapModal());
-  bar.querySelector('[data-tab="gacha"]').addEventListener('click', () => openGachaModal());
 
-  // scrollspy: 表示中のセクションをアクティブに
-  if ('IntersectionObserver' in window) {
-    const spy = new IntersectionObserver((entries) => {
-      entries.forEach(en => {
-        if (!en.isIntersecting) return;
-        bar.querySelectorAll('.mobile-tab').forEach(t =>
-          t.classList.toggle('is-active', t.dataset.tab === en.target.id));
-      });
-    }, { rootMargin: '-35% 0px -55% 0px' });
-    ['spots', 'visited'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) spy.observe(el);
-    });
+  const makeItem = (action, icon, label, onClick) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bottom-nav-item';
+    btn.dataset.action = action;
+    btn.innerHTML = `<span class="bottom-nav-icon" aria-hidden="true">${icon}</span><span class="bottom-nav-label">${label}</span>`;
+    btn.addEventListener('click', onClick);
+    return btn;
+  };
+
+  const mapBtn = makeItem('map', '🧭', isEn ? 'Map' : '地図', () => openMapModal());
+  const gachaBtn = makeItem('gacha', '✨', isEn ? 'Gacha' : 'ガチャ', () => openGachaModal());
+
+  // 配置: スポット | 地図 | 感想 | つぶやく | ガチャ | 掲示板 の並びになるよう挿入
+  const items = nav.querySelectorAll('.bottom-nav-item');
+  const visitedItem = nav.querySelector('[data-section="visited"]');
+  const postItem = nav.querySelector('.bottom-nav-post');
+  if (items.length && visitedItem && postItem) {
+    nav.insertBefore(mapBtn, visitedItem);          // スポットの直後
+    nav.insertBefore(gachaBtn, postItem.nextSibling); // つぶやくの直後
+  } else {
+    nav.appendChild(mapBtn);
+    nav.appendChild(gachaBtn);
   }
 }
 

@@ -5608,60 +5608,71 @@ html.vt-modal::view-transition-new(root) {
   transform: none;
 }
 
-/* --- モバイル下部タブバー --- */
-.mobile-tab-bar {
-  display: none;
-}
+/* --- モバイル下部ナビ: 既存bottom-navに地図・ガチャを追加した6項目用の微調整 --- */
 @media (max-width: 768px) {
-  .mobile-tab-bar {
-    display: flex;
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    z-index: 990;
-    justify-content: space-around;
-    align-items: stretch;
-    padding: 6px 8px;
-    background: rgba(255, 254, 250, 0.86);
-    border: 1.5px solid rgba(79, 127, 216, 0.2);
-    border-radius: 22px;
-    box-shadow: 0 10px 30px rgba(43, 67, 120, 0.18);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  .mobile-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    flex: 1;
-    padding: 6px 4px;
-    border: none;
-    background: none;
-    border-radius: 16px;
-    color: var(--text-muted, #6b7a99);
-    text-decoration: none;
-    font-family: inherit;
-    transition: background 0.2s ease, color 0.2s ease;
-  }
-  .mobile-tab span { font-size: 1.15rem; line-height: 1.2; }
-  .mobile-tab small { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.5px; }
-  .mobile-tab.is-active {
-    color: var(--blue, #5b8dee);
-    background: rgba(205, 228, 250, 0.5);
-  }
-  /* タブバーに隠れないよう下部に余白を確保 */
-  body { padding-bottom: 84px; }
-  [data-theme="dark"] .mobile-tab-bar {
-    background: rgba(13, 18, 30, 0.85);
-    border-color: rgba(96, 165, 250, 0.25);
-  }
-  [data-theme="dark"] .mobile-tab.is-active {
-    background: rgba(30, 58, 95, 0.6);
-    color: #93c5fd;
+  /* 6項目になってもラベルが収まるように */
+  .bottom-nav-label {
+    white-space: nowrap;
   }
 }
+@media (max-width: 400px) {
+  .bottom-nav-label {
+    font-size: 0.58rem;
+  }
+  .bottom-nav-icon,
+  .bottom-nav-post-icon {
+    font-size: 1.18rem;
+  }
+}
+
+/* --- ポポッと選ぶ: 結果カードのスワイプカルーセル --- */
+/* 縦に伸びてスクロールできなくなる問題の解消（縦スクロール許可） */
+.gacha-modal .modal-box {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.gacha-result-grid.is-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 12px;
+  padding: 4px 2px 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.gacha-result-grid.is-carousel .gacha-result-card {
+  flex: 0 0 min(82%, 300px);
+  scroll-snap-align: center;
+}
+.gacha-result-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 10px;
+}
+.gacha-result-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(91, 141, 238, 0.25);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.gacha-result-dot.is-active {
+  background: var(--blue, #5b8dee);
+  transform: scale(1.3);
+}
+.gacha-result-swipe-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted, #8a97b5);
+  margin-left: 8px;
+}
+[data-theme="dark"] .gacha-result-dot { background: rgba(147, 197, 253, 0.25); }
+[data-theme="dark"] .gacha-result-dot.is-active { background: #93c5fd; }
 
 /* --- テーマ切替: ボタン位置から新テーマが円形に広がる --- */
 @keyframes vtThemeWipe {
@@ -5685,5 +5696,12 @@ html.vt-theme::view-transition-new(root) {
   html.vt-theme::view-transition-old(root),
   html.vt-theme::view-transition-new(root) {
     animation: none !important;
+  }
+}
+
+/* --- 人参鹿さんヒント: ホームバー端末で下部ナビと詰まらないようセーフエリア対応 --- */
+@media (max-width: 768px) {
+  .carrot-guide {
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
   }
 }
