@@ -126,6 +126,7 @@ const TRANSLATIONS = {
     footer_admin: "お手入れ係",
     footer_contact: "🦋 masa0a へ連絡する / Bluesky",
     upload_disclaimer: "※画像は自動的に最適化（縮小・圧縮）して保存されます。",
+    search_philosophy: "🌿 誰かの意図で結果が変わることはありません。この検索も、ただ偶然そこに現れる場所との出会いです。",
     
     // about.html 用追加テキスト
     about_story: "STORY",
@@ -239,6 +240,7 @@ const TRANSLATIONS = {
     footer_admin: "Curator",
     footer_contact: "🦋 Contact masa0a / Bluesky",
     upload_disclaimer: "*Images will be optimized (shrunk/compressed) and saved automatically.",
+    search_philosophy: "🌿 Free from biased sorting or tailored results. Every search and recommendation is purely honest and left to chance.",
     
     // about.html 用追加テキスト
     about_story: "STORY",

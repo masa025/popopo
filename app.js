@@ -8804,6 +8804,13 @@ function initSpotSearchUI() {
         aria-label="${isEn ? 'Search spots' : 'スポットを検索'}" autocomplete="off">
       <kbd class="spot-search-kbd" aria-hidden="true">⌘K</kbd>
     </div>
+    <div class="search-philosophy-box" style="margin-top: 6px; padding-left: 12px; max-width: 580px;">
+      <p class="search-philosophy" data-i18n="search_philosophy" style="font-size: 0.72rem; color: var(--text-muted); opacity: 0.82; margin: 0; font-style: italic; line-height: 1.45;">
+        ${isEn 
+          ? "🌿 Free from biased sorting or tailored results. Every search and recommendation is purely honest and left to chance." 
+          : "🌿 誰かの意図で結果が変わることはありません。この検索も、ただ偶然そこに現れる場所との出会いです。"}
+      </p>
+    </div>
     <div class="spot-filter-status" id="spotFilterStatus" aria-live="polite"></div>
   `;
   tabsWrapper.parentNode.insertBefore(wrap, tabsWrapper);
